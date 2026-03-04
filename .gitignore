@@ -26,4 +26,4 @@ Thumbs.db
 npm-debug.log*
 
 # Generated output (user downloads)
-output/
+/output/
