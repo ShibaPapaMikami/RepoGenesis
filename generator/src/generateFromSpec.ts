@@ -1,5 +1,4 @@
 import type { ProjectBrief, ProjectSpec, SpecVersion } from './schema';
-import { SUPPORTED_SPEC_VERSIONS } from './schema';
 import { generateClaudeMd } from './templates/claudeMd';
 import { generateActiveContext } from './templates/activeContext';
 import { generateRequirements } from './templates/requirements';
@@ -18,6 +17,7 @@ import { generateIssueBugReport } from './templates/issueBugReport';
 import { generateIssueFeatureRequest } from './templates/issueFeatureRequest';
 
 type RepoEntry = ProjectBrief['structure']['repos'][number];
+const DEFAULT_SPEC_VERSION: SpecVersion = '1.0';
 
 export interface GenerateFromSpecOptions {
   specVersion?: SpecVersion;
@@ -40,7 +40,7 @@ function resolveSpecVersion(input: ProjectBrief | ProjectSpec, options?: Generat
   if ('specVersion' in input) {
     return input.specVersion;
   }
-  return options?.specVersion ?? SUPPORTED_SPEC_VERSIONS[0];
+  return options?.specVersion ?? DEFAULT_SPEC_VERSION;
 }
 
 function normalizeBrief(input: ProjectBrief | ProjectSpec): ProjectBrief {
