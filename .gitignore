@@ -1,0 +1,29 @@
+# Environment
+.env
+.env.local
+.env.production
+
+# Dependencies
+node_modules/
+
+# Build
+dist/
+build/
+.next/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Generated output (user downloads)
+output/

@@ -1,0 +1,32 @@
+{
+  "specVersion": "1.0",
+  "project": {
+    "name": "App Export Test",
+    "slug": "app-export-test",
+    "description": "Test project simulating JSON export from the Web app",
+    "owner": "App Tester",
+    "created_at": "2026-03-01T12:00:00.000Z"
+  },
+  "tech": {
+    "domains": ["web"],
+    "primary_language": "typescript",
+    "frameworks": ["React", "Vite"],
+    "ai_tool": "claude_cli",
+    "ai_tool_detail": ""
+  },
+  "security": {
+    "level": "medium",
+    "has_api_keys": true,
+    "has_user_data": true,
+    "has_payment_data": false,
+    "has_ip_sensitive": false,
+    "has_credentials": false
+  },
+  "structure": {
+    "repo_type": "single",
+    "repos": []
+  },
+  "workflow": {
+    "phases_count": 3
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "specVersion": "1.0",
+  "project": {
+    "name": "E2E Single Test",
+    "slug": "e2e-single-test",
+    "description": "E2E test project for single-repo generation",
+    "owner": "E2E Tester",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  },
+  "tech": {
+    "domains": ["web", "ai"],
+    "primary_language": "typescript",
+    "frameworks": ["Next.js", "Prisma"],
+    "ai_tool": "claude_cli",
+    "ai_tool_detail": ""
+  },
+  "security": {
+    "level": "high",
+    "has_api_keys": true,
+    "has_user_data": true,
+    "has_payment_data": true,
+    "has_ip_sensitive": false,
+    "has_credentials": false
+  },
+  "structure": {
+    "repo_type": "single",
+    "repos": []
+  },
+  "workflow": {
+    "phases_count": 4
+  }
+}

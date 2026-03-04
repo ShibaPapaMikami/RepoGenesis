@@ -1,0 +1,54 @@
+{
+  "name": "@gugenka/repogenesis",
+  "version": "0.1.0",
+  "description": "AI-ready repository structure generator — generates claude.md, docs, and folder structures from project_brief.json",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gugenka/RepoGenesis.git",
+    "directory": "generator"
+  },
+  "homepage": "https://github.com/gugenka/RepoGenesis#readme",
+  "bugs": {
+    "url": "https://github.com/gugenka/RepoGenesis/issues"
+  },
+  "main": "dist/lib.js",
+  "types": "dist/lib.d.ts",
+  "bin": {
+    "repogenesis": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:api": "node dist/orchestration/server.js",
+    "smoke:api": "bash scripts/smoke-orchestration.sh",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "prepublishOnly": "npm run build && npm test -- --run"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
+  "keywords": [
+    "repogenesis",
+    "ai",
+    "claude",
+    "repository",
+    "generator",
+    "scaffold"
+  ],
+  "author": "Gugenka",
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

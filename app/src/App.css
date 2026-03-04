@@ -1,0 +1,331 @@
+/* === Layout === */
+.app {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.app-header p {
+  margin: 0.25rem 0 0;
+  color: #666;
+}
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* === Section === */
+.form-section {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  background: #fafafa;
+}
+
+.form-section h2 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+/* === Form Row === */
+.form-row {
+  margin-bottom: 1rem;
+}
+
+.form-row > label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.form-row input[type="text"],
+.form-row input[type="number"],
+.form-row textarea,
+.form-row select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+.form-row textarea {
+  resize: vertical;
+}
+
+/* === Hint === */
+.hint {
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: #888;
+  margin-left: 0.5rem;
+}
+
+/* === Error === */
+.error {
+  display: block;
+  color: #d32f2f;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.error-summary {
+  background: #fff3f3;
+  border: 1px solid #ffcdd2;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.error-summary p {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+  color: #d32f2f;
+}
+
+.error-summary ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.error-summary li {
+  font-size: 0.85rem;
+  color: #d32f2f;
+}
+
+/* === Checkbox / Radio Groups === */
+.checkbox-group,
+.radio-group,
+.toggle-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.checkbox-label,
+.radio-label,
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* === Tag Input === */
+.tag-input-container {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  background: #fff;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  background: #e3f2fd;
+  border-radius: 3px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.85rem;
+}
+
+.tag-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 0.25rem;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+  color: #666;
+}
+
+.tag-remove:hover {
+  color: #d32f2f;
+}
+
+.tag-input {
+  border: none;
+  outline: none;
+  flex: 1;
+  min-width: 120px;
+  padding: 0.25rem;
+  font-size: 0.9rem;
+}
+
+/* === Repo Entry === */
+.repo-entry {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: #fff;
+}
+
+.repo-entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.repo-entry-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.repos-list {
+  margin-bottom: 0.75rem;
+}
+
+.depends-on-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* === Security Level === */
+.security-level-display {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.security-level-min {
+  color: #888;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+}
+
+.level-low {
+  color: #4caf50;
+}
+
+.level-medium {
+  color: #ff9800;
+}
+
+.level-high {
+  color: #d32f2f;
+}
+
+.security-level-override {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.security-level-override select {
+  padding: 0.35rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* === JSON Preview === */
+.json-preview {
+  background: #263238;
+  color: #eeffff;
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.json-preview pre {
+  margin: 0;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* === Buttons === */
+.btn-primary,
+.btn-secondary,
+.btn-add,
+.btn-remove,
+.btn-reset {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  background: #1976d2;
+  color: #fff;
+  border-color: #1976d2;
+}
+
+.btn-primary:disabled {
+  background: #90caf9;
+  border-color: #90caf9;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: #1976d2;
+  border-color: #1976d2;
+}
+
+.btn-secondary:disabled {
+  color: #90caf9;
+  border-color: #90caf9;
+  cursor: not-allowed;
+}
+
+.btn-add {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-color: #a5d6a7;
+}
+
+.btn-remove {
+  background: #ffebee;
+  color: #c62828;
+  border-color: #ef9a9a;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.btn-reset {
+  background: #fff;
+  color: #666;
+}
+
+.output-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.app-actions {
+  display: flex;
+  justify-content: flex-end;
+}

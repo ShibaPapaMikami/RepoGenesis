@@ -1,0 +1,101 @@
+import type { Dispatch } from 'react';
+import type { FormAction, FormState } from '../../state/actions';
+import {
+  DOMAINS,
+  DOMAIN_LABELS,
+  PRIMARY_LANGUAGES,
+  LANGUAGE_LABELS,
+  AI_TOOLS,
+  AI_TOOL_LABELS,
+  type PrimaryLanguage,
+  type AiTool,
+} from '../../constants/enums';
+import { TagInput } from '../shared/TagInput';
+
+interface TechSectionProps {
+  state: FormState;
+  dispatch: Dispatch<FormAction>;
+  errors: Record<string, string>;
+}
+
+export function TechSection({ state, dispatch, errors }: TechSectionProps) {
+  return (
+    <section className="form-section">
+      <h2>技術情報</h2>
+
+      <div className="form-row">
+        <label>技術ドメイン *（1つ以上選択）</label>
+        <div className="checkbox-group">
+          {DOMAINS.map((domain) => (
+            <label key={domain} className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={state.tech.domains.includes(domain)}
+                onChange={() => dispatch({ type: 'TOGGLE_DOMAIN', payload: domain })}
+              />
+              {DOMAIN_LABELS[domain]}
+            </label>
+          ))}
+        </div>
+        {errors['tech.domains'] && <span className="error">{errors['tech.domains']}</span>}
+      </div>
+
+      <div className="form-row">
+        <label htmlFor="primary-language">主要言語 *</label>
+        <select
+          id="primary-language"
+          value={state.tech.primary_language}
+          onChange={(e) =>
+            dispatch({ type: 'SET_PRIMARY_LANGUAGE', payload: e.target.value as PrimaryLanguage })
+          }
+        >
+          {PRIMARY_LANGUAGES.map((lang) => (
+            <option key={lang} value={lang}>
+              {LANGUAGE_LABELS[lang]}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-row">
+        <label>フレームワーク（任意）</label>
+        <TagInput
+          tags={state.tech.frameworks}
+          onChange={(tags) => dispatch({ type: 'SET_FRAMEWORKS', payload: tags })}
+          placeholder="例: Next.js, Prisma（Enter/カンマで追加）"
+        />
+      </div>
+
+      <div className="form-row">
+        <label>AI開発ツール *</label>
+        <div className="radio-group">
+          {AI_TOOLS.map((tool) => (
+            <label key={tool} className="radio-label">
+              <input
+                type="radio"
+                name="ai_tool"
+                value={tool}
+                checked={state.tech.ai_tool === tool}
+                onChange={() => dispatch({ type: 'SET_AI_TOOL', payload: tool as AiTool })}
+              />
+              {AI_TOOL_LABELS[tool]}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {state.tech.ai_tool === 'other' && (
+        <div className="form-row">
+          <label htmlFor="ai-tool-detail">AI開発ツール詳細</label>
+          <input
+            id="ai-tool-detail"
+            type="text"
+            value={state.tech.ai_tool_detail}
+            onChange={(e) => dispatch({ type: 'SET_AI_TOOL_DETAIL', payload: e.target.value })}
+            placeholder="使用するAIツール名"
+          />
+        </div>
+      )}
+    </section>
+  );
+}

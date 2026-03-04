@@ -1,0 +1,44 @@
+import type { ProjectBrief } from '../schema';
+
+export function generateGlobalContext(brief: ProjectBrief): string {
+  const { project, structure } = brief;
+
+  const repoList = structure.repos.map((r) => {
+    const deps = r.depends_on.length > 0 ? ` → depends on: ${r.depends_on.join(', ')}` : '';
+    return `- **${r.name}** (${r.type}): ${r.description} — Owner: ${r.owner}${deps}`;
+  }).join('\n');
+
+  // Dependency graph (simple text representation)
+  const depsWithRelations = structure.repos.filter((r) => r.depends_on.length > 0);
+  let depGraph = '';
+  if (depsWithRelations.length > 0) {
+    const lines = depsWithRelations.map((r) =>
+      r.depends_on.map((dep) => `  ${r.name} → ${dep}`).join('\n'),
+    ).join('\n');
+    depGraph = `
+
+## Dependency Graph
+\`\`\`
+${lines}
+\`\`\``;
+  }
+
+  return `# GLOBAL_CONTEXT.md — Multi-Repository Workspace
+
+## Project
+${project.name} — ${project.description}
+
+## Owner
+${project.owner}
+
+## Repositories
+${repoList}
+${depGraph}
+
+## Cross-Repo Conventions
+- Each repository has its own \`claude.md\` with repo-specific rules.
+- Shared decisions are documented in this file.
+- Dependencies between repos should be managed explicitly.
+- When a change in one repo affects another, update both repos' \`ACTIVE_CONTEXT.md\`.
+`;
+}

@@ -1,0 +1,54 @@
+{
+  "specVersion": "1.0",
+  "project": {
+    "name": "E2E Multi Test",
+    "slug": "e2e-multi-test",
+    "description": "E2E test project for multi-repo generation",
+    "owner": "E2E Tester",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  },
+  "tech": {
+    "domains": ["web", "mobile"],
+    "primary_language": "typescript",
+    "frameworks": ["React Native"],
+    "ai_tool": "claude_cli",
+    "ai_tool_detail": ""
+  },
+  "security": {
+    "level": "high",
+    "has_api_keys": true,
+    "has_user_data": false,
+    "has_payment_data": true,
+    "has_ip_sensitive": true,
+    "has_credentials": true
+  },
+  "structure": {
+    "repo_type": "multi",
+    "repos": [
+      {
+        "name": "web-app",
+        "type": "frontend",
+        "description": "Web frontend application",
+        "owner": "Alice",
+        "depends_on": []
+      },
+      {
+        "name": "api-server",
+        "type": "backend",
+        "description": "REST API backend",
+        "owner": "Bob",
+        "depends_on": ["web-app"]
+      },
+      {
+        "name": "infra",
+        "type": "infra",
+        "description": "Infrastructure and deployment",
+        "owner": "Charlie",
+        "depends_on": ["api-server"]
+      }
+    ]
+  },
+  "workflow": {
+    "phases_count": 5
+  }
+}
