@@ -2,6 +2,7 @@ import { createServer, type ServerResponse } from 'http';
 import { appendAuditRecord } from './audit';
 import type { GenerateApiDownloadSuccess, GenerateApiError } from './api';
 import { handleGenerateApiDownloadRequest } from './api';
+import { handleFeedbackApiRequest } from './feedback';
 
 const PORT = Number(process.env.PORT ?? 8002);
 const HOST = process.env.HOST ?? '0.0.0.0';
@@ -39,7 +40,11 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (req.method !== 'POST' || req.url !== '/api/v1/repositories/generate') {
+  const isFeedbackBug = req.method === 'POST' && req.url === '/api/v1/feedback/bug';
+  const isFeedbackRequest = req.method === 'POST' && req.url === '/api/v1/feedback/request';
+  const isGenerate = req.method === 'POST' && req.url === '/api/v1/repositories/generate';
+
+  if (!isGenerate && !isFeedbackBug && !isFeedbackRequest) {
     const out = jsonResponse(404, { error: 'Not Found' });
     res.writeHead(out.status, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(out.text);
@@ -60,11 +65,26 @@ const server = createServer((req, res) => {
       return;
     }
 
-    const result = await handleGenerateApiDownloadRequest(
-      typeof req.headers.authorization === 'string' ? req.headers.authorization : undefined,
-      typeof req.headers.cookie === 'string' ? req.headers.cookie : undefined,
-      payload,
-    );
+    const authHeader = typeof req.headers.authorization === 'string'
+      ? req.headers.authorization
+      : undefined;
+    const cookieHeader = typeof req.headers.cookie === 'string' ? req.headers.cookie : undefined;
+
+    if (isFeedbackBug || isFeedbackRequest) {
+      const feedbackType = isFeedbackBug ? 'bug' : 'request';
+      const feedbackResult = await handleFeedbackApiRequest(
+        authHeader,
+        cookieHeader,
+        feedbackType,
+        payload,
+      );
+      const out = jsonResponse(feedbackResult.status, feedbackResult.body);
+      res.writeHead(out.status, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(out.text);
+      return;
+    }
+
+    const result = await handleGenerateApiDownloadRequest(authHeader, cookieHeader, payload);
     if (result.status !== 200) {
       const err = result.body as GenerateApiError;
       appendAuditRecord({

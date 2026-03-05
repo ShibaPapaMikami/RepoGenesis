@@ -12,6 +12,10 @@ export interface GenerateRepositoryResult {
 const API_BASE = import.meta.env.VITE_ORCHESTRATION_API_URL as string | undefined;
 const REMOTE_AUTH_MODE = (import.meta.env.VITE_REMOTE_AUTH_MODE as string | undefined) ?? 'manual_bearer';
 
+export function getOrchestrationApiBase(): string | undefined {
+  return API_BASE;
+}
+
 export function getGenerationMode(): 'local' | 'remote' {
   return API_BASE && API_BASE.length > 0 ? 'remote' : 'local';
 }

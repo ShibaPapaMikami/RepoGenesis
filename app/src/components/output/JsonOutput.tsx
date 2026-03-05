@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { FormState } from '../../state/actions';
 import { PROJECT_SPEC_FILENAME } from '../../constants/spec';
-import { stringifyProjectSpec } from '../../utils/buildProjectSpec';
+import { buildProjectSpec, stringifyProjectSpec } from '../../utils/buildProjectSpec';
 import { generateRepository, getGenerationMode, getRemoteAuthMode } from '../../utils/generateRepository';
+import { downloadErrorReport, submitFeedback, type FeedbackType, type ErrorReportPayload } from '../../utils/feedback';
 
 interface JsonOutputProps {
   state: FormState;
@@ -15,6 +16,13 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateMessage, setGenerateMessage] = useState<string | null>(null);
   const [authToken, setAuthToken] = useState('');
+  const [lastErrorReport, setLastErrorReport] = useState<ErrorReportPayload | null>(null);
+  const [feedbackType, setFeedbackType] = useState<FeedbackType>('bug');
+  const [feedbackTitle, setFeedbackTitle] = useState('');
+  const [feedbackDescription, setFeedbackDescription] = useState('');
+  const [feedbackEmail, setFeedbackEmail] = useState('');
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const generationMode = getGenerationMode();
   const remoteAuthMode = getRemoteAuthMode();
 
@@ -58,11 +66,44 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
       URL.revokeObjectURL(url);
       const fileInfo = result.fileCount ? `${result.fileCount} files` : 'repository ZIP';
       setGenerateMessage(`Generated ${fileInfo} as ${result.filename} (${result.mode})`);
+      setLastErrorReport(null);
     } catch (error) {
       console.error(error);
-      setGenerateMessage(error instanceof Error ? error.message : 'Repository generation failed.');
+      const message = error instanceof Error ? error.message : 'Repository generation failed.';
+      setGenerateMessage(message);
+      setLastErrorReport({
+        timestamp: new Date().toISOString(),
+        message,
+        mode: generationMode,
+        spec: buildProjectSpec(state),
+      });
     } finally {
       setIsGenerating(false);
+    }
+  }
+
+  async function handleSubmitFeedback() {
+    try {
+      setIsSubmittingFeedback(true);
+      setFeedbackMessage(null);
+      const result = await submitFeedback({
+        type: feedbackType,
+        title: feedbackTitle,
+        description: feedbackDescription,
+        email: feedbackEmail,
+        state,
+        errorReport: feedbackType === 'bug' ? lastErrorReport : null,
+        authToken,
+      });
+      setFeedbackMessage(result.message);
+      if (result.ok) {
+        setFeedbackTitle('');
+        setFeedbackDescription('');
+      }
+    } catch (error) {
+      setFeedbackMessage(error instanceof Error ? error.message : 'Feedback submit failed');
+    } finally {
+      setIsSubmittingFeedback(false);
     }
   }
 
@@ -131,8 +172,68 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
         >
           {isGenerating ? 'Generating...' : `Generate Repository (ZIP / ${generationMode})`}
         </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (lastErrorReport) downloadErrorReport(lastErrorReport);
+          }}
+          disabled={!lastErrorReport}
+          className="btn-secondary"
+        >
+          Download Error JSON
+        </button>
       </div>
       {generateMessage && <p>{generateMessage}</p>}
+
+      <div className="form-field" style={{ marginTop: '1rem' }}>
+        <h3>Feedback</h3>
+        <label htmlFor="feedbackType">Type</label>
+        <select
+          id="feedbackType"
+          value={feedbackType}
+          onChange={(e) => setFeedbackType(e.target.value as FeedbackType)}
+        >
+          <option value="bug">Bug Report</option>
+          <option value="request">Feature Request</option>
+        </select>
+
+        <label htmlFor="feedbackTitle">Title</label>
+        <input
+          id="feedbackTitle"
+          type="text"
+          value={feedbackTitle}
+          onChange={(e) => setFeedbackTitle(e.target.value)}
+          placeholder="Short summary"
+        />
+
+        <label htmlFor="feedbackDescription">Description</label>
+        <textarea
+          id="feedbackDescription"
+          value={feedbackDescription}
+          onChange={(e) => setFeedbackDescription(e.target.value)}
+          placeholder="Describe issue/request in detail"
+          rows={4}
+        />
+
+        <label htmlFor="feedbackEmail">Email (optional)</label>
+        <input
+          id="feedbackEmail"
+          type="email"
+          value={feedbackEmail}
+          onChange={(e) => setFeedbackEmail(e.target.value)}
+          placeholder="name@gugenka.co.jp"
+        />
+
+        <button
+          type="button"
+          onClick={handleSubmitFeedback}
+          disabled={isSubmittingFeedback || feedbackTitle.trim().length < 3 || feedbackDescription.trim().length < 10}
+          className="btn-primary"
+        >
+          {isSubmittingFeedback ? 'Submitting...' : 'Submit Feedback'}
+        </button>
+        {feedbackMessage && <p>{feedbackMessage}</p>}
+      </div>
     </section>
   );
 }

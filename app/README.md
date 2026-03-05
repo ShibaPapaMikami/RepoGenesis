@@ -55,6 +55,8 @@ npm run dev
 - `VITE_REMOTE_AUTH_MODE=cookie_session`: 手動トークン入力なし。ブラウザのセッションクッキーで API を呼ぶ
 - `Generate Repository` は `POST /api/v1/repositories/generate` を呼ぶ
 - レスポンスZIPをそのままダウンロードする
+- 失敗時は `Download Error JSON` でエラー情報を共有可能
+- フォーム下部の `Feedback` から bug/request を送信可能
 
 Cloudflare Pages 公開手順:
 - `docs/CLOUDFLARE_PAGES_DEPLOY.md`

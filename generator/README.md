@@ -108,6 +108,9 @@ npm run start:api
 - OAuth 本実装は今後 `@gugenka/auth` に置き換える（境界のみ）。
 - 成功時レスポンス: ZIP バイナリ（`Content-Type: application/zip`）
 - 監査ログ: `generator/logs/orchestration-audit.log`（JSONL）
+- フィードバック保存:
+  - `POST /api/v1/feedback/bug` → `logs/feedback/bugs/*.json`
+  - `POST /api/v1/feedback/request` → `logs/feedback/requests/*.json`
 
 環境変数:
 - `AUTH_PROVIDER=mock` (default): `dev-token` / `forbidden-token` を利用
