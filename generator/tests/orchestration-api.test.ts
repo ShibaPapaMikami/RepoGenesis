@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect } from 'vitest';
 import { handleGenerateApiDownloadRequest, handleGenerateApiRequest } from '../src/orchestration/api';
 
 const VALID_SPEC = {
@@ -35,9 +35,19 @@ const VALID_SPEC = {
 };
 
 describe('orchestration api', () => {
+  afterEach(() => {
+    delete process.env.GENERATE_REQUIRE_AUTH;
+  });
+
   it('returns 401 without authorization header', async () => {
     const res = await handleGenerateApiRequest(undefined, undefined, { spec: VALID_SPEC });
     expect(res.status).toBe(401);
+  });
+
+  it('allows generation without auth when GENERATE_REQUIRE_AUTH=false', async () => {
+    process.env.GENERATE_REQUIRE_AUTH = 'false';
+    const res = await handleGenerateApiRequest(undefined, undefined, { spec: VALID_SPEC });
+    expect(res.status).toBe(200);
   });
 
   it('returns 403 when token has no required role', async () => {

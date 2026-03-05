@@ -119,6 +119,8 @@ npm run start:api
 - `SESSION_AUDIENCE` (default: `repogenesis`)
 - `AUTH_ALLOWED_EMAILS` (optional, comma-separated)
 - `CORS_ALLOW_ORIGIN` (本番は app 公開ドメインに固定)
+- `GENERATE_REQUIRE_AUTH` (default: `true`)
+  - `false` にすると ZIP生成APIの認証を一時的に無効化（検証用）
 
 認証入力:
 - `AUTH_PROVIDER=mock`: `Authorization: Bearer <token>` 必須

@@ -46,6 +46,10 @@ interface PreparedGenerateRequest {
   spec: ReturnType<typeof projectSpecSchema.parse>;
 }
 
+function requiresGenerateAuth(): boolean {
+  return (process.env.GENERATE_REQUIRE_AUTH ?? 'true').toLowerCase() !== 'false';
+}
+
 function toRequestId(maybeId: unknown): string {
   if (typeof maybeId === 'string' && maybeId.length > 0) return maybeId;
   return `srv-${Date.now()}`;
@@ -60,11 +64,12 @@ async function prepareGenerateRequest(
   cookieHeader: string | undefined,
   payload: unknown,
 ): Promise<ApiResponse<PreparedGenerateRequest | GenerateApiError>> {
+  const enforceAuth = requiresGenerateAuth();
   const auth = await authorizeRequestAsync(authHeader, cookieHeader);
-  if (!auth.ok || !auth.context) {
+  if ((!auth.ok || !auth.context) && enforceAuth) {
     return { status: auth.status, body: { error: auth.error ?? 'Unauthorized' } };
   }
-  if (!hasGeneratePermission(auth.context)) {
+  if (auth.ok && auth.context && !hasGeneratePermission(auth.context) && enforceAuth) {
     return { status: 403, body: { error: 'Forbidden' } };
   }
 
@@ -94,7 +99,7 @@ async function prepareGenerateRequest(
     status: 200,
     body: {
       requestId,
-      userId: auth.context.userId,
+      userId: auth.ok && auth.context ? auth.context.userId : 'anonymous',
       spec: parsed.data,
     },
   };
