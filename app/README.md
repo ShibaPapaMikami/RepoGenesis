@@ -52,7 +52,7 @@ npm run dev
 ```
 
 - `VITE_REMOTE_AUTH_MODE=manual_bearer`（default）: UI に `API Token (Bearer)` 入力欄が表示される
-- `VITE_REMOTE_AUTH_MODE=cookie_session`: 手動トークン入力なし。ブラウザのセッションクッキーで API を呼ぶ
+- `VITE_REMOTE_AUTH_MODE=cookie_session`: 手動トークン入力なし。`/api/orchestration` プロキシ経由で API を呼ぶ
 - `Generate Repository` は `POST /api/v1/repositories/generate` を呼ぶ
 - レスポンスZIPをそのままダウンロードする
 - 失敗時は `Download Error JSON` でエラー情報を共有可能

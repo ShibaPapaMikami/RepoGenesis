@@ -20,11 +20,12 @@ Project settings:
 - Output directory: `dist`
 
 Environment variables:
-- `VITE_ORCHESTRATION_API_URL=https://<your-api-domain>`
+- `VITE_ORCHESTRATION_API_URL=/api/orchestration`
 - `VITE_REMOTE_AUTH_MODE=cookie_session`
+- `ORCHESTRATION_API_URL=https://<your-api-domain>` (Vercel server-side env for BFF proxy)
 
 Result:
-- UI から手動 Bearer 入力をなくし、ブラウザセッションで API 呼び出し
+- UI から手動 Bearer 入力をなくし、同一オリジン(`/api/orchestration`)経由で API 呼び出し
 
 ## 2. Deploy orchestration API
 

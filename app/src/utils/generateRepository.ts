@@ -11,17 +11,26 @@ export interface GenerateRepositoryResult {
 
 const API_BASE = import.meta.env.VITE_ORCHESTRATION_API_URL as string | undefined;
 const REMOTE_AUTH_MODE = (import.meta.env.VITE_REMOTE_AUTH_MODE as string | undefined) ?? 'manual_bearer';
+const PROXY_BASE = '/api/orchestration';
 
 export function getOrchestrationApiBase(): string | undefined {
   return API_BASE;
 }
 
 export function getGenerationMode(): 'local' | 'remote' {
+  if (getRemoteAuthMode() === 'cookie_session') return 'remote';
   return API_BASE && API_BASE.length > 0 ? 'remote' : 'local';
 }
 
 export function getRemoteAuthMode(): 'manual_bearer' | 'cookie_session' {
   return REMOTE_AUTH_MODE === 'cookie_session' ? 'cookie_session' : 'manual_bearer';
+}
+
+function resolveApiBase(authMode: 'manual_bearer' | 'cookie_session'): string | undefined {
+  if (authMode === 'cookie_session') {
+    return PROXY_BASE;
+  }
+  return API_BASE;
 }
 
 function parseFilenameFromContentDisposition(headerValue: string | null, fallback: string): string {
@@ -32,10 +41,11 @@ function parseFilenameFromContentDisposition(headerValue: string | null, fallbac
 }
 
 async function generateRepositoryRemote(state: FormState, authToken: string): Promise<GenerateRepositoryResult> {
-  if (!API_BASE) {
+  const authMode = getRemoteAuthMode();
+  const apiBase = resolveApiBase(authMode);
+  if (!apiBase) {
     throw new Error('VITE_ORCHESTRATION_API_URL が未設定です');
   }
-  const authMode = getRemoteAuthMode();
   if (authMode === 'manual_bearer' && (!authToken || authToken.trim().length === 0)) {
     throw new Error('リモート生成には API トークンが必要です');
   }
@@ -50,7 +60,7 @@ async function generateRepositoryRemote(state: FormState, authToken: string): Pr
 
   let response: Response;
   try {
-    response = await fetch(`${API_BASE}/api/v1/repositories/generate`, {
+    response = await fetch(`${apiBase}/repositories/generate`, {
       method: 'POST',
       headers,
       credentials: authMode === 'cookie_session' ? 'include' : 'same-origin',
