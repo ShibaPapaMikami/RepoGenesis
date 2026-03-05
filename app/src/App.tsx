@@ -10,6 +10,8 @@ import { WorkflowSection } from './components/sections/WorkflowSection';
 import { JsonOutput } from './components/output/JsonOutput';
 import './App.css';
 
+declare const __APP_VERSION__: string;
+
 const TEST_FILL_STATE = {
   project: {
     name: 'RepoGenesis Test Project',
@@ -87,6 +89,7 @@ function App() {
       <header className="app-header">
         <h1>RepoGenesis</h1>
         <p>AI対応リポジトリ構造ジェネレータ</p>
+        <p className="app-version">デプロイ版: {__APP_VERSION__}</p>
       </header>
 
       <main className="app-main">

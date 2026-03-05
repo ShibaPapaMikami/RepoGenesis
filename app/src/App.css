@@ -21,6 +21,13 @@
   color: #666;
 }
 
+.app-version {
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  color: #0d47a1;
+  font-weight: 600;
+}
+
 .app-main {
   display: flex;
   flex-direction: column;

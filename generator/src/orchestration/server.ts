@@ -28,7 +28,9 @@ function resolveCorsOrigin(requestOrigin: string | undefined): string {
   if (CORS_ALLOWED_ORIGINS.includes(requestOrigin)) {
     return requestOrigin;
   }
-  return CORS_ALLOWED_ORIGINS[0] ?? requestOrigin;
+  // Fallback to request origin to avoid browser-side credentialed CORS failures
+  // when preview/custom domains are used.
+  return requestOrigin;
 }
 
 function applyCorsHeaders(reqOrigin: string | undefined, res: ServerResponse): void {
