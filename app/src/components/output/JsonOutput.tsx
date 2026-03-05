@@ -9,9 +9,13 @@ interface JsonOutputProps {
   state: FormState;
   canExport: boolean;
   errors: Record<string, string>;
+  authSession: {
+    authenticated: boolean;
+    email: string | null;
+  };
 }
 
-export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
+export function JsonOutput({ state, canExport, errors, authSession }: JsonOutputProps) {
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateMessage, setGenerateMessage] = useState<string | null>(null);
@@ -26,6 +30,7 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const generationMode = getGenerationMode();
   const remoteAuthMode = getRemoteAuthMode();
+  const requiresCookieSessionLogin = generationMode === 'remote' && remoteAuthMode === 'cookie_session';
 
   const jsonString = stringifyProjectSpec(state);
 
@@ -180,6 +185,7 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
           disabled={
             !canExport
             || isGenerating
+            || (requiresCookieSessionLogin && !authSession.authenticated)
             || (generationMode === 'remote'
               && remoteAuthMode === 'manual_bearer'
               && authToken.trim().length === 0)
@@ -207,6 +213,9 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
           エラーJSONをダウンロード
         </button>
       </div>
+      {requiresCookieSessionLogin && !authSession.authenticated && (
+        <p className="hint">ZIP 生成には上部の認証セクションでログインが必要です。</p>
+      )}
       {generateMessage && <p>{generateMessage}</p>}
 
       <div className="feedback-panel">

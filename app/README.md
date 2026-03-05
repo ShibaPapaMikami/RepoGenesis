@@ -53,6 +53,10 @@ npm run dev
 
 - `VITE_REMOTE_AUTH_MODE=manual_bearer`（default）: UI に `API Token (Bearer)` 入力欄が表示される
 - `VITE_REMOTE_AUTH_MODE=cookie_session`: 手動トークン入力なし。`/api/orchestration` プロキシ経由で API を呼ぶ
+- `cookie_session` では追加で以下が必要:
+  - Vercel: `ORCHESTRATION_API_URL`, `NEXTAUTH_SECRET`, `SESSION_AUDIENCE`
+  - Vercel client: `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`
+  - Render と Vercel の `NEXTAUTH_SECRET` / `SESSION_AUDIENCE` は一致必須
 - `Generate Repository` は `POST /api/v1/repositories/generate` を呼ぶ
 - レスポンスZIPをそのままダウンロードする
 - 失敗時は `Download Error JSON` でエラー情報を共有可能

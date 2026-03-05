@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useRef, useCallback } from 'react';
+import { useReducer, useEffect, useRef, useCallback, useState } from 'react';
 import { formReducer, initialFormState } from './state/formReducer';
 import { validationErrors, canExport } from './state/selectors';
 import { saveDraft, loadDraft, clearDraft } from './utils/storage';
@@ -8,6 +8,8 @@ import { SecuritySection } from './components/sections/SecuritySection';
 import { StructureSection } from './components/sections/StructureSection';
 import { WorkflowSection } from './components/sections/WorkflowSection';
 import { JsonOutput } from './components/output/JsonOutput';
+import { AuthPanel } from './components/auth/AuthPanel';
+import { getGenerationMode, getRemoteAuthMode } from './utils/generateRepository';
 import './App.css';
 
 declare const __APP_VERSION__: string;
@@ -47,6 +49,10 @@ const TEST_FILL_STATE = {
 
 function App() {
   const [state, dispatch] = useReducer(formReducer, initialFormState);
+  const [authSession, setAuthSession] = useState<{ authenticated: boolean; email: string | null }>({
+    authenticated: false,
+    email: null,
+  });
   const initialized = useRef(false);
 
   // localStorage からドラフト復元（起動時のみ）
@@ -74,6 +80,7 @@ function App() {
 
   const errors = validationErrors(state);
   const exportable = canExport(state);
+  const requiresCookieSession = getGenerationMode() === 'remote' && getRemoteAuthMode() === 'cookie_session';
 
   function handleReset() {
     clearDraft();
@@ -93,12 +100,21 @@ function App() {
       </header>
 
       <main className="app-main">
+        <AuthPanel
+          enabled={requiresCookieSession}
+          onSessionChange={setAuthSession}
+        />
         <ProjectSection state={state} dispatch={dispatch} errors={errors} />
         <TechSection state={state} dispatch={dispatch} errors={errors} />
         <SecuritySection state={state} dispatch={dispatch} />
         <StructureSection state={state} dispatch={dispatch} errors={errors} />
         <WorkflowSection state={state} dispatch={dispatch} errors={errors} />
-        <JsonOutput state={state} canExport={exportable} errors={errors} />
+        <JsonOutput
+          state={state}
+          canExport={exportable}
+          errors={errors}
+          authSession={authSession}
+        />
 
         <div className="app-actions">
           <button type="button" onClick={handleApplyTestInput} className="btn-secondary">

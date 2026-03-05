@@ -1,3 +1,18 @@
+import type { IncomingMessage, ServerResponse } from 'http';
+
+type VercelRequest = IncomingMessage & {
+  method?: string;
+  body?: unknown;
+  headers: IncomingMessage['headers'];
+};
+
+type VercelResponse = ServerResponse & {
+  json: (body: unknown) => void;
+  send: (body: string | Buffer) => void;
+  status: (code: number) => VercelResponse;
+  setHeader: (name: string, value: string) => void;
+};
+
 function getUpstreamBase(): string {
   const raw = process.env.ORCHESTRATION_API_URL;
   if (!raw || raw.trim().length === 0) {
@@ -11,7 +26,7 @@ function pickHeader(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
-export default async function handler(req: any, res: any): Promise<void> {
+export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (req.method === 'OPTIONS') {
     res.status(204).end();
     return;
