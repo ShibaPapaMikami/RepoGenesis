@@ -15,6 +15,7 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateMessage, setGenerateMessage] = useState<string | null>(null);
+  const [generatedZip, setGeneratedZip] = useState<{ blob: Blob; filename: string } | null>(null);
   const [authToken, setAuthToken] = useState('');
   const [lastErrorReport, setLastErrorReport] = useState<ErrorReportPayload | null>(null);
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('bug');
@@ -54,18 +55,14 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
     try {
       setIsGenerating(true);
       setGenerateMessage(null);
+      setGeneratedZip(null);
       if (generationMode === 'remote' && remoteAuthMode === 'manual_bearer') {
         localStorage.setItem('repogenesis_api_token', authToken);
       }
       const result = await generateRepository(state, authToken);
-      const url = URL.createObjectURL(result.blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = result.filename;
-      a.click();
-      URL.revokeObjectURL(url);
+      setGeneratedZip({ blob: result.blob, filename: result.filename });
       const fileInfo = result.fileCount ? `${result.fileCount}ファイル` : 'ZIP';
-      setGenerateMessage(`生成完了: ${result.filename} (${fileInfo}, ${result.mode})`);
+      setGenerateMessage(`生成完了: ${result.filename} (${fileInfo}, ${result.mode})。ZIPをダウンロードしてください。`);
       setLastErrorReport(null);
     } catch (error) {
       console.error(error);
@@ -82,7 +79,26 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
     }
   }
 
+  function handleDownloadGeneratedZip() {
+    if (!generatedZip) return;
+    const url = URL.createObjectURL(generatedZip.blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = generatedZip.filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   async function handleSubmitFeedback() {
+    if (feedbackTitle.trim().length < 3) {
+      setFeedbackMessage('タイトルは3文字以上で入力してください。');
+      return;
+    }
+    if (feedbackDescription.trim().length < 10) {
+      setFeedbackMessage('詳細は10文字以上で入力してください。');
+      return;
+    }
+
     try {
       setIsSubmittingFeedback(true);
       setFeedbackMessage(null);
@@ -174,6 +190,14 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
         </button>
         <button
           type="button"
+          onClick={handleDownloadGeneratedZip}
+          disabled={!generatedZip}
+          className="btn-primary"
+        >
+          ZIPをダウンロード
+        </button>
+        <button
+          type="button"
           onClick={() => {
             if (lastErrorReport) downloadErrorReport(lastErrorReport);
           }}
@@ -238,12 +262,13 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
           <button
             type="button"
             onClick={handleSubmitFeedback}
-            disabled={isSubmittingFeedback || feedbackTitle.trim().length < 3 || feedbackDescription.trim().length < 10}
+            disabled={isSubmittingFeedback}
             className="btn-primary"
           >
             {isSubmittingFeedback ? '送信中...' : 'フィードバックを送信'}
           </button>
         </div>
+        <p className="hint">入力目安: タイトル3文字以上、詳細10文字以上</p>
         {feedbackMessage && <p>{feedbackMessage}</p>}
       </div>
     </section>
