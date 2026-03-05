@@ -8,12 +8,17 @@ const feedbackBaseDir = path.resolve(process.cwd(), 'logs', 'feedback');
 describe('orchestration feedback api', () => {
   afterEach(() => {
     fs.rmSync(feedbackBaseDir, { recursive: true, force: true });
+    delete process.env.FEEDBACK_REQUIRE_AUTH;
   });
 
-  it('returns 401 without authorization in mock mode', async () => {
+  it('accepts anonymous feedback when FEEDBACK_REQUIRE_AUTH is false', async () => {
     process.env.AUTH_PROVIDER = 'mock';
-    const res = await handleFeedbackApiRequest(undefined, undefined, 'bug', {});
-    expect(res.status).toBe(401);
+    process.env.FEEDBACK_REQUIRE_AUTH = 'false';
+    const res = await handleFeedbackApiRequest(undefined, undefined, 'bug', {
+      title: '匿名バグ報告',
+      description: '匿名でも保存できることを確認するためのテストです。',
+    });
+    expect(res.status).toBe(200);
   });
 
   it('returns 400 when payload is invalid', async () => {

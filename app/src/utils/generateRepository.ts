@@ -33,11 +33,11 @@ function parseFilenameFromContentDisposition(headerValue: string | null, fallbac
 
 async function generateRepositoryRemote(state: FormState, authToken: string): Promise<GenerateRepositoryResult> {
   if (!API_BASE) {
-    throw new Error('VITE_ORCHESTRATION_API_URL is not configured');
+    throw new Error('VITE_ORCHESTRATION_API_URL が未設定です');
   }
   const authMode = getRemoteAuthMode();
   if (authMode === 'manual_bearer' && (!authToken || authToken.trim().length === 0)) {
-    throw new Error('Authorization token is required for remote generation');
+    throw new Error('リモート生成には API トークンが必要です');
   }
 
   const spec = buildProjectSpec(state);
@@ -48,18 +48,23 @@ async function generateRepositoryRemote(state: FormState, authToken: string): Pr
     headers.Authorization = `Bearer ${authToken.trim()}`;
   }
 
-  const response = await fetch(`${API_BASE}/api/v1/repositories/generate`, {
-    method: 'POST',
-    headers,
-    credentials: authMode === 'cookie_session' ? 'include' : 'same-origin',
-    body: JSON.stringify({
-      spec,
-      output: { format: 'zip' },
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}/api/v1/repositories/generate`, {
+      method: 'POST',
+      headers,
+      credentials: authMode === 'cookie_session' ? 'include' : 'same-origin',
+      body: JSON.stringify({
+        spec,
+        output: { format: 'zip' },
+      }),
+    });
+  } catch {
+    throw new Error('通信に失敗しました。CORS設定またはAPI稼働状態を確認してください。');
+  }
 
   if (!response.ok) {
-    let msg = `Remote generation failed (${response.status})`;
+    let msg = `リモート生成に失敗しました (${response.status})`;
     try {
       const json = await response.json() as { error?: string };
       if (json?.error) msg = `${msg}: ${json.error}`;

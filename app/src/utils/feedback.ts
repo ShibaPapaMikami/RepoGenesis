@@ -54,7 +54,7 @@ export async function submitFeedback(input: SubmitFeedbackInput): Promise<Submit
   if (getGenerationMode() !== 'remote' || !getOrchestrationApiBase()) {
     const fileLabel = input.type === 'bug' ? 'bug' : 'request';
     triggerJsonDownload(`repogenesis-${fileLabel}-${Date.now()}.json`, payload);
-    return { ok: true, message: 'Saved locally as JSON file' };
+    return { ok: true, message: 'ローカルに JSON として保存しました' };
   }
 
   const apiBase = getOrchestrationApiBase() as string;
@@ -64,15 +64,20 @@ export async function submitFeedback(input: SubmitFeedbackInput): Promise<Submit
     headers.Authorization = `Bearer ${input.authToken.trim()}`;
   }
 
-  const response = await fetch(`${apiBase}/api/v1/feedback/${input.type}`, {
-    method: 'POST',
-    headers,
-    credentials: remoteAuthMode === 'cookie_session' ? 'include' : 'same-origin',
-    body: JSON.stringify(payload),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${apiBase}/api/v1/feedback/${input.type}`, {
+      method: 'POST',
+      headers,
+      credentials: remoteAuthMode === 'cookie_session' ? 'include' : 'same-origin',
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    return { ok: false, message: '送信に失敗しました。API通信またはCORS設定を確認してください。' };
+  }
 
   if (!response.ok) {
-    let msg = `Feedback submit failed (${response.status})`;
+    let msg = `送信に失敗しました (${response.status})`;
     try {
       const json = await response.json() as { error?: string };
       if (json.error) msg = `${msg}: ${json.error}`;
@@ -82,6 +87,6 @@ export async function submitFeedback(input: SubmitFeedbackInput): Promise<Submit
     return { ok: false, message: msg };
   }
 
-  const kind = input.type === 'bug' ? 'Bug report' : 'Request';
-  return { ok: true, message: `${kind} saved successfully` };
+  const kind = input.type === 'bug' ? '不具合報告' : '要望';
+  return { ok: true, message: `${kind}を保存しました` };
 }

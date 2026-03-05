@@ -41,6 +41,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+function requiresFeedbackAuth(): boolean {
+  return (process.env.FEEDBACK_REQUIRE_AUTH ?? 'false').toLowerCase() === 'true';
+}
+
 export async function handleFeedbackApiRequest(
   authHeader: string | undefined,
   cookieHeader: string | undefined,
@@ -48,7 +52,7 @@ export async function handleFeedbackApiRequest(
   payload: unknown,
 ): Promise<ApiResponse<FeedbackApiSuccess | FeedbackApiError>> {
   const auth = await authorizeRequestAsync(authHeader, cookieHeader);
-  if (!auth.ok || !auth.context) {
+  if ((!auth.ok || !auth.context) && requiresFeedbackAuth()) {
     return { status: auth.status, body: { error: auth.error ?? 'Unauthorized' } };
   }
 
@@ -71,12 +75,13 @@ export async function handleFeedbackApiRequest(
   }
 
   const feedbackId = `${feedbackType}-${Date.now()}`;
+  const userId = auth.ok && auth.context ? auth.context.userId : 'anonymous';
   const stored = persistFeedback({
     feedbackId,
     requestId,
     createdAt: new Date().toISOString(),
     type: feedbackType,
-    userId: auth.context.userId,
+    userId,
     title,
     description,
     email,

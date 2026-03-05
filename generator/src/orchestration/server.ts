@@ -9,6 +9,7 @@ const HOST = process.env.HOST ?? '0.0.0.0';
 const CORS_ALLOW_ORIGIN = process.env.CORS_ALLOW_ORIGIN ?? '*';
 const CORS_ALLOW_HEADERS = 'Authorization, Content-Type';
 const CORS_EXPOSE_HEADERS = 'Content-Disposition, X-Request-Id, X-Spec-Version, X-File-Count';
+const CORS_ALLOWED_ORIGINS = CORS_ALLOW_ORIGIN.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
 
 function jsonResponse(status: number, body: unknown): { status: number; text: string } {
   return {
@@ -17,15 +18,31 @@ function jsonResponse(status: number, body: unknown): { status: number; text: st
   };
 }
 
-function applyCorsHeaders(res: ServerResponse): void {
-  res.setHeader('Access-Control-Allow-Origin', CORS_ALLOW_ORIGIN);
+function resolveCorsOrigin(requestOrigin: string | undefined): string {
+  if (!requestOrigin || requestOrigin.length === 0) {
+    return CORS_ALLOWED_ORIGINS[0] ?? '*';
+  }
+  if (CORS_ALLOWED_ORIGINS.includes('*')) {
+    return requestOrigin;
+  }
+  if (CORS_ALLOWED_ORIGINS.includes(requestOrigin)) {
+    return requestOrigin;
+  }
+  return CORS_ALLOWED_ORIGINS[0] ?? requestOrigin;
+}
+
+function applyCorsHeaders(reqOrigin: string | undefined, res: ServerResponse): void {
+  res.setHeader('Access-Control-Allow-Origin', resolveCorsOrigin(reqOrigin));
   res.setHeader('Access-Control-Allow-Headers', CORS_ALLOW_HEADERS);
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Expose-Headers', CORS_EXPOSE_HEADERS);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Vary', 'Origin');
 }
 
 const server = createServer((req, res) => {
-  applyCorsHeaders(res);
+  const reqOrigin = typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
+  applyCorsHeaders(reqOrigin, res);
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);

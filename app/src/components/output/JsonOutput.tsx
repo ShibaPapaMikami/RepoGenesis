@@ -64,12 +64,12 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
       a.download = result.filename;
       a.click();
       URL.revokeObjectURL(url);
-      const fileInfo = result.fileCount ? `${result.fileCount} files` : 'repository ZIP';
-      setGenerateMessage(`Generated ${fileInfo} as ${result.filename} (${result.mode})`);
+      const fileInfo = result.fileCount ? `${result.fileCount}ファイル` : 'ZIP';
+      setGenerateMessage(`生成完了: ${result.filename} (${fileInfo}, ${result.mode})`);
       setLastErrorReport(null);
     } catch (error) {
       console.error(error);
-      const message = error instanceof Error ? error.message : 'Repository generation failed.';
+      const message = error instanceof Error ? error.message : 'リポジトリ生成に失敗しました。';
       setGenerateMessage(message);
       setLastErrorReport({
         timestamp: new Date().toISOString(),
@@ -101,7 +101,7 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
         setFeedbackDescription('');
       }
     } catch (error) {
-      setFeedbackMessage(error instanceof Error ? error.message : 'Feedback submit failed');
+      setFeedbackMessage(error instanceof Error ? error.message : '送信に失敗しました');
     } finally {
       setIsSubmittingFeedback(false);
     }
@@ -129,14 +129,14 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
       </div>
 
       {generationMode === 'remote' && remoteAuthMode === 'manual_bearer' && (
-        <div className="form-field">
-          <label htmlFor="apiToken">API Token (Bearer)</label>
+        <div className="form-row">
+          <label htmlFor="apiToken">APIトークン (Bearer)</label>
           <input
             id="apiToken"
             type="password"
             value={authToken}
             onChange={(e) => setAuthToken(e.target.value)}
-            placeholder="Paste bearer token"
+            placeholder="Bearerトークンを入力"
           />
         </div>
       )}
@@ -148,7 +148,7 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
           disabled={!canExport}
           className="btn-primary"
         >
-          Download JSON
+          JSONをダウンロード
         </button>
         <button
           type="button"
@@ -156,7 +156,7 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
           disabled={!canExport}
           className="btn-secondary"
         >
-          {copied ? 'Copied!' : 'Copy JSON'}
+          {copied ? 'コピー済み' : 'JSONをコピー'}
         </button>
         <button
           type="button"
@@ -170,7 +170,7 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
           }
           className="btn-primary"
         >
-          {isGenerating ? 'Generating...' : `Generate Repository (ZIP / ${generationMode})`}
+          {isGenerating ? '生成中...' : `リポジトリ生成 (ZIP / ${generationMode})`}
         </button>
         <button
           type="button"
@@ -180,58 +180,70 @@ export function JsonOutput({ state, canExport, errors }: JsonOutputProps) {
           disabled={!lastErrorReport}
           className="btn-secondary"
         >
-          Download Error JSON
+          エラーJSONをダウンロード
         </button>
       </div>
       {generateMessage && <p>{generateMessage}</p>}
 
-      <div className="form-field" style={{ marginTop: '1rem' }}>
-        <h3>Feedback</h3>
-        <label htmlFor="feedbackType">Type</label>
-        <select
-          id="feedbackType"
-          value={feedbackType}
-          onChange={(e) => setFeedbackType(e.target.value as FeedbackType)}
-        >
-          <option value="bug">Bug Report</option>
-          <option value="request">Feature Request</option>
-        </select>
+      <div className="feedback-panel">
+        <h3>フィードバック</h3>
+        <div className="feedback-grid">
+          <div className="form-row">
+            <label htmlFor="feedbackType">種別</label>
+            <select
+              id="feedbackType"
+              value={feedbackType}
+              onChange={(e) => setFeedbackType(e.target.value as FeedbackType)}
+            >
+              <option value="bug">不具合報告</option>
+              <option value="request">要望</option>
+            </select>
+          </div>
 
-        <label htmlFor="feedbackTitle">Title</label>
-        <input
-          id="feedbackTitle"
-          type="text"
-          value={feedbackTitle}
-          onChange={(e) => setFeedbackTitle(e.target.value)}
-          placeholder="Short summary"
-        />
+          <div className="form-row">
+            <label htmlFor="feedbackTitle">タイトル</label>
+            <input
+              id="feedbackTitle"
+              type="text"
+              value={feedbackTitle}
+              onChange={(e) => setFeedbackTitle(e.target.value)}
+              placeholder="例: ZIP生成が失敗する"
+            />
+          </div>
 
-        <label htmlFor="feedbackDescription">Description</label>
-        <textarea
-          id="feedbackDescription"
-          value={feedbackDescription}
-          onChange={(e) => setFeedbackDescription(e.target.value)}
-          placeholder="Describe issue/request in detail"
-          rows={4}
-        />
+          <div className="form-row feedback-description">
+            <label htmlFor="feedbackDescription">詳細</label>
+            <textarea
+              id="feedbackDescription"
+              value={feedbackDescription}
+              onChange={(e) => setFeedbackDescription(e.target.value)}
+              placeholder="再現手順や発生条件を記載してください"
+              rows={4}
+            />
+          </div>
 
-        <label htmlFor="feedbackEmail">Email (optional)</label>
-        <input
-          id="feedbackEmail"
-          type="email"
-          value={feedbackEmail}
-          onChange={(e) => setFeedbackEmail(e.target.value)}
-          placeholder="name@gugenka.co.jp"
-        />
+          <div className="form-row">
+            <label htmlFor="feedbackEmail">連絡先メール（任意）</label>
+            <input
+              id="feedbackEmail"
+              type="email"
+              value={feedbackEmail}
+              onChange={(e) => setFeedbackEmail(e.target.value)}
+              placeholder="name@gugenka.co.jp"
+            />
+          </div>
+        </div>
 
-        <button
-          type="button"
-          onClick={handleSubmitFeedback}
-          disabled={isSubmittingFeedback || feedbackTitle.trim().length < 3 || feedbackDescription.trim().length < 10}
-          className="btn-primary"
-        >
-          {isSubmittingFeedback ? 'Submitting...' : 'Submit Feedback'}
-        </button>
+        <div className="output-actions">
+          <button
+            type="button"
+            onClick={handleSubmitFeedback}
+            disabled={isSubmittingFeedback || feedbackTitle.trim().length < 3 || feedbackDescription.trim().length < 10}
+            className="btn-primary"
+          >
+            {isSubmittingFeedback ? '送信中...' : 'フィードバックを送信'}
+          </button>
+        </div>
         {feedbackMessage && <p>{feedbackMessage}</p>}
       </div>
     </section>

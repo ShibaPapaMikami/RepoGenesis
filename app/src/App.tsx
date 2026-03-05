@@ -10,6 +10,39 @@ import { WorkflowSection } from './components/sections/WorkflowSection';
 import { JsonOutput } from './components/output/JsonOutput';
 import './App.css';
 
+const TEST_FILL_STATE = {
+  project: {
+    name: 'RepoGenesis Test Project',
+    slug: 'repogenesis-test',
+    description: 'テスト入力で自動セットされたプロジェクトです',
+    owner: 'Gugenka QA',
+  },
+  tech: {
+    domains: ['web'] as const,
+    primary_language: 'typescript' as const,
+    frameworks: ['React', 'Vite'],
+    ai_tool: 'claude_cli' as const,
+    ai_tool_detail: '',
+  },
+  security: {
+    level: 'medium' as const,
+    has_api_keys: true,
+    has_user_data: true,
+    has_payment_data: false,
+    has_ip_sensitive: false,
+    has_credentials: false,
+  },
+  structure: {
+    repo_type: 'single' as const,
+    repos: [],
+  },
+  workflow: {
+    phases_count: 3,
+  },
+  slugManuallyEdited: true,
+  securityLevelOverride: null,
+};
+
 function App() {
   const [state, dispatch] = useReducer(formReducer, initialFormState);
   const initialized = useRef(false);
@@ -45,6 +78,10 @@ function App() {
     dispatch({ type: 'RESET' });
   }
 
+  function handleApplyTestInput() {
+    dispatch({ type: 'RESTORE_DRAFT', payload: TEST_FILL_STATE });
+  }
+
   return (
     <div className="app">
       <header className="app-header">
@@ -61,6 +98,9 @@ function App() {
         <JsonOutput state={state} canExport={exportable} errors={errors} />
 
         <div className="app-actions">
+          <button type="button" onClick={handleApplyTestInput} className="btn-secondary">
+            テスト入力を適用
+          </button>
           <button type="button" onClick={handleReset} className="btn-reset">
             Reset
           </button>

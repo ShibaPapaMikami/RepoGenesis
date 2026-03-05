@@ -322,10 +322,38 @@
 
 .output-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.feedback-panel {
+  margin-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 1rem;
+}
+
+.feedback-panel h3 {
+  margin: 0 0 0.75rem;
+}
+
+.feedback-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.feedback-description {
+  grid-column: 1 / -1;
 }
 
 .app-actions {
   display: flex;
+  gap: 0.75rem;
   justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .feedback-grid {
+    grid-template-columns: 1fr;
+  }
 }
