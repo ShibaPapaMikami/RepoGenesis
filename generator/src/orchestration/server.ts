@@ -4,6 +4,7 @@ import type { GenerateApiDownloadSuccess, GenerateApiError } from './api';
 import { handleGenerateApiDownloadRequest } from './api';
 
 const PORT = Number(process.env.PORT ?? 8002);
+const HOST = process.env.HOST ?? '0.0.0.0';
 const CORS_ALLOW_ORIGIN = process.env.CORS_ALLOW_ORIGIN ?? '*';
 const CORS_ALLOW_HEADERS = 'Authorization, Content-Type';
 const CORS_EXPOSE_HEADERS = 'Content-Disposition, X-Request-Id, X-Spec-Version, X-File-Count';
@@ -101,7 +102,7 @@ const server = createServer((req, res) => {
   });
 });
 
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, HOST, () => {
   // eslint-disable-next-line no-console
-  console.log(`RepoGenesis orchestration API listening on http://127.0.0.1:${PORT}`);
+  console.log(`RepoGenesis orchestration API listening on http://${HOST}:${PORT}`);
 });
