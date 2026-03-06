@@ -1,10 +1,10 @@
 # ACTIVE_CONTEXT.md — Current Project State
 
 ## Last Updated
-2026-03-04
+2026-03-06
 
 ## Current Phase
-Phase 3 — Usability & Integration (In Progress)
+Phase 4 — Authenticated Web System (In Progress)
 
 ## What Has Been Done
 - Phase 0 完了:
@@ -27,28 +27,29 @@ Phase 3 — Usability & Integration (In Progress)
     - テスト26件全パス、`npm run build` 成功、`node dist/index.js` で実行可能
 
 ## What Is Being Done Now
-- Web Form から `generateFromSpec` を直接呼ぶ ZIP 生成フローを検証中。
-- 実機検証（2026-03-03）:
-  - multi: pass (`/test/test20260303`, `manifest.fileCount=18`)
-  - single: pass (`/test/single20260303`, `manifest.fileCount=16`)
-- OAuth orchestration API の MVP スケルトンを実装:
-  - `POST /api/v1/repositories/generate`
-  - `401/403/400/200` の境界応答
-  - `validate + authorize + invoke` を分離
-  - 成功時 ZIP バイナリレスポンス化（`application/zip`）
-  - 監査ログ出力（`generator/logs/orchestration-audit.log`）
-  - Auth adapter導入（`AUTH_PROVIDER=mock|gugenka`）
-  - `gugenka-auth` server session verifier を vendor 取り込み（`generator/src/vendor/gugenka-auth`）
-  - Auth adapterテスト追加（mock成功 + gugenka未導入エラー）
-  - Cloudflare Pages 公開手順を追加（`docs/CLOUDFLARE_PAGES_DEPLOY.md`）
-  - API疎通スモークスクリプト追加（`generator/scripts/smoke-orchestration.sh`）
-  - app向け環境変数テンプレート追加（`app/.env.example`）
-  - API認証を Bearer + cookie session 両対応化（gugenka provider）
-  - app に remote auth mode を追加（`VITE_REMOTE_AUTH_MODE=manual_bearer|cookie_session`）
-  - Vercel公開手順を追加（`docs/VERCEL_DEPLOY.md`）
+- Vercel + Render 構成で、本番相当の cookie-session ZIP 生成を成立させた。
+- 実機状態:
+  - Firebase ログイン: pass
+  - Vercel 側 `__session` 発行: pass
+  - Render 側 ZIP 生成: pass
+  - 個別 allowlist (`AUTH_ALLOWED_EMAILS`) で生成認可: pass
+- 追加した本番構成:
+  - `app/api/orchestration/*` の Vercel BFF
+  - `app/api/auth/*` の Vercel session APIs
+  - `app/public/vendor/gugenka-auth.*` によるブラウザ認証 UI
+  - app 上部の認証パネル
+  - デプロイ版ラベル表示
+- いまの主要テーマ:
+  - 個別メール許可から `gugenka.jp` ドメイン許可へ移行
+  - 非エンジニア向け UX へ切り替える設計
+  - AI 補助による入力品質向上
 
 ## What Is Blocked
-- Nothing currently blocked.
+- 技術的 blocker は解消済み。
+- 残る blocker は運用設計:
+  - 生成認可が `AUTH_ALLOWED_EMAILS` 依存でスケールしない
+  - 非エンジニア向け入力 UX が未整備
+  - feedback 保存がローカルファイルで永続性に欠ける
 
 ## Key Decisions Made
 - React + Vite (SPA)。Next.jsは後回し。(ADR-0001)
@@ -58,6 +59,8 @@ Phase 3 — Usability & Integration (In Progress)
 - created_atはExport時付与。stateに保持しない。
 - localStorageでドラフト自動保存。
 - OAuth 境界設計を固定: auth は実行権限のみ、生成ロジック非依存（ADR-0003）。
+- 本番の browser -> API 呼び出しは cross-site cookie ではなく Vercel BFF 経由に固定する。
+- `gugenka.jp` を実運用ドメインとし、`gugenka.co.jp` は使わない。
 
 ## Technical Decisions Locked
 - Runtime validation: zod（スキーマ定義と型推論を一元化）
@@ -72,6 +75,9 @@ Phase 3 — Usability & Integration (In Progress)
 - interactive CLIなし（対話的プロンプト未対応）
 - skill injectionなし（テンプレートの外部差し込み未対応）
 - template versioningなし（テンプレートのバージョン管理未対応）
+- 非エンジニア向け `かんたん入力` が未実装
+- generator の生成認可がドメインではなく個別メール allowlist 中心
+- feedback 保存先が Render ローカルファイル
 
 ## Files That Exist
 - `claude.md`
@@ -88,15 +94,14 @@ Phase 3 — Usability & Integration (In Progress)
   - `tests/schema.test.ts`, `tests/generator.test.ts`
 
 ## Next Phase
-Phase 3 — Usability & Distribution
-- README/使い方整備（Web ZIPフローを明文化）
-- npm linkで `repogenesis` コマンド化
-- dry-run追加
-- テンプレートのバージョン付け方針
+Phase 5 — Usability for Non-Engineers
+- `かんたん入力` モード追加
+- 生成前要約の導入
+- AI 相談プロンプトの UI 埋め込み
 
 ## Upcoming Focus
-Phase 4 準備:
-- OAuth orchestration API 契約を固定（`docs/OAUTH_ORCHESTRATION_API.md`）
-- `gugenka-auth` server session 実装を vendor 化し、依存導入なしで runtime 実統合を完了（現在65テスト全通過）。
-- 次は upstream `@gugenka/auth` package 置換を行うかを判断する。
-- 本番では `VITE_REMOTE_AUTH_MODE=cookie_session` を固定し、手動Bearer入力を無効にする。
+Immediate next:
+- generator 側の認可を `AUTH_ALLOWED_DOMAINS=gugenka.jp` へ対応させる
+- 本番 UI から manual bearer を隠す
+- 非エンジニア向け質問セットを定義する
+- feedback の永続保存先を決める
