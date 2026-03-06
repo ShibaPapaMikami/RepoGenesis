@@ -1,7 +1,18 @@
 import { useReducer, useEffect, useRef, useCallback, useState } from 'react';
 import { formReducer, initialFormState } from './state/formReducer';
 import { validationErrors, canExport } from './state/selectors';
-import { saveDraft, loadDraft, clearDraft } from './utils/storage';
+import {
+  saveDraft,
+  loadDraft,
+  clearDraft,
+  saveConsultationText,
+  loadConsultationText,
+  saveConsultationDraft,
+  loadConsultationDraft,
+  saveInputMode,
+  loadInputMode,
+  clearConsultationState,
+} from './utils/storage';
 import { ProjectSection } from './components/sections/ProjectSection';
 import { TechSection } from './components/sections/TechSection';
 import { SecuritySection } from './components/sections/SecuritySection';
@@ -52,9 +63,9 @@ const TEST_FILL_STATE = {
 
 function App() {
   const [state, dispatch] = useReducer(formReducer, initialFormState);
-  const [inputMode, setInputMode] = useState<'consultation' | 'detail'>('consultation');
-  const [consultationText, setConsultationText] = useState('');
-  const [consultationDraft, setConsultationDraft] = useState<IntakeDraft | null>(null);
+  const [inputMode, setInputMode] = useState<'consultation' | 'detail'>(loadInputMode());
+  const [consultationText, setConsultationText] = useState(loadConsultationText());
+  const [consultationDraft, setConsultationDraft] = useState<IntakeDraft | null>(loadConsultationDraft());
   const [consultationMessage, setConsultationMessage] = useState<string | null>(null);
   const [authSession, setAuthSession] = useState<{ authenticated: boolean; email: string | null }>({
     authenticated: false,
@@ -70,6 +81,12 @@ function App() {
     if (draft) {
       dispatch({ type: 'RESTORE_DRAFT', payload: draft });
     }
+    const restoredMode = loadInputMode();
+    const restoredText = loadConsultationText();
+    const restoredConsultationDraft = loadConsultationDraft();
+    setInputMode(restoredMode);
+    setConsultationText(restoredText);
+    setConsultationDraft(restoredConsultationDraft);
   }, []);
 
   // state 変更時にデバウンス保存（500ms）
@@ -85,13 +102,30 @@ function App() {
     }
   }, [state, debouncedSave]);
 
+  useEffect(() => {
+    saveConsultationText(consultationText);
+  }, [consultationText]);
+
+  useEffect(() => {
+    saveConsultationDraft(consultationDraft);
+  }, [consultationDraft]);
+
+  useEffect(() => {
+    saveInputMode(inputMode);
+  }, [inputMode]);
+
   const errors = validationErrors(state);
   const exportable = canExport(state);
   const requiresCookieSession = getGenerationMode() === 'remote' && getRemoteAuthMode() === 'cookie_session';
 
   function handleReset() {
     clearDraft();
+    clearConsultationState();
     dispatch({ type: 'RESET' });
+    setInputMode('consultation');
+    setConsultationText('');
+    setConsultationDraft(null);
+    setConsultationMessage(null);
   }
 
   function handleApplyTestInput() {
@@ -171,6 +205,33 @@ function App() {
 
         {inputMode === 'detail' && (
           <>
+            {consultationDraft && (
+              <section className="form-section consultation-followup">
+                <h2>相談結果からの確認事項</h2>
+                <p className="consultation-lead">
+                  相談結果から仮置きした内容と未確定事項です。必要に応じて下の詳細入力で調整してください。
+                </p>
+                <div className="consultation-columns">
+                  <div className="consultation-card">
+                    <h4>仮置きした内容</h4>
+                    <ul>
+                      {consultationDraft.certainty.provisional.map((item) => <li key={item}>{item}</li>)}
+                    </ul>
+                  </div>
+                  <div className="consultation-card consultation-card-wide">
+                    <h4>未確定事項</h4>
+                    <ul>
+                      {consultationDraft.certainty.unresolved.map((item) => <li key={item}>{item}</li>)}
+                    </ul>
+                  </div>
+                </div>
+                <div className="output-actions">
+                  <button type="button" onClick={() => setInputMode('consultation')} className="btn-secondary">
+                    相談結果へ戻る
+                  </button>
+                </div>
+              </section>
+            )}
             <ProjectSection state={state} dispatch={dispatch} errors={errors} />
             <TechSection state={state} dispatch={dispatch} errors={errors} />
             <SecuritySection state={state} dispatch={dispatch} />

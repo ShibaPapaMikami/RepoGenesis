@@ -471,6 +471,10 @@
   background: #fff;
 }
 
+.consultation-card-wide {
+  grid-column: span 2;
+}
+
 .consultation-card h4 {
   margin: 0 0 0.5rem;
   font-size: 0.95rem;
@@ -498,6 +502,10 @@
   margin: 0 0 0.45rem;
 }
 
+.consultation-followup {
+  border-color: #dbe5f0;
+}
+
 @media (max-width: 640px) {
   .auth-panel-header {
     flex-direction: column;
@@ -509,5 +517,9 @@
 
   .consultation-columns {
     grid-template-columns: 1fr;
+  }
+
+  .consultation-card-wide {
+    grid-column: span 1;
   }
 }
