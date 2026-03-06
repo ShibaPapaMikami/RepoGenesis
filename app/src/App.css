@@ -437,9 +437,17 @@
   background: linear-gradient(180deg, #fbfdff 0%, #f7fafc 100%);
 }
 
+.consultation-prompt-picker {
+  margin-bottom: 0.5rem;
+}
+
 .consultation-lead,
 .consultation-message {
   margin: 0 0 0.75rem;
+}
+
+.consultation-variant-hint {
+  margin: 0.35rem 0 0;
 }
 
 .consultation-message {

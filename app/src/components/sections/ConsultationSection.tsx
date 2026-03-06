@@ -1,6 +1,8 @@
-import type { IntakeDraft } from '../../utils/intakeParser';
+import { CONSULTATION_PROMPT_OPTIONS, type ConsultationPromptVariant, type IntakeDraft } from '../../utils/intakeParser';
 
 interface ConsultationSectionProps {
+  promptVariant: ConsultationPromptVariant;
+  onChangePromptVariant: (value: ConsultationPromptVariant) => void;
   intakeText: string;
   onChangeText: (value: string) => void;
   onCopyPrompt: () => void;
@@ -13,6 +15,8 @@ interface ConsultationSectionProps {
 }
 
 export function ConsultationSection({
+  promptVariant,
+  onChangePromptVariant,
   intakeText,
   onChangeText,
   onCopyPrompt,
@@ -29,6 +33,26 @@ export function ConsultationSection({
       <p className="consultation-lead">
         ChatGPT / Claude などで壁打ちした結果を貼り付け、RepoGenesis 用の draft に変換します。
       </p>
+
+      <div className="consultation-prompt-picker">
+        <div className="form-row">
+          <label htmlFor="consultationPromptVariant">相談の種類</label>
+          <select
+            id="consultationPromptVariant"
+            value={promptVariant}
+            onChange={(e) => onChangePromptVariant(e.target.value as ConsultationPromptVariant)}
+          >
+            {CONSULTATION_PROMPT_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <p className="hint consultation-variant-hint">
+            {CONSULTATION_PROMPT_OPTIONS.find((option) => option.id === promptVariant)?.description}
+          </p>
+        </div>
+      </div>
 
       <div className="output-actions">
         <button type="button" onClick={onCopyPrompt} className="btn-secondary">

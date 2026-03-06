@@ -22,7 +22,7 @@ import { JsonOutput } from './components/output/JsonOutput';
 import { AuthPanel } from './components/auth/AuthPanel';
 import { getGenerationMode, getRemoteAuthMode } from './utils/generateRepository';
 import { ConsultationSection } from './components/sections/ConsultationSection';
-import { getConsultationPromptTemplate, parseConsultationIntake, type IntakeDraft } from './utils/intakeParser';
+import { getConsultationPromptTemplate, parseConsultationIntake, type ConsultationPromptVariant, type IntakeDraft } from './utils/intakeParser';
 import './App.css';
 
 declare const __APP_RELEASE__: string;
@@ -66,6 +66,7 @@ function App() {
   const [inputMode, setInputMode] = useState<'consultation' | 'detail'>(loadInputMode());
   const [consultationText, setConsultationText] = useState(loadConsultationText());
   const [consultationDraft, setConsultationDraft] = useState<IntakeDraft | null>(loadConsultationDraft());
+  const [consultationPromptVariant, setConsultationPromptVariant] = useState<ConsultationPromptVariant>('internal_tool');
   const [consultationMessage, setConsultationMessage] = useState<string | null>(null);
   const [authSession, setAuthSession] = useState<{ authenticated: boolean; email: string | null }>({
     authenticated: false,
@@ -135,7 +136,7 @@ function App() {
   }
 
   async function handleCopyConsultationPrompt() {
-    await navigator.clipboard.writeText(getConsultationPromptTemplate());
+    await navigator.clipboard.writeText(getConsultationPromptTemplate(consultationPromptVariant));
     setConsultationMessage('相談用プロンプトをコピーしました。壁打ち結果をこの画面に貼り付けてください。');
   }
 
@@ -203,6 +204,8 @@ function App() {
 
         {inputMode === 'consultation' && (
           <ConsultationSection
+            promptVariant={consultationPromptVariant}
+            onChangePromptVariant={setConsultationPromptVariant}
             intakeText={consultationText}
             onChangeText={setConsultationText}
             onCopyPrompt={handleCopyConsultationPrompt}

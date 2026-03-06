@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assessIntakeReadiness, parseConsultationIntake } from '../src/utils/intakeParser.ts';
+import { assessIntakeReadiness, CONSULTATION_PROMPT_OPTIONS, getConsultationPromptTemplate, parseConsultationIntake } from '../src/utils/intakeParser.ts';
 import type { FormState } from '../src/state/actions.ts';
 
 function makeState(): FormState {
@@ -100,4 +100,14 @@ test('assessIntakeReadiness should separate blocking items from warnings', () =>
   assert.equal(readiness.blocking.includes('解決したい課題（未入力）'), true);
   assert.equal(readiness.warnings.includes('リポジトリ構成'), true);
   assert.equal(readiness.warnings.includes('外部API有無'), true);
+});
+
+test('getConsultationPromptTemplate should return variant-specific guidance', () => {
+  const internalPrompt = getConsultationPromptTemplate('internal_tool');
+  const businessPrompt = getConsultationPromptTemplate('new_business');
+
+  assert.equal(CONSULTATION_PROMPT_OPTIONS.length, 3);
+  assert.equal(/社内ツール/.test(internalPrompt), true);
+  assert.equal(/新規事業/.test(businessPrompt), true);
+  assert.equal(/## プロジェクト概要/.test(internalPrompt), true);
 });

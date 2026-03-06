@@ -29,6 +29,14 @@ export interface IntakeDraft {
   suggestedState: FormState;
 }
 
+export type ConsultationPromptVariant = 'new_business' | 'internal_tool' | 'client_project';
+
+export interface ConsultationPromptOption {
+  id: ConsultationPromptVariant;
+  label: string;
+  description: string;
+}
+
 function isBlockingUnresolved(item: string): boolean {
   if (item === 'プロジェクト名') return true;
   if (/（未入力）$/.test(item)) return true;
@@ -59,11 +67,7 @@ const REQUIRED_SECTION_KEYS = [
   '未確定事項',
 ] as const;
 
-const PROMPT_TEMPLATE = `あなたは新規プロジェクトの要件整理アシスタントです。
-以下の形式で、非エンジニアでも RepoGenesis に反映しやすいように整理してください。
-推測は最小化し、不明点は「未確定事項」に残してください。
-
-## プロジェクト概要
+const PROMPT_SKELETON = `## プロジェクト概要
 
 ## 想定ユーザー
 
@@ -79,8 +83,35 @@ const PROMPT_TEMPLATE = `あなたは新規プロジェクトの要件整理ア�
 
 ## RepoGenesis入力候補`;
 
-export function getConsultationPromptTemplate(): string {
-  return PROMPT_TEMPLATE;
+const PROMPT_TEMPLATES: Record<ConsultationPromptVariant, string> = {
+  new_business: `あなたは新規事業の要件整理アシスタントです。
+新しい事業やプロダクトの立ち上げ前提で、非エンジニアでも RepoGenesis に反映しやすいように整理してください。
+市場仮説、最初の提供価値、初期ユーザー、検証したいことを優先し、推測は最小化してください。
+不明点は「未確定事項」に残してください。
+
+${PROMPT_SKELETON}`,
+  internal_tool: `あなたは社内ツールの要件整理アシスタントです。
+業務改善や情報整理のための社内利用前提で、非エンジニアでも RepoGenesis に反映しやすいように整理してください。
+対象部門、現状の非効率、最初に置き換えたい業務、機密情報の扱いを優先し、推測は最小化してください。
+不明点は「未確定事項」に残してください。
+
+${PROMPT_SKELETON}`,
+  client_project: `あなたはクライアント案件の要件整理アシスタントです。
+受託開発や提案前提で、非エンジニアでも RepoGenesis に反映しやすいように整理してください。
+クライアントの目的、納品範囲、最初の成果物、制約条件、扱う情報の機密性を優先し、推測は最小化してください。
+不明点は「未確定事項」に残してください。
+
+${PROMPT_SKELETON}`,
+};
+
+export const CONSULTATION_PROMPT_OPTIONS: ConsultationPromptOption[] = [
+  { id: 'new_business', label: '新規事業', description: '新しい事業やプロダクトの立ち上げを整理する' },
+  { id: 'internal_tool', label: '社内ツール', description: '業務改善や社内利用のツールを整理する' },
+  { id: 'client_project', label: 'クライアント案件', description: '受託開発や提案案件の整理に使う' },
+];
+
+export function getConsultationPromptTemplate(variant: ConsultationPromptVariant): string {
+  return PROMPT_TEMPLATES[variant];
 }
 
 function parseSections(input: string): Record<string, string> {
