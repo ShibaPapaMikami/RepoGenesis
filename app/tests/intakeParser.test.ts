@@ -1,6 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assessIntakeReadiness, CONSULTATION_PROMPT_OPTIONS, getConsultationPromptTemplate, parseConsultationIntake } from '../src/utils/intakeParser.ts';
+import {
+  assessIntakeReadiness,
+  CONSULTATION_PROMPT_OPTIONS,
+  getConsultationPromptTemplate,
+  getConsultationReviewHints,
+  parseConsultationIntake,
+} from '../src/utils/intakeParser.ts';
 import type { FormState } from '../src/state/actions.ts';
 
 function makeState(): FormState {
@@ -110,4 +116,13 @@ test('getConsultationPromptTemplate should return variant-specific guidance', ()
   assert.equal(/社内ツール/.test(internalPrompt), true);
   assert.equal(/新規事業/.test(businessPrompt), true);
   assert.equal(/## プロジェクト概要/.test(internalPrompt), true);
+});
+
+test('getConsultationReviewHints should return variant-specific review points', () => {
+  const internalHints = getConsultationReviewHints('internal_tool');
+  const clientHints = getConsultationReviewHints('client_project');
+
+  assert.equal(/社内ツール/.test(internalHints.title), true);
+  assert.equal(internalHints.points.length > 0, true);
+  assert.equal(/クライアント案件/.test(clientHints.title), true);
 });

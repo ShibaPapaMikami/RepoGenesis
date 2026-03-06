@@ -4,7 +4,7 @@ import { PROJECT_SPEC_FILENAME } from '../../constants/spec';
 import { buildProjectSpec, stringifyProjectSpec } from '../../utils/buildProjectSpec';
 import { generateRepository, getGenerationMode, getRemoteAuthMode } from '../../utils/generateRepository';
 import { downloadErrorReport, submitFeedback, type FeedbackType, type ErrorReportPayload } from '../../utils/feedback';
-import { assessIntakeReadiness, type IntakeDraft } from '../../utils/intakeParser';
+import { assessIntakeReadiness, getConsultationReviewHints, type ConsultationPromptVariant, type IntakeDraft } from '../../utils/intakeParser';
 
 interface JsonOutputProps {
   sectionRef?: RefObject<HTMLElement | null>;
@@ -16,9 +16,10 @@ interface JsonOutputProps {
     email: string | null;
   };
   consultationDraft: IntakeDraft | null;
+  consultationPromptVariant: ConsultationPromptVariant;
 }
 
-export function JsonOutput({ sectionRef, state, canExport, errors, authSession, consultationDraft }: JsonOutputProps) {
+export function JsonOutput({ sectionRef, state, canExport, errors, authSession, consultationDraft, consultationPromptVariant }: JsonOutputProps) {
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateMessage, setGenerateMessage] = useState<string | null>(null);
@@ -136,6 +137,7 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
   const blockingItems = readiness.blocking;
   const warningItems = readiness.warnings;
   const hasConsultationWarnings = blockingItems.length > 0 || warningItems.length > 0;
+  const reviewHints = getConsultationReviewHints(consultationPromptVariant);
 
   return (
     <section ref={sectionRef} className="form-section output-section">
@@ -155,6 +157,12 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
       {hasConsultationWarnings && (
         <div className={blockingItems.length > 0 ? 'generation-readiness generation-readiness-blocking' : 'generation-readiness generation-readiness-warning'}>
           <h3>生成前チェック</h3>
+          <div className="generation-readiness-guidance">
+            <p><strong>{reviewHints.title}</strong></p>
+            <ul>
+              {reviewHints.points.map((point) => <li key={point}>{point}</li>)}
+            </ul>
+          </div>
           {blockingItems.length > 0 ? (
             <p>この draft には、生成前に確定すべき項目があります。先に詳細入力で補完してください。</p>
           ) : (

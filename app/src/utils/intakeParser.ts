@@ -37,6 +37,11 @@ export interface ConsultationPromptOption {
   description: string;
 }
 
+export interface ConsultationReviewHints {
+  title: string;
+  points: string[];
+}
+
 function isBlockingUnresolved(item: string): boolean {
   if (item === 'プロジェクト名') return true;
   if (/（未入力）$/.test(item)) return true;
@@ -110,8 +115,39 @@ export const CONSULTATION_PROMPT_OPTIONS: ConsultationPromptOption[] = [
   { id: 'client_project', label: 'クライアント案件', description: '受託開発や提案案件の整理に使う' },
 ];
 
+const REVIEW_HINTS: Record<ConsultationPromptVariant, ConsultationReviewHints> = {
+  new_business: {
+    title: '新規事業で先に確認したいこと',
+    points: [
+      '最初の提供価値が一文で説明できるか',
+      '最初に使ってほしいユーザーが具体化されているか',
+      'PoC と本番運用の境界が未確定のまま混ざっていないか',
+    ],
+  },
+  internal_tool: {
+    title: '社内ツールで先に確認したいこと',
+    points: [
+      'どの部門のどの作業を先に置き換えるかが明確か',
+      '扱う情報に機密や個人情報が含まれるか整理できているか',
+      '外部APIや複数リポジトリが本当に必要かを仮置きで済ませていないか',
+    ],
+  },
+  client_project: {
+    title: 'クライアント案件で先に確認したいこと',
+    points: [
+      '最初の成果物と納品範囲が分かれているか',
+      'クライアント固有の制約や機密条件が書かれているか',
+      '提案段階の仮説と確定仕様が混ざっていないか',
+    ],
+  },
+};
+
 export function getConsultationPromptTemplate(variant: ConsultationPromptVariant): string {
   return PROMPT_TEMPLATES[variant];
+}
+
+export function getConsultationReviewHints(variant: ConsultationPromptVariant): ConsultationReviewHints {
+  return REVIEW_HINTS[variant];
 }
 
 function parseSections(input: string): Record<string, string> {

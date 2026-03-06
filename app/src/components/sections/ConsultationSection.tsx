@@ -1,4 +1,9 @@
-import { CONSULTATION_PROMPT_OPTIONS, type ConsultationPromptVariant, type IntakeDraft } from '../../utils/intakeParser';
+import {
+  CONSULTATION_PROMPT_OPTIONS,
+  getConsultationReviewHints,
+  type ConsultationPromptVariant,
+  type IntakeDraft,
+} from '../../utils/intakeParser';
 
 interface ConsultationSectionProps {
   promptVariant: ConsultationPromptVariant;
@@ -27,6 +32,8 @@ export function ConsultationSection({
   draft,
   message,
 }: ConsultationSectionProps) {
+  const reviewHints = getConsultationReviewHints(promptVariant);
+
   return (
     <section className="form-section consultation-section">
       <h2>相談結果を反映</h2>
@@ -79,6 +86,13 @@ export function ConsultationSection({
       {draft && (
         <div className="consultation-review">
           <h3>生成前レビュー</h3>
+
+          <div className="consultation-guidance">
+            <h4>{reviewHints.title}</h4>
+            <ul>
+              {reviewHints.points.map((point) => <li key={point}>{point}</li>)}
+            </ul>
+          </div>
 
           <div className="consultation-columns">
             <div className="consultation-card">

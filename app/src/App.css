@@ -465,6 +465,26 @@
   margin: 0 0 0.75rem;
 }
 
+.consultation-guidance,
+.generation-readiness-guidance {
+  border: 1px solid #dbe5f0;
+  border-radius: 6px;
+  padding: 0.9rem;
+  background: #fff;
+  margin-bottom: 1rem;
+}
+
+.consultation-guidance h4,
+.generation-readiness-guidance p {
+  margin: 0 0 0.5rem;
+}
+
+.consultation-guidance ul,
+.generation-readiness-guidance ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
 .consultation-columns {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

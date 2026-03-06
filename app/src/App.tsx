@@ -262,6 +262,7 @@ function App() {
           errors={errors}
           authSession={authSession}
           consultationDraft={consultationDraft}
+          consultationPromptVariant={consultationPromptVariant}
         />
 
         <div className="app-actions">
