@@ -69,6 +69,8 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 
 ## Phase 5: Usability for Non-Engineers (Next)
 **Goal:** Reduce input burden and improve spec quality.
+- Reference: `docs/AI_INTAKE_ROADMAP.md`, `docs/AI_INTAKE_CONTRACT.md`
+- [ ] Add `相談結果を反映` mode as the primary non-engineer entry
 - [ ] Add `かんたん入力` mode separate from `詳細入力`
 - [ ] Replace direct spec-first UX with guided business questions
 - [ ] Add field-by-field explanations in plain Japanese
@@ -80,6 +82,7 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 
 ## Phase 6: AI-Assisted Spec Authoring
 **Goal:** Improve quality without duplicating generator knowledge.
+- [ ] Add AI provider abstraction behind intake flow
 - [ ] Add guided prompt templates for ChatGPT / Claude / Gemini
 - [ ] Convert questionnaire answers into `ProjectSpec draft`
 - [ ] Separate "facts", "assumptions", and "open questions" in output
@@ -114,12 +117,14 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [ ] 認証エラー時の文言をユーザー向けに整理
 
 ### Milestone B: Simple UX
+- [ ] `相談結果を反映` の貼り付け導線を追加
 - [ ] `かんたん入力` の質問セットを定義
 - [ ] 入力回答 -> `ProjectSpec` のマッピング表を作る
 - [ ] 非エンジニア向け用語集を UI に埋め込む
 - [ ] 生成前サマリーを追加
 
 ### Milestone C: AI Workflow
+- [ ] provider 非依存の intake abstraction を定義
 - [ ] 「ChatGPT/Claude に相談するためのプロンプト」プリセットを追加
 - [ ] 回答結果をフォームに転記しやすい JSON / markdown 形式で出力
 - [ ] `facts / assumptions / open questions` の 3 区分を導入

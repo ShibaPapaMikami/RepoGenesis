@@ -41,14 +41,15 @@ Phase 4 — Authenticated Web System (In Progress)
   - デプロイ版ラベル表示
 - いまの主要テーマ:
   - 個別メール許可から `gugenka.jp` ドメイン許可へ移行
-  - 非エンジニア向け UX へ切り替える設計
-  - AI 補助による入力品質向上
+  - `相談結果を反映` を主導線にした非エンジニア向け intake 設計
+  - AI 補助導入前の intake architecture 固定
+  - 参照設計 docs: `docs/AI_INTAKE_ROADMAP.md`, `docs/AI_INTAKE_CONTRACT.md`
 
 ## What Is Blocked
 - 技術的 blocker は解消済み。
 - 残る blocker は運用設計:
-  - 生成認可が `AUTH_ALLOWED_EMAILS` 依存でスケールしない
   - 非エンジニア向け入力 UX が未整備
+  - 相談結果の取り込み導線がなく、壁打ち結果を活用できない
   - feedback 保存がローカルファイルで永続性に欠ける
 
 ## Key Decisions Made
@@ -76,7 +77,7 @@ Phase 4 — Authenticated Web System (In Progress)
 - skill injectionなし（テンプレートの外部差し込み未対応）
 - template versioningなし（テンプレートのバージョン管理未対応）
 - 非エンジニア向け `かんたん入力` が未実装
-- generator の生成認可がドメインではなく個別メール allowlist 中心
+- `相談結果を反映` モードが未実装
 - feedback 保存先が Render ローカルファイル
 
 ## Files That Exist
@@ -95,13 +96,14 @@ Phase 4 — Authenticated Web System (In Progress)
 
 ## Next Phase
 Phase 5 — Usability for Non-Engineers
+- `相談結果を反映` モード追加
 - `かんたん入力` モード追加
 - 生成前要約の導入
 - AI 相談プロンプトの UI 埋め込み
 
 ## Upcoming Focus
 Immediate next:
-- generator 側の認可を `AUTH_ALLOWED_DOMAINS=gugenka.jp` へ対応させる
 - 本番 UI から manual bearer を隠す
+- `相談結果を反映` モードの input/output 仕様を固める
 - 非エンジニア向け質問セットを定義する
 - feedback の永続保存先を決める
