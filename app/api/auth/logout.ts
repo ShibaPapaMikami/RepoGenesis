@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { buildExpiredSessionCookie } from '../_lib/session';
+import { buildExpiredSessionCookie } from '../_lib/session.js';
 
 type Res = ServerResponse & {
   json: (body: unknown) => void;

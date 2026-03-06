@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { getSessionEmailFromCookies } from '../_lib/session';
+import { getSessionEmailFromCookies } from '../_lib/session.js';
 
 type Req = IncomingMessage & {
   method?: string;

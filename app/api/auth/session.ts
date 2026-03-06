@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { buildSessionCookie, isAllowedEmail, signSessionJwt } from '../_lib/session';
+import { buildSessionCookie, isAllowedEmail, signSessionJwt } from '../_lib/session.js';
 
 type Req = IncomingMessage & {
   method?: string;
