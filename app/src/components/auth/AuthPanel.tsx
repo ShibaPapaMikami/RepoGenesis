@@ -37,7 +37,7 @@ const FIREBASE_CONFIG = {
 const APP_NAME = (import.meta.env.VITE_AUTH_APP_NAME as string | undefined) ?? 'RepoGenesis';
 const LOGIN_MESSAGE = (import.meta.env.VITE_AUTH_LOGIN_MESSAGE as string | undefined)
   ?? 'Gugenka スタッフでログインしてください';
-const ALLOWED_DOMAIN = (import.meta.env.VITE_AUTH_ALLOWED_DOMAIN as string | undefined) ?? 'gugenka.co.jp';
+const ALLOWED_DOMAIN = (import.meta.env.VITE_AUTH_ALLOWED_DOMAIN as string | undefined) ?? 'gugenka.jp';
 
 function hasFirebaseConfig(): boolean {
   return Boolean(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.authDomain && FIREBASE_CONFIG.projectId);

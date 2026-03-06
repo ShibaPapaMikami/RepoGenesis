@@ -15,6 +15,7 @@ import { generateContributing } from './templates/contributing';
 import { generatePrTemplate } from './templates/prTemplate';
 import { generateIssueBugReport } from './templates/issueBugReport';
 import { generateIssueFeatureRequest } from './templates/issueFeatureRequest';
+import { generateVersioningStandard } from './templates/versioningStandard';
 
 type RepoEntry = ProjectBrief['structure']['repos'][number];
 const DEFAULT_SPEC_VERSION: SpecVersion = '1.0';
@@ -181,6 +182,7 @@ function buildSingleRepo(brief: ProjectBrief): Map<string, string> {
     ['docs/REQUIREMENTS.md', generateRequirements(brief)],
     ['docs/ARCHITECTURE.md', generateArchitecture(brief)],
     ['docs/ROADMAP.md', generateRoadmap(brief)],
+    ['docs/VERSIONING_STANDARD.md', generateVersioningStandard(brief)],
     ['docs/ADR/0000-template.md', generateAdrTemplate(brief)],
     ['plans/template.md', generatePlansTemplate(brief)],
     ['prompts/restart.md', generateRestart(brief)],
@@ -208,6 +210,7 @@ function buildMultiRepo(brief: ProjectBrief): Map<string, string> {
     ['GLOBAL_CONTEXT.md', generateGlobalContext(brief)],
     ['REQUIREMENTS.md', generateRequirements(brief)],
     ['SECURITY.md', generateSecurity(brief)],
+    ['VERSIONING_STANDARD.md', generateVersioningStandard(brief)],
     ['.gitignore', generateGitignore(brief)],
     ['CONTRIBUTING.md', generateContributing(brief)],
     ['.github/PULL_REQUEST_TEMPLATE.md', generatePrTemplate(brief)],
@@ -226,6 +229,7 @@ function buildMultiRepo(brief: ProjectBrief): Map<string, string> {
       [`${repo.name}/docs/ACTIVE_CONTEXT.md`, repoActiveContext(brief, repo)],
       [`${repo.name}/docs/ARCHITECTURE.md`, repoArchitecture(brief, repo)],
       [`${repo.name}/docs/ROADMAP.md`, generateRoadmap(brief)],
+      [`${repo.name}/docs/VERSIONING_STANDARD.md`, generateVersioningStandard(brief)],
       [`${repo.name}/docs/ADR/0000-template.md`, generateAdrTemplate(brief)],
       [`${repo.name}/plans/template.md`, generatePlansTemplate(brief)],
       [`${repo.name}/prompts/restart.md`, generateRestart(brief)],

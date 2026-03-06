@@ -63,7 +63,7 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Add Vercel BFF proxy for same-origin browser calls
 - [x] Add Vercel-side session issue / inspect / logout endpoints
 - [x] Add production deployment runbooks
-- [ ] Replace `AUTH_ALLOWED_EMAILS`-centric generation gating with domain-first gating
+- [x] Replace `AUTH_ALLOWED_EMAILS`-centric generation gating with domain-first gating
 - [ ] Remove `manual_bearer` from production UI
 - [ ] Add explicit admin-only mode for local support/debug paths
 
@@ -108,8 +108,8 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 
 ## Immediate Priorities (Next 3 Milestones)
 ### Milestone A: Production Hardening
-- [ ] `AUTH_ALLOWED_DOMAINS=gugenka.jp` を generator 側の生成認可に反映
-- [ ] `AUTH_ALLOWED_EMAILS` は例外運用に格下げ
+- [x] `AUTH_ALLOWED_DOMAINS=gugenka.jp` を generator 側の生成認可に反映
+- [x] `AUTH_ALLOWED_EMAILS` は例外運用に格下げ
 - [ ] 本番 UI から manual bearer を隠す
 - [ ] 認証エラー時の文言をユーザー向けに整理
 

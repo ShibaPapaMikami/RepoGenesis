@@ -12,7 +12,8 @@ import { AuthPanel } from './components/auth/AuthPanel';
 import { getGenerationMode, getRemoteAuthMode } from './utils/generateRepository';
 import './App.css';
 
-declare const __APP_VERSION__: string;
+declare const __APP_RELEASE__: string;
+declare const __APP_COMMIT__: string;
 
 const TEST_FILL_STATE = {
   project: {
@@ -96,7 +97,7 @@ function App() {
       <header className="app-header">
         <h1>RepoGenesis</h1>
         <p>AI対応リポジトリ構造ジェネレータ</p>
-        <p className="app-version">デプロイ版: {__APP_VERSION__}</p>
+        <p className="app-version">リリース: {__APP_RELEASE__} / コミット: {__APP_COMMIT__}</p>
       </header>
 
       <main className="app-main">

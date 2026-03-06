@@ -62,6 +62,7 @@ repos/{slug}/
 │   ├── REQUIREMENTS.md
 │   ├── ARCHITECTURE.md
 │   ├── ROADMAP.md
+│   ├── VERSIONING_STANDARD.md
 │   └── ADR/0000-template.md
 ├── .repogenesis/
 │   └── manifest.json
@@ -117,7 +118,8 @@ npm run start:api
 - `AUTH_PROVIDER=gugenka`: vendored `gugenka-auth` session verifier を利用
 - `NEXTAUTH_SECRET`: gugenka session JWT 検証に必須
 - `SESSION_AUDIENCE` (default: `repogenesis`)
-- `AUTH_ALLOWED_EMAILS` (optional, comma-separated)
+- `AUTH_ALLOWED_DOMAINS` (optional, comma-separated, preferred for production)
+- `AUTH_ALLOWED_EMAILS` (optional, comma-separated, for explicit exceptions)
 - `CORS_ALLOW_ORIGIN` (本番は app 公開ドメインに固定)
 - `GENERATE_REQUIRE_AUTH` (default: `true`)
   - `false` にすると ZIP生成APIの認証を一時的に無効化（検証用）

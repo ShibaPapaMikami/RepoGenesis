@@ -7,12 +7,14 @@ describe('orchestration auth adapter', () => {
   let originalSecret: string | undefined;
   let originalAudience: string | undefined;
   let originalAllowed: string | undefined;
+  let originalAllowedDomains: string | undefined;
 
   beforeEach(() => {
     originalProvider = process.env.AUTH_PROVIDER;
     originalSecret = process.env.NEXTAUTH_SECRET;
     originalAudience = process.env.SESSION_AUDIENCE;
     originalAllowed = process.env.AUTH_ALLOWED_EMAILS;
+    originalAllowedDomains = process.env.AUTH_ALLOWED_DOMAINS;
   });
 
   afterEach(() => {
@@ -30,6 +32,9 @@ describe('orchestration auth adapter', () => {
 
     if (originalAllowed === undefined) delete process.env.AUTH_ALLOWED_EMAILS;
     else process.env.AUTH_ALLOWED_EMAILS = originalAllowed;
+
+    if (originalAllowedDomains === undefined) delete process.env.AUTH_ALLOWED_DOMAINS;
+    else process.env.AUTH_ALLOWED_DOMAINS = originalAllowedDomains;
   });
 
   it('authorizes dev-token in mock mode', async () => {
@@ -64,13 +69,13 @@ describe('orchestration auth adapter', () => {
     process.env.NEXTAUTH_SECRET = 'test-secret';
     process.env.SESSION_AUDIENCE = 'repogenesis-test';
 
-    const token = await signSessionJwt('dev@gugenka.example', {
+    const token = await signSessionJwt('dev@gugenka.jp', {
       audience: 'repogenesis-test',
     });
     const result = await authorizeBearerTokenAsync(`Bearer ${token}`);
     expect(result.ok).toBe(true);
     if (result.ok && result.context) {
-      expect(result.context.userId).toBe('dev@gugenka.example');
+      expect(result.context.userId).toBe('dev@gugenka.jp');
       expect(hasGeneratePermission(result.context)).toBe(true);
     }
   });
@@ -80,13 +85,13 @@ describe('orchestration auth adapter', () => {
     process.env.NEXTAUTH_SECRET = 'test-secret';
     process.env.SESSION_AUDIENCE = 'repogenesis-test';
 
-    const token = await signSessionJwt('cookie@gugenka.example', {
+    const token = await signSessionJwt('cookie@gugenka.jp', {
       audience: 'repogenesis-test',
     });
     const result = await authorizeRequestAsync(undefined, `__session=${token}`);
     expect(result.ok).toBe(true);
     if (result.ok && result.context) {
-      expect(result.context.userId).toBe('cookie@gugenka.example');
+      expect(result.context.userId).toBe('cookie@gugenka.jp');
       expect(hasGeneratePermission(result.context)).toBe(true);
     }
   });
@@ -104,6 +109,55 @@ describe('orchestration auth adapter', () => {
     expect(result.ok).toBe(true);
     if (result.ok && result.context) {
       expect(hasGeneratePermission(result.context)).toBe(false);
+    }
+  });
+
+  it('allows matching allowed domain in gugenka mode', async () => {
+    process.env.AUTH_PROVIDER = 'gugenka';
+    process.env.NEXTAUTH_SECRET = 'test-secret';
+    process.env.SESSION_AUDIENCE = 'repogenesis-test';
+    process.env.AUTH_ALLOWED_DOMAINS = 'gugenka.jp';
+
+    const token = await signSessionJwt('member@gugenka.jp', {
+      audience: 'repogenesis-test',
+    });
+    const result = await authorizeRequestAsync(undefined, `__session=${token}`);
+    expect(result.ok).toBe(true);
+    if (result.ok && result.context) {
+      expect(hasGeneratePermission(result.context)).toBe(true);
+    }
+  });
+
+  it('denies non-matching domain when allowed domains are configured', async () => {
+    process.env.AUTH_PROVIDER = 'gugenka';
+    process.env.NEXTAUTH_SECRET = 'test-secret';
+    process.env.SESSION_AUDIENCE = 'repogenesis-test';
+    process.env.AUTH_ALLOWED_DOMAINS = 'gugenka.jp';
+
+    const token = await signSessionJwt('member@external.example', {
+      audience: 'repogenesis-test',
+    });
+    const result = await authorizeRequestAsync(undefined, `__session=${token}`);
+    expect(result.ok).toBe(true);
+    if (result.ok && result.context) {
+      expect(hasGeneratePermission(result.context)).toBe(false);
+    }
+  });
+
+  it('allows explicit email even when domain does not match', async () => {
+    process.env.AUTH_PROVIDER = 'gugenka';
+    process.env.NEXTAUTH_SECRET = 'test-secret';
+    process.env.SESSION_AUDIENCE = 'repogenesis-test';
+    process.env.AUTH_ALLOWED_DOMAINS = 'gugenka.jp';
+    process.env.AUTH_ALLOWED_EMAILS = 'partner@external.example';
+
+    const token = await signSessionJwt('partner@external.example', {
+      audience: 'repogenesis-test',
+    });
+    const result = await authorizeRequestAsync(undefined, `__session=${token}`);
+    expect(result.ok).toBe(true);
+    if (result.ok && result.context) {
+      expect(hasGeneratePermission(result.context)).toBe(true);
     }
   });
 });

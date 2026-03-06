@@ -262,7 +262,7 @@ export function JsonOutput({ state, canExport, errors, authSession }: JsonOutput
               type="email"
               value={feedbackEmail}
               onChange={(e) => setFeedbackEmail(e.target.value)}
-              placeholder="name@gugenka.co.jp"
+              placeholder="name@gugenka.jp"
             />
           </div>
         </div>

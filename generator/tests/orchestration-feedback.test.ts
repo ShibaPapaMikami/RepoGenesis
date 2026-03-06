@@ -35,7 +35,7 @@ describe('orchestration feedback api', () => {
     const res = await handleFeedbackApiRequest('Bearer dev-token', undefined, 'bug', {
       title: 'Cannot generate zip',
       description: 'ZIP generation failed with 403 and request id.',
-      email: 'tester@gugenka.co.jp',
+      email: 'tester@gugenka.jp',
       metadata: { ui: 'app', at: 'test' },
     });
     expect(res.status).toBe(200);

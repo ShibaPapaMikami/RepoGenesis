@@ -65,6 +65,7 @@ describe('E2E — single-repo', () => {
       'docs/REQUIREMENTS.md',
       'docs/ARCHITECTURE.md',
       'docs/ROADMAP.md',
+      'docs/VERSIONING_STANDARD.md',
       'docs/ADR/0000-template.md',
       'plans/template.md',
       'prompts/restart.md',
@@ -132,13 +133,13 @@ describe('E2E — single-repo', () => {
 describe('E2E — app export', () => {
   const SLUG = 'app-export-test';
 
-  it('should exit 0 and generate 16 files from app export JSON', () => {
+  it('should exit 0 and generate 17 files from app export JSON', () => {
     const result = run('test_brief_app_export.json', 'app-export');
     expect(result.exitCode, `CLI failed.\nstdout: ${result.stdout}\nstderr: ${result.stderr}`).toBe(0);
-    expect(result.stdout).toContain('16 files');
+    expect(result.stdout).toContain('17 files');
   });
 
-  it('should create all 16 required single-repo files from app export', () => {
+  it('should create all 17 required single-repo files from app export', () => {
     run('test_brief_app_export.json', 'app-export');
     const base = path.join(TMP_OUTPUT, 'app-export', SLUG);
 
@@ -148,6 +149,7 @@ describe('E2E — app export', () => {
       'docs/REQUIREMENTS.md',
       'docs/ARCHITECTURE.md',
       'docs/ROADMAP.md',
+      'docs/VERSIONING_STANDARD.md',
       'docs/ADR/0000-template.md',
       'plans/template.md',
       'prompts/restart.md',
@@ -161,7 +163,7 @@ describe('E2E — app export', () => {
       '.repogenesis/manifest.json',
     ];
 
-    expect(requiredFiles.length).toBe(16);
+    expect(requiredFiles.length).toBe(17);
 
     for (const file of requiredFiles) {
       const fullPath = path.join(base, file);
@@ -183,7 +185,7 @@ describe('E2E — multi-repo', () => {
     run('test_brief_multi.json', 'multi');
     const base = path.join(TMP_OUTPUT, 'multi', SLUG);
 
-    for (const file of ['GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', '.gitignore', '.repogenesis/manifest.json']) {
+    for (const file of ['GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', '.gitignore', '.repogenesis/manifest.json']) {
       expect(fs.existsSync(path.join(base, file)), `Missing workspace file: ${file}`).toBe(true);
     }
   });

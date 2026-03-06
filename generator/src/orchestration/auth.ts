@@ -13,6 +13,7 @@ export interface AuthResult {
 }
 
 const REQUIRED_ROLE = 'repogenesis:generate';
+const DEFAULT_ALLOWED_DOMAIN = 'gugenka.jp';
 
 function getAuthProvider(): string {
   return process.env.AUTH_PROVIDER ?? 'mock';
@@ -30,6 +31,39 @@ function getAllowedEmails(): Set<string> | null {
     .map((s) => s.trim().toLowerCase())
     .filter((s) => s.length > 0);
   return parsed.length > 0 ? new Set(parsed) : null;
+}
+
+function getAllowedDomains(): Set<string> | null {
+  const raw = process.env.AUTH_ALLOWED_DOMAINS;
+  if (!raw) return null;
+  const parsed = raw
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter((s) => s.length > 0);
+  return parsed.length > 0 ? new Set(parsed) : null;
+}
+
+function hasAllowedGenerateAccess(email: string): boolean {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized.includes('@')) return false;
+
+  const allowedEmails = getAllowedEmails();
+  if (allowedEmails && allowedEmails.has(normalized)) {
+    return true;
+  }
+
+  const allowedDomains = getAllowedDomains();
+  if (allowedDomains) {
+    const domain = normalized.split('@')[1] ?? '';
+    return allowedDomains.has(domain);
+  }
+
+  if (allowedEmails) {
+    return false;
+  }
+
+  const domain = normalized.split('@')[1] ?? '';
+  return domain === DEFAULT_ALLOWED_DOMAIN;
 }
 
 function parseCookieHeader(cookieHeader: string | undefined): Map<string, string> {
@@ -122,8 +156,7 @@ export async function authorizeBearerTokenAsync(
     );
     if (!email) return { ok: false, status: 401, error: 'Token verification failed' };
 
-    const allowlist = getAllowedEmails();
-    const roles = !allowlist || allowlist.has(email.toLowerCase()) ? [REQUIRED_ROLE] : [];
+    const roles = hasAllowedGenerateAccess(email) ? [REQUIRED_ROLE] : [];
     const context: AuthContext = { userId: email.toLowerCase(), roles };
     return { ok: true, status: 200, context };
   } catch {
@@ -166,8 +199,7 @@ export async function authorizeRequestAsync(
     );
     if (!email) return { ok: false, status: 401, error: 'Token verification failed' };
 
-    const allowlist = getAllowedEmails();
-    const roles = !allowlist || allowlist.has(email.toLowerCase()) ? [REQUIRED_ROLE] : [];
+    const roles = hasAllowedGenerateAccess(email) ? [REQUIRED_ROLE] : [];
     return {
       ok: true,
       status: 200,

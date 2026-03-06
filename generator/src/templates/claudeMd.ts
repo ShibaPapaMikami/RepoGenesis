@@ -41,6 +41,7 @@ ${project.slug}/
 │   ├── REQUIREMENTS.md
 │   ├── ARCHITECTURE.md
 │   ├── ROADMAP.md
+│   ├── VERSIONING_STANDARD.md
 │   └── ADR/
 │       └── 0000-template.md
 ├── plans/
@@ -100,6 +101,7 @@ ${securityRules}
 - \`docs/ACTIVE_CONTEXT.md\` is the single source of truth for current project state.
 - \`docs/ROADMAP.md\` is the single source of truth for phase progression.
 - \`docs/REQUIREMENTS.md\` is the single source of truth for what the system must do.
+- \`docs/VERSIONING_STANDARD.md\` defines release/version traceability rules.
 - If any conflict exists between conversation and files, files win.
 
 ### 4. Session Protocol

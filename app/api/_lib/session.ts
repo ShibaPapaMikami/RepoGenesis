@@ -3,7 +3,7 @@ import { createHmac, randomUUID, timingSafeEqual } from 'crypto';
 const ISSUER = 'gugenka-auth';
 const COOKIE_NAME = '__session';
 const DEFAULT_AUDIENCE = 'repogenesis';
-const DEFAULT_ALLOWED_DOMAIN = 'gugenka.co.jp';
+const DEFAULT_ALLOWED_DOMAIN = 'gugenka.jp';
 
 type CookiesLike = {
   get(name: string): { value: string } | undefined | null;

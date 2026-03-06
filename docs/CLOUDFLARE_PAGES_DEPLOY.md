@@ -65,5 +65,5 @@ npm run smoke:api
 ## 5. Troubleshooting
 
 - `401`: token 無効 / `NEXTAUTH_SECRET` 不一致
-- `403`: 認可ロール不足（`AUTH_ALLOWED_EMAILS` 制約含む）
+- `403`: 認可ロール不足（`AUTH_ALLOWED_DOMAINS` / `AUTH_ALLOWED_EMAILS` 制約含む）
 - CORS エラー: `CORS_ALLOW_ORIGIN` を Pages ドメインに合わせる

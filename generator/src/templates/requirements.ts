@@ -37,5 +37,12 @@ ${frameworkLine}- AI Tool: ${tech.ai_tool}
 
 ## Non-Requirements
 - [List things explicitly out of scope]
+
+## Operational Standards
+
+### Version Traceability
+- Running services must expose release version and commit SHA.
+- APIs should expose deploy identity through health/version surfaces or logs.
+- CLI tools should support version output.
 `;
 }

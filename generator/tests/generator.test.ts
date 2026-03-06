@@ -97,7 +97,7 @@ describe('generator — single-repo', () => {
     const result = generate({ inputPath, outputPath: tmpDir, force: false });
 
     expect(result.success).toBe(true);
-    expect(result.filesCreated.length).toBe(16);
+    expect(result.filesCreated.length).toBe(17);
 
     const expectedFiles = [
       'claude.md',
@@ -105,6 +105,7 @@ describe('generator — single-repo', () => {
       'docs/REQUIREMENTS.md',
       'docs/ARCHITECTURE.md',
       'docs/ROADMAP.md',
+      'docs/VERSIONING_STANDARD.md',
       'docs/ADR/0000-template.md',
       'plans/template.md',
       'prompts/restart.md',
@@ -139,7 +140,7 @@ describe('generator — single-repo', () => {
     // Second generate with --force
     const result = generate({ inputPath, outputPath: tmpDir, force: true });
     expect(result.success).toBe(true);
-    expect(result.filesCreated.length).toBe(16);
+    expect(result.filesCreated.length).toBe(17);
   });
 });
 
@@ -151,7 +152,7 @@ describe('generator — multi-repo', () => {
     expect(result.success).toBe(true);
 
     // Workspace-level files
-    const workspaceFiles = ['GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', '.gitignore'];
+    const workspaceFiles = ['GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', '.gitignore'];
     for (const file of workspaceFiles) {
       const fullPath = path.join(result.outputDir, file);
       expect(fs.existsSync(fullPath), `Expected workspace file: ${file}`).toBe(true);
@@ -164,6 +165,7 @@ describe('generator — multi-repo', () => {
         `${repoName}/docs/ACTIVE_CONTEXT.md`,
         `${repoName}/docs/ARCHITECTURE.md`,
         `${repoName}/docs/ROADMAP.md`,
+        `${repoName}/docs/VERSIONING_STANDARD.md`,
         `${repoName}/docs/ADR/0000-template.md`,
         `${repoName}/plans/template.md`,
         `${repoName}/prompts/restart.md`,
@@ -279,12 +281,13 @@ describe('generateFromSpec — pure function', () => {
     return result.data;
   }
 
-  it('should return Map with 16 files for single-repo', () => {
+  it('should return Map with 17 files for single-repo', () => {
     const brief = parseBrief(SINGLE_BRIEF);
     const files = generateFromSpec(brief);
-    expect(files.size).toBe(16);
+    expect(files.size).toBe(17);
     expect(files.has('claude.md')).toBe(true);
     expect(files.has('SECURITY.md')).toBe(true);
+    expect(files.has('docs/VERSIONING_STANDARD.md')).toBe(true);
     expect(files.has('.gitignore')).toBe(true);
     expect(files.has('.repogenesis/manifest.json')).toBe(true);
   });
@@ -292,10 +295,12 @@ describe('generateFromSpec — pure function', () => {
   it('should return Map with correct files for multi-repo', () => {
     const brief = parseBrief(MULTI_BRIEF);
     const files = generateFromSpec(brief);
-    // 8 workspace + 9 * 2 repos + 1 manifest = 27
-    expect(files.size).toBe(27);
+    // 9 workspace + 10 * 2 repos + 1 manifest = 30
+    expect(files.size).toBe(30);
     expect(files.has('GLOBAL_CONTEXT.md')).toBe(true);
+    expect(files.has('VERSIONING_STANDARD.md')).toBe(true);
     expect(files.has('frontend/claude.md')).toBe(true);
+    expect(files.has('frontend/docs/VERSIONING_STANDARD.md')).toBe(true);
     expect(files.has('backend/claude.md')).toBe(true);
     expect(files.has('.repogenesis/manifest.json')).toBe(true);
   });
@@ -362,7 +367,7 @@ describe('generateFromSpec — pure function', () => {
     const manifest = JSON.parse(manifestRaw as string);
     expect(manifest.specVersion).toBe('1.0');
     expect(manifest.repoType).toBe('single');
-    expect(manifest.fileCount).toBe(16);
+    expect(manifest.fileCount).toBe(17);
     expect(manifest.source).toBe('legacyBrief');
   });
 });

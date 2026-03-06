@@ -9,7 +9,7 @@
 1. Frontend: Vercel (`app/`, Vite static)
 2. Orchestration API: Node 実行環境（Vercel Functions または Render/Railway）
 3. Auth: `AUTH_PROVIDER=gugenka` + `NEXTAUTH_SECRET`
-4. Access control: `AUTH_ALLOWED_EMAILS` または `@gugenka.co.jp` ドメイン制限
+4. Access control: `AUTH_ALLOWED_DOMAINS=gugenka.jp` を基本にし、必要時のみ `AUTH_ALLOWED_EMAILS` を併用
 
 ## 1. Deploy app to Vercel
 
@@ -42,7 +42,8 @@ npm run start:api
 ```
 
 推奨:
-- `AUTH_ALLOWED_EMAILS` を併用して許可ユーザーを明示
+- `AUTH_ALLOWED_DOMAINS=gugenka.jp` を基本にする
+- 例外ユーザーのみ `AUTH_ALLOWED_EMAILS` を併用する
 - `CORS_ALLOW_ORIGIN` は単一の本番ドメインに固定
 
 ## 3. Smoke checks (before go-live)
