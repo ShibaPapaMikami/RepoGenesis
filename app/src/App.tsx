@@ -10,6 +10,8 @@ import { WorkflowSection } from './components/sections/WorkflowSection';
 import { JsonOutput } from './components/output/JsonOutput';
 import { AuthPanel } from './components/auth/AuthPanel';
 import { getGenerationMode, getRemoteAuthMode } from './utils/generateRepository';
+import { ConsultationSection } from './components/sections/ConsultationSection';
+import { getConsultationPromptTemplate, parseConsultationIntake, type IntakeDraft } from './utils/intakeParser';
 import './App.css';
 
 declare const __APP_RELEASE__: string;
@@ -50,6 +52,10 @@ const TEST_FILL_STATE = {
 
 function App() {
   const [state, dispatch] = useReducer(formReducer, initialFormState);
+  const [inputMode, setInputMode] = useState<'consultation' | 'detail'>('consultation');
+  const [consultationText, setConsultationText] = useState('');
+  const [consultationDraft, setConsultationDraft] = useState<IntakeDraft | null>(null);
+  const [consultationMessage, setConsultationMessage] = useState<string | null>(null);
   const [authSession, setAuthSession] = useState<{ authenticated: boolean; email: string | null }>({
     authenticated: false,
     email: null,
@@ -90,6 +96,25 @@ function App() {
 
   function handleApplyTestInput() {
     dispatch({ type: 'RESTORE_DRAFT', payload: TEST_FILL_STATE });
+    setInputMode('detail');
+  }
+
+  async function handleCopyConsultationPrompt() {
+    await navigator.clipboard.writeText(getConsultationPromptTemplate());
+    setConsultationMessage('相談用プロンプトをコピーしました。壁打ち結果をこの画面に貼り付けてください。');
+  }
+
+  function handleBuildConsultationDraft() {
+    const draft = parseConsultationIntake(consultationText, state);
+    setConsultationDraft(draft);
+    setConsultationMessage('draft を作成しました。仮置き項目と未確定事項を確認してください。');
+  }
+
+  function handleApplyConsultationDraft() {
+    if (!consultationDraft) return;
+    dispatch({ type: 'RESTORE_DRAFT', payload: consultationDraft.suggestedState });
+    setInputMode('detail');
+    setConsultationMessage('draft をフォームに反映しました。詳細入力で微調整してください。');
   }
 
   return (
@@ -101,15 +126,59 @@ function App() {
       </header>
 
       <main className="app-main">
+        <section className="form-section mode-switcher">
+          <h2>入力モード</h2>
+          <div className="toggle-group">
+            <label className="radio-label">
+              <input
+                type="radio"
+                name="inputMode"
+                checked={inputMode === 'consultation'}
+                onChange={() => setInputMode('consultation')}
+              />
+              相談結果を反映
+            </label>
+            <label className="radio-label">
+              <input
+                type="radio"
+                name="inputMode"
+                checked={inputMode === 'detail'}
+                onChange={() => setInputMode('detail')}
+              />
+              詳細入力
+            </label>
+          </div>
+          <p className="hint">推奨: 先に AI で壁打ちした結果を貼り付け、draft を作ってから詳細入力で調整します。</p>
+        </section>
+
         <AuthPanel
           enabled={requiresCookieSession}
           onSessionChange={setAuthSession}
         />
-        <ProjectSection state={state} dispatch={dispatch} errors={errors} />
-        <TechSection state={state} dispatch={dispatch} errors={errors} />
-        <SecuritySection state={state} dispatch={dispatch} />
-        <StructureSection state={state} dispatch={dispatch} errors={errors} />
-        <WorkflowSection state={state} dispatch={dispatch} errors={errors} />
+
+        {inputMode === 'consultation' && (
+          <ConsultationSection
+            intakeText={consultationText}
+            onChangeText={setConsultationText}
+            onCopyPrompt={handleCopyConsultationPrompt}
+            onBuildDraft={handleBuildConsultationDraft}
+            onApplyDraft={handleApplyConsultationDraft}
+            onSwitchToDetail={() => setInputMode('detail')}
+            draft={consultationDraft}
+            message={consultationMessage}
+          />
+        )}
+
+        {inputMode === 'detail' && (
+          <>
+            <ProjectSection state={state} dispatch={dispatch} errors={errors} />
+            <TechSection state={state} dispatch={dispatch} errors={errors} />
+            <SecuritySection state={state} dispatch={dispatch} />
+            <StructureSection state={state} dispatch={dispatch} errors={errors} />
+            <WorkflowSection state={state} dispatch={dispatch} errors={errors} />
+          </>
+        )}
+
         <JsonOutput
           state={state}
           canExport={exportable}

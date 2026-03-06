@@ -9,7 +9,7 @@
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:contract": "node --experimental-strip-types --test tests/buildProjectSpec.test.ts"
+    "test:contract": "node --experimental-strip-types --test tests/buildProjectSpec.test.ts tests/intakeParser.test.ts"
   },
   "dependencies": {
     "react": "^19.2.0",
