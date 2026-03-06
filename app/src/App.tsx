@@ -72,6 +72,7 @@ function App() {
     email: null,
   });
   const initialized = useRef(false);
+  const outputRef = useRef<HTMLElement | null>(null);
 
   // localStorage からドラフト復元（起動時のみ）
   useEffect(() => {
@@ -151,6 +152,16 @@ function App() {
     setConsultationMessage('draft をフォームに反映しました。詳細入力で微調整してください。');
   }
 
+  function handleApplyConsultationDraftAndReviewOutput() {
+    if (!consultationDraft) return;
+    dispatch({ type: 'RESTORE_DRAFT', payload: consultationDraft.suggestedState });
+    setInputMode('detail');
+    setConsultationMessage('draft をフォームに反映しました。生成前チェックへ移動します。');
+    requestAnimationFrame(() => {
+      outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
   return (
     <div className="app">
       <header className="app-header">
@@ -197,6 +208,7 @@ function App() {
             onCopyPrompt={handleCopyConsultationPrompt}
             onBuildDraft={handleBuildConsultationDraft}
             onApplyDraft={handleApplyConsultationDraft}
+            onApplyDraftAndReviewOutput={handleApplyConsultationDraftAndReviewOutput}
             onSwitchToDetail={() => setInputMode('detail')}
             draft={consultationDraft}
             message={consultationMessage}
@@ -241,10 +253,12 @@ function App() {
         )}
 
         <JsonOutput
+          sectionRef={outputRef}
           state={state}
           canExport={exportable}
           errors={errors}
           authSession={authSession}
+          consultationDraft={consultationDraft}
         />
 
         <div className="app-actions">

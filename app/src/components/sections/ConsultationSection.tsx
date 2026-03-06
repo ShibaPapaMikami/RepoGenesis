@@ -6,6 +6,7 @@ interface ConsultationSectionProps {
   onCopyPrompt: () => void;
   onBuildDraft: () => void;
   onApplyDraft: () => void;
+  onApplyDraftAndReviewOutput: () => void;
   onSwitchToDetail: () => void;
   draft: IntakeDraft | null;
   message: string | null;
@@ -17,6 +18,7 @@ export function ConsultationSection({
   onCopyPrompt,
   onBuildDraft,
   onApplyDraft,
+  onApplyDraftAndReviewOutput,
   onSwitchToDetail,
   draft,
   message,
@@ -88,6 +90,9 @@ export function ConsultationSection({
           <div className="output-actions">
             <button type="button" onClick={onApplyDraft} className="btn-primary">
               この draft をフォームへ反映
+            </button>
+            <button type="button" onClick={onApplyDraftAndReviewOutput} className="btn-secondary">
+              この draft で出力確認へ進む
             </button>
             <button type="button" onClick={onSwitchToDetail} className="btn-secondary">
               詳細入力で調整
