@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseConsultationIntake } from '../src/utils/intakeParser.ts';
+import { assessIntakeReadiness, parseConsultationIntake } from '../src/utils/intakeParser.ts';
 import type { FormState } from '../src/state/actions.ts';
 
 function makeState(): FormState {
@@ -90,4 +90,14 @@ test('parseConsultationIntake should mark missing required sections as unresolve
   assert.equal(draft.certainty.unresolved.includes('解決したい課題（未入力）'), true);
   assert.equal(draft.certainty.unresolved.includes('扱うデータ（未入力）'), true);
   assert.equal(draft.certainty.unresolved.includes('未確定事項（未入力）'), true);
+});
+
+test('assessIntakeReadiness should separate blocking items from warnings', () => {
+  const draft = parseConsultationIntake('## プロジェクト概要\nテスト', makeState());
+  const readiness = assessIntakeReadiness(draft);
+
+  assert.equal(readiness.blocking.includes('想定ユーザー（未入力）'), true);
+  assert.equal(readiness.blocking.includes('解決したい課題（未入力）'), true);
+  assert.equal(readiness.warnings.includes('リポジトリ構成'), true);
+  assert.equal(readiness.warnings.includes('外部API有無'), true);
 });

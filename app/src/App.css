@@ -537,6 +537,11 @@
   background: #fff9ec;
 }
 
+.generation-readiness-blocking {
+  border-color: #d14343;
+  background: #fff2f2;
+}
+
 .generation-readiness h3 {
   margin: 0 0 0.6rem;
 }
@@ -553,4 +558,8 @@
 .generation-readiness-note {
   color: #8a4b00;
   font-size: 0.88rem;
+}
+
+.generation-readiness-blocking .generation-readiness-note {
+  color: #8b1e1e;
 }

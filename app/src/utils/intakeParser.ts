@@ -2,6 +2,11 @@ import { slugify } from './slugify.ts';
 import type { FormState } from '../state/actions.ts';
 import type { Domain } from '../constants/enums.ts';
 
+export interface IntakeReadiness {
+  blocking: string[];
+  warnings: string[];
+}
+
 export interface IntakeDraft {
   source: 'pasted_consultation';
   rawText: string;
@@ -22,6 +27,28 @@ export interface IntakeDraft {
     unresolved: string[];
   };
   suggestedState: FormState;
+}
+
+function isBlockingUnresolved(item: string): boolean {
+  if (item === 'プロジェクト名') return true;
+  if (/（未入力）$/.test(item)) return true;
+  if (item === '技術ドメイン') return true;
+  return false;
+}
+
+export function assessIntakeReadiness(draft: IntakeDraft | null): IntakeReadiness {
+  if (!draft) return { blocking: [], warnings: [] };
+
+  const blocking = draft.certainty.unresolved.filter(isBlockingUnresolved);
+  const warnings = [
+    ...draft.certainty.provisional,
+    ...draft.certainty.unresolved.filter((item) => !isBlockingUnresolved(item)),
+  ];
+
+  return {
+    blocking: [...new Set(blocking)],
+    warnings: [...new Set(warnings)],
+  };
 }
 
 const REQUIRED_SECTION_KEYS = [

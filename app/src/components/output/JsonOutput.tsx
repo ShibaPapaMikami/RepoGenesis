@@ -4,7 +4,7 @@ import { PROJECT_SPEC_FILENAME } from '../../constants/spec';
 import { buildProjectSpec, stringifyProjectSpec } from '../../utils/buildProjectSpec';
 import { generateRepository, getGenerationMode, getRemoteAuthMode } from '../../utils/generateRepository';
 import { downloadErrorReport, submitFeedback, type FeedbackType, type ErrorReportPayload } from '../../utils/feedback';
-import type { IntakeDraft } from '../../utils/intakeParser';
+import { assessIntakeReadiness, type IntakeDraft } from '../../utils/intakeParser';
 
 interface JsonOutputProps {
   sectionRef?: RefObject<HTMLElement | null>;
@@ -132,9 +132,10 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
   }
 
   const errorList = Object.entries(errors);
-  const unresolvedItems = consultationDraft?.certainty.unresolved ?? [];
-  const provisionalItems = consultationDraft?.certainty.provisional ?? [];
-  const hasConsultationWarnings = unresolvedItems.length > 0 || provisionalItems.length > 0;
+  const readiness = assessIntakeReadiness(consultationDraft);
+  const blockingItems = readiness.blocking;
+  const warningItems = readiness.warnings;
+  const hasConsultationWarnings = blockingItems.length > 0 || warningItems.length > 0;
 
   return (
     <section ref={sectionRef} className="form-section output-section">
@@ -152,24 +153,28 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
       )}
 
       {hasConsultationWarnings && (
-        <div className={unresolvedItems.length > 0 ? 'generation-readiness generation-readiness-warning' : 'generation-readiness'}>
+        <div className={blockingItems.length > 0 ? 'generation-readiness generation-readiness-blocking' : 'generation-readiness generation-readiness-warning'}>
           <h3>生成前チェック</h3>
-          <p>相談結果から反映した draft に、まだ仮置きまたは未確定の項目があります。</p>
-          {provisionalItems.length > 0 && (
+          {blockingItems.length > 0 ? (
+            <p>この draft には、生成前に確定すべき項目があります。先に詳細入力で補完してください。</p>
+          ) : (
+            <p>この draft には仮置きの項目があります。生成はできますが、後で見直しが必要になる可能性があります。</p>
+          )}
+          {blockingItems.length > 0 && (
             <>
-              <p><strong>仮置きした内容</strong></p>
+              <p><strong>生成前に確定が必要な項目</strong></p>
               <ul>
-                {provisionalItems.map((item) => <li key={`prov-${item}`}>{item}</li>)}
+                {blockingItems.map((item) => <li key={`block-${item}`}>{item}</li>)}
               </ul>
             </>
           )}
-          {unresolvedItems.length > 0 && (
+          {warningItems.length > 0 && (
             <>
-              <p><strong>未確定事項</strong></p>
+              <p><strong>仮置き / 後で見直す項目</strong></p>
               <ul>
-                {unresolvedItems.map((item) => <li key={`unres-${item}`}>{item}</li>)}
+                {warningItems.map((item) => <li key={`warn-${item}`}>{item}</li>)}
               </ul>
-              <p className="generation-readiness-note">未確定事項が残っていても生成はできますが、構成や security の見直しが必要になる可能性があります。</p>
+              <p className="generation-readiness-note">外部API有無やリポジトリ構成は仮置きでも進められますが、生成後に調整が必要になる場合があります。</p>
             </>
           )}
         </div>
@@ -215,6 +220,7 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
           disabled={
             !canExport
             || isGenerating
+            || blockingItems.length > 0
             || (requiresCookieSessionLogin && !authSession.authenticated)
             || (generationMode === 'remote'
               && remoteAuthMode === 'manual_bearer'
