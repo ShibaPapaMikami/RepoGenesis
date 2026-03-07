@@ -32,6 +32,23 @@ npm run test:contract
 - JSON 出力の先頭キー順 (`specVersion`)
 - ダウンロードファイル名 (`project_spec.json`)
 
+## E2E テスト
+
+```bash
+npm run test:e2e
+```
+
+検証内容:
+- `相談結果を反映` モードの基本導線
+- 相談の種類ごとのテスト入力反映
+- `draft` 生成と詳細入力への反映
+- JSON プレビューの必須形状
+- 入力モード切替と `Reset`
+
+補足:
+- `playwright.config.ts` が Vite dev server (`npm run dev`) を自動起動する
+- 生成物は `app/test-results/` に出るため Git 管理対象外
+
 ## ZIP 生成フロー
 
 `Generate Repository (ZIP)` は `app` から `generator/src/generateFromSpec.ts` を直接呼び出し、生成ファイルを ZIP 化してダウンロードする。

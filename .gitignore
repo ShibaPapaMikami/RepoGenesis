@@ -27,3 +27,5 @@ npm-debug.log*
 
 # Generated output (user downloads)
 /output/
+app/test-results/
+app/playwright-report/
