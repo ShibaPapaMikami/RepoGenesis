@@ -11,6 +11,11 @@ export interface IntakeDraft {
   source: 'pasted_consultation';
   rawText: string;
   sections: Record<string, string>;
+  review: {
+    facts: string[];
+    assumptions: string[];
+    openQuestions: string[];
+  };
   extracted: {
     summary: string | null;
     users: string[];
@@ -212,6 +217,59 @@ function detectHasIpSensitive(text: string): boolean {
   return /(機密|秘匿|社外秘|取引先情報|案件情報)/i.test(text);
 }
 
+function toFactList(
+  summary: string | null,
+  users: string[],
+  problem: string | null,
+  firstDeliverable: string | null,
+  dataKinds: string[],
+  integrations: string[],
+): string[] {
+  const facts: string[] = [];
+  if (summary) facts.push(`概要: ${summary}`);
+  if (users.length > 0) facts.push(`想定ユーザー: ${users.join(' / ')}`);
+  if (problem) facts.push(`課題: ${problem}`);
+  if (firstDeliverable) facts.push(`最初に作るもの: ${firstDeliverable}`);
+  if (dataKinds.length > 0) facts.push(`扱うデータ: ${dataKinds.join(' / ')}`);
+  if (integrations.length > 0) facts.push(`外部連携候補: ${integrations.join(' / ')}`);
+  return facts;
+}
+
+function toAssumptionList(
+  provisional: string[],
+  inferredRepoType: RepoType,
+  inferredPhasesCount: number,
+): string[] {
+  return provisional.map((item) => {
+    if (item.startsWith('リポジトリ構成')) {
+      return `リポジトリ構成は ${inferredRepoType} を仮置き`;
+    }
+    if (item.startsWith('フェーズ数')) {
+      return `フェーズ数は ${inferredPhasesCount} を仮置き`;
+    }
+    if (item === '外部API有無') {
+      return '外部API有無は未確定のため仮置き';
+    }
+    if (item === '技術ドメイン') {
+      return '技術ドメインは文面から推定';
+    }
+    if (item === 'プロジェクト名') {
+      return 'プロジェクト名は概要から仮置き';
+    }
+    if (item === '責任者') {
+      return '責任者は未設定のため仮置き';
+    }
+    return item;
+  });
+}
+
+function toOpenQuestionList(
+  unresolved: string[],
+  openQuestions: string[],
+): string[] {
+  return [...new Set([...openQuestions, ...unresolved])];
+}
+
 function inferRepoType(text: string): RepoType {
   if (/(管理画面|ダッシュボード|画面)/i.test(text) && /(api|バッチ|worker|ジョブ)/i.test(text)) {
     return 'multi';
@@ -330,6 +388,11 @@ export function parseConsultationIntake(input: string, currentState: FormState):
     source: 'pasted_consultation',
     rawText,
     sections,
+    review: {
+      facts: toFactList(summary, users, problem, firstDeliverable, dataKinds, integrations),
+      assumptions: toAssumptionList([...new Set(provisional)], inferredRepoType, inferredPhasesCount),
+      openQuestions: toOpenQuestionList([...new Set(unresolved)], openQuestions),
+    },
     extracted: {
       summary,
       users,

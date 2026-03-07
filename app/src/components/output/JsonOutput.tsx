@@ -185,6 +185,16 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
               <p className="generation-readiness-note">外部API有無やリポジトリ構成は仮置きでも進められますが、生成後に調整が必要になる場合があります。</p>
             </>
           )}
+          {consultationDraft && (
+            <div className="generation-readiness-guidance">
+              <p><strong>facts / assumptions / open questions</strong></p>
+              <ul>
+                {consultationDraft.review.facts.slice(0, 2).map((item) => <li key={`fact-${item}`}>fact: {item}</li>)}
+                {consultationDraft.review.assumptions.slice(0, 2).map((item) => <li key={`assumption-${item}`}>assumption: {item}</li>)}
+                {consultationDraft.review.openQuestions.slice(0, 2).map((item) => <li key={`question-${item}`}>open question: {item}</li>)}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 

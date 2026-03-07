@@ -76,6 +76,8 @@ test('parseConsultationIntake should extract core sections into a draft', () => 
   assert.equal(draft.extracted.problem, '案件ごとの相談履歴と進行状況が分散している');
   assert.equal(draft.extracted.firstDeliverable, '案件一覧と相談履歴を見られる画面');
   assert.deepEqual(draft.extracted.integrations, ['Slack', 'Google Drive']);
+  assert.equal(draft.review.facts.some((item) => item.includes('概要: 社内向けのAI活用案件管理ツールを作りたい')), true);
+  assert.equal(draft.review.openQuestions.some((item) => item.includes('1リポジトリで十分かは未確定')), true);
 });
 
 test('parseConsultationIntake should create provisional state without changing schema shape', () => {
@@ -89,6 +91,7 @@ test('parseConsultationIntake should create provisional state without changing s
   assert.equal(draft.certainty.provisional.includes('リポジトリ構成（single 仮置き）'), true);
   assert.equal(draft.certainty.provisional.includes('フェーズ数（4 仮置き）'), true);
   assert.equal(draft.suggestedState.workflow.phases_count, 4);
+  assert.equal(draft.review.assumptions.some((item) => item.includes('リポジトリ構成は single を仮置き')), true);
 });
 
 test('parseConsultationIntake should mark missing required sections as unresolved', () => {
