@@ -61,6 +61,38 @@ const TEST_FILL_STATE = {
   securityLevelOverride: null,
 };
 
+const TEST_CONSULTATION_INPUT = `## プロジェクト概要
+社内の案件相談と進行管理をまとめる AI 活用ツールを作りたい
+
+## 想定ユーザー
+- 営業
+- PM
+- 制作進行
+
+## 解決したい課題
+案件ごとの相談履歴、タスク、判断ログが Slack とスプレッドシートに分散している
+
+## 最初に作るべきもの
+案件一覧、相談履歴、担当者別の確認状況を見られる Web 画面
+
+## 扱うデータ
+- 案件名
+- 担当者
+- 顧客名
+- 相談メモ
+
+## 外部連携候補
+- Slack
+- Google Drive
+
+## 未確定事項
+- 外部APIが本当に必要かは未確定
+- 1リポジトリで十分かは未確定
+
+## RepoGenesis入力候補
+- domain は web と ai が候補
+- 機密情報を扱う前提で security は medium 以上を想定`;
+
 function App() {
   const [state, dispatch] = useReducer(formReducer, initialFormState);
   const [inputMode, setInputMode] = useState<'consultation' | 'detail'>(loadInputMode());
@@ -133,6 +165,14 @@ function App() {
   function handleApplyTestInput() {
     dispatch({ type: 'RESTORE_DRAFT', payload: TEST_FILL_STATE });
     setInputMode('detail');
+  }
+
+  function handleApplyConsultationTestInput() {
+    setConsultationPromptVariant('internal_tool');
+    setConsultationText(TEST_CONSULTATION_INPUT);
+    setConsultationDraft(null);
+    setConsultationMessage('相談結果のテスト入力を反映しました。必要ならそのまま draft を作成してください。');
+    setInputMode('consultation');
   }
 
   async function handleCopyConsultationPrompt() {
@@ -267,7 +307,10 @@ function App() {
 
         <div className="app-actions">
           <button type="button" onClick={handleApplyTestInput} className="btn-secondary">
-            テスト入力を適用
+            詳細入力のテスト入力を適用
+          </button>
+          <button type="button" onClick={handleApplyConsultationTestInput} className="btn-secondary">
+            相談結果のテスト入力を適用
           </button>
           <button type="button" onClick={handleReset} className="btn-reset">
             Reset
