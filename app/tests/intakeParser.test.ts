@@ -86,7 +86,9 @@ test('parseConsultationIntake should create provisional state without changing s
   assert.equal(draft.suggestedState.tech.domains.includes('web'), true);
   assert.equal(draft.suggestedState.tech.domains.includes('ai'), true);
   assert.equal(draft.suggestedState.security.has_user_data, true);
-  assert.equal(draft.certainty.provisional.includes('リポジトリ構成'), true);
+  assert.equal(draft.certainty.provisional.includes('リポジトリ構成（single 仮置き）'), true);
+  assert.equal(draft.certainty.provisional.includes('フェーズ数（4 仮置き）'), true);
+  assert.equal(draft.suggestedState.workflow.phases_count, 4);
 });
 
 test('parseConsultationIntake should mark missing required sections as unresolved', () => {
@@ -104,8 +106,32 @@ test('assessIntakeReadiness should separate blocking items from warnings', () =>
 
   assert.equal(readiness.blocking.includes('想定ユーザー（未入力）'), true);
   assert.equal(readiness.blocking.includes('解決したい課題（未入力）'), true);
-  assert.equal(readiness.warnings.includes('リポジトリ構成'), true);
+  assert.equal(readiness.warnings.includes('リポジトリ構成（single 仮置き）'), true);
   assert.equal(readiness.warnings.includes('外部API有無'), true);
+});
+
+test('parseConsultationIntake should infer multi repo when deliverable mentions ui and api parts', () => {
+  const input = `## プロジェクト概要
+テスト
+
+## 想定ユーザー
+- 開発者
+
+## 解決したい課題
+管理画面と API を分けて整理したい
+
+## 最初に作るべきもの
+管理画面と API を先に作る
+
+## 扱うデータ
+- 案件情報
+
+## 未確定事項
+- なし`;
+  const draft = parseConsultationIntake(input, makeState());
+
+  assert.equal(draft.suggestedState.structure.repo_type, 'multi');
+  assert.equal(draft.certainty.provisional.includes('リポジトリ構成（multi 仮置き）'), true);
 });
 
 test('getConsultationPromptTemplate should return variant-specific guidance', () => {

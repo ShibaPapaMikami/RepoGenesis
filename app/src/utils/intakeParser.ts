@@ -1,6 +1,6 @@
 import { slugify } from './slugify.ts';
 import type { FormState } from '../state/actions.ts';
-import type { Domain } from '../constants/enums.ts';
+import type { Domain, RepoType } from '../constants/enums.ts';
 
 export interface IntakeReadiness {
   blocking: string[];
@@ -212,6 +212,23 @@ function detectHasIpSensitive(text: string): boolean {
   return /(機密|秘匿|社外秘|取引先情報|案件情報)/i.test(text);
 }
 
+function inferRepoType(text: string): RepoType {
+  if (/(管理画面|ダッシュボード|画面)/i.test(text) && /(api|バッチ|worker|ジョブ)/i.test(text)) {
+    return 'multi';
+  }
+  return 'single';
+}
+
+function inferPhasesCount(text: string, integrations: string[]): number {
+  if (/(poc|PoC|プロトタイプ|たたき台)/i.test(text)) {
+    return 2;
+  }
+  if (/(管理画面|ダッシュボード|認証|権限)/i.test(text) || integrations.length > 0) {
+    return 4;
+  }
+  return 3;
+}
+
 export function parseConsultationIntake(input: string, currentState: FormState): IntakeDraft {
   const rawText = input.trim();
   const sections = parseSections(rawText);
@@ -225,6 +242,13 @@ export function parseConsultationIntake(input: string, currentState: FormState):
   const openQuestions = toList(sections['未確定事項']);
   const candidateInputs = toList(sections['RepoGenesis入力候補']);
   const inferredDomains = inferDomains(combined);
+  const inferenceSource = [
+    summary ?? '',
+    problem ?? '',
+    firstDeliverable ?? '',
+    candidateInputs.join('\n'),
+    integrations.join('\n'),
+  ].join('\n');
 
   const projectName = currentState.project.name || guessProjectName(summary);
   const projectDescription = currentState.project.description || problem || summary || '';
@@ -233,6 +257,8 @@ export function parseConsultationIntake(input: string, currentState: FormState):
   const hasUserData = currentState.security.has_user_data || detectHasUserData(combined);
   const hasIpSensitive = currentState.security.has_ip_sensitive || detectHasIpSensitive(combined);
   const hasApiKeys = currentState.security.has_api_keys;
+  const inferredRepoType = inferRepoType(inferenceSource);
+  const inferredPhasesCount = inferPhasesCount(inferenceSource, integrations);
 
   const confirmed: string[] = [];
   const provisional: string[] = [];
@@ -259,7 +285,8 @@ export function parseConsultationIntake(input: string, currentState: FormState):
     provisional.push('技術ドメイン');
   }
 
-  provisional.push('リポジトリ構成');
+  provisional.push(`リポジトリ構成（${inferredRepoType} 仮置き）`);
+  provisional.push(`フェーズ数（${inferredPhasesCount} 仮置き）`);
   provisional.push('外部API有無');
 
   for (const key of REQUIRED_SECTION_KEYS) {
@@ -289,11 +316,11 @@ export function parseConsultationIntake(input: string, currentState: FormState):
     },
     structure: {
       ...currentState.structure,
-      repo_type: currentState.structure.repo_type || 'single',
+      repo_type: inferredRepoType,
     },
     workflow: {
       ...currentState.workflow,
-      phases_count: currentState.workflow.phases_count || 3,
+      phases_count: currentState.workflow.phases_count === 3 ? inferredPhasesCount : currentState.workflow.phases_count,
     },
     slugManuallyEdited: Boolean(currentState.project.slug),
     securityLevelOverride: currentState.securityLevelOverride,
