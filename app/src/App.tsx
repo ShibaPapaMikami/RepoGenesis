@@ -61,7 +61,8 @@ const TEST_FILL_STATE = {
   securityLevelOverride: null,
 };
 
-const TEST_CONSULTATION_INPUT = `## プロジェクト概要
+const TEST_CONSULTATION_INPUTS: Record<ConsultationPromptVariant, string> = {
+  internal_tool: `## プロジェクト概要
 社内の案件相談と進行管理をまとめる AI 活用ツールを作りたい
 
 ## 想定ユーザー
@@ -91,7 +92,72 @@ const TEST_CONSULTATION_INPUT = `## プロジェクト概要
 
 ## RepoGenesis入力候補
 - domain は web と ai が候補
-- 機密情報を扱う前提で security は medium 以上を想定`;
+- 機密情報を扱う前提で security は medium 以上を想定`,
+  new_business: `## プロジェクト概要
+法人向けに AI で案件提案を支援する新規 SaaS を立ち上げたい
+
+## 想定ユーザー
+- 企画担当
+- 営業責任者
+- 先行導入企業
+
+## 解決したい課題
+提案準備の質と速度が担当者依存で、初回商談までの仮説整理に時間がかかる
+
+## 最初に作るべきもの
+案件情報を入力すると提案のたたき台を出す PoC 画面
+
+## 扱うデータ
+- 企業名
+- 案件概要
+- 提案メモ
+- 社内の提案テンプレート
+
+## 外部連携候補
+- HubSpot
+- Notion
+
+## 未確定事項
+- 最初は single repo で十分かは未確定
+- 顧客ごとの権限管理を初期から入れるか未確定
+
+## RepoGenesis入力候補
+- domain は web と ai が候補
+- security は medium を想定
+- PoC と本番の境界をあとで見直す`,
+  client_project: `## プロジェクト概要
+クライアント向けに、問い合わせから制作進行まで見える管理画面を構築したい
+
+## 想定ユーザー
+- クライアント担当者
+- 制作ディレクター
+- 開発メンバー
+
+## 解決したい課題
+依頼内容、決定事項、進行状況がメールとチャットに散らばっていて、責任分界が曖昧
+
+## 最初に作るべきもの
+案件ごとの問い合わせ履歴と進行ステータスを見られる管理画面
+
+## 扱うデータ
+- 案件名
+- クライアント担当者
+- 契約範囲メモ
+- 進行ログ
+
+## 外部連携候補
+- Backlog
+- Google Drive
+
+## 未確定事項
+- 納品物と運用機能を同じ repo に置くべきか未確定
+- 外部API連携を初回スコープに含めるか未確定
+
+## RepoGenesis入力候補
+- domain は web が中心
+- クライアント情報を扱うので security は medium 以上
+- 納品範囲と将来拡張を分けて考える必要がある`,
+};
 
 function App() {
   const [state, dispatch] = useReducer(formReducer, initialFormState);
@@ -168,10 +234,9 @@ function App() {
   }
 
   function handleApplyConsultationTestInput() {
-    setConsultationPromptVariant('internal_tool');
-    setConsultationText(TEST_CONSULTATION_INPUT);
+    setConsultationText(TEST_CONSULTATION_INPUTS[consultationPromptVariant]);
     setConsultationDraft(null);
-    setConsultationMessage('相談結果のテスト入力を反映しました。必要ならそのまま draft を作成してください。');
+    setConsultationMessage(`相談結果のテスト入力を反映しました（${consultationPromptVariant}）。必要ならそのまま draft を作成してください。`);
     setInputMode('consultation');
   }
 
