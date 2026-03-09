@@ -14,7 +14,7 @@ export const initialFormState: FormState = {
     domains: [],
     primary_language: 'typescript',
     frameworks: [],
-    ai_tool: 'claude_cli',
+    ai_tools: ['claude_code'],
     ai_tool_detail: '',
   },
   security: {
@@ -95,15 +95,19 @@ export function formReducer(state: FormState, action: FormAction): FormState {
       return { ...state, tech: { ...state.tech, primary_language: action.payload } };
     case 'SET_FRAMEWORKS':
       return { ...state, tech: { ...state.tech, frameworks: action.payload } };
-    case 'SET_AI_TOOL':
+    case 'TOGGLE_AI_TOOL': {
+      const ai_tools = state.tech.ai_tools.includes(action.payload)
+        ? state.tech.ai_tools.filter((tool) => tool !== action.payload)
+        : [...state.tech.ai_tools, action.payload];
       return {
         ...state,
         tech: {
           ...state.tech,
-          ai_tool: action.payload,
-          ai_tool_detail: action.payload === 'other' ? state.tech.ai_tool_detail : '',
+          ai_tools,
+          ai_tool_detail: ai_tools.includes('other') ? state.tech.ai_tool_detail : '',
         },
       };
+    }
     case 'SET_AI_TOOL_DETAIL':
       return { ...state, tech: { ...state.tech, ai_tool_detail: action.payload } };
 

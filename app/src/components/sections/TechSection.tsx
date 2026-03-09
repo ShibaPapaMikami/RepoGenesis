@@ -67,24 +67,23 @@ export function TechSection({ state, dispatch, errors }: TechSectionProps) {
       </div>
 
       <div className="form-row">
-        <label>AI開発ツール *</label>
-        <div className="radio-group">
+        <label>AI開発ツール *（複数選択可）</label>
+        <div className="checkbox-group">
           {AI_TOOLS.map((tool) => (
-            <label key={tool} className="radio-label">
+            <label key={tool} className="checkbox-label">
               <input
-                type="radio"
-                name="ai_tool"
-                value={tool}
-                checked={state.tech.ai_tool === tool}
-                onChange={() => dispatch({ type: 'SET_AI_TOOL', payload: tool as AiTool })}
+                type="checkbox"
+                checked={state.tech.ai_tools.includes(tool)}
+                onChange={() => dispatch({ type: 'TOGGLE_AI_TOOL', payload: tool as AiTool })}
               />
               {AI_TOOL_LABELS[tool]}
             </label>
           ))}
         </div>
+        {errors['tech.ai_tools'] && <span className="error">{errors['tech.ai_tools']}</span>}
       </div>
 
-      {state.tech.ai_tool === 'other' && (
+      {state.tech.ai_tools.includes('other') && (
         <div className="form-row">
           <label htmlFor="ai-tool-detail">AI開発ツール詳細</label>
           <input

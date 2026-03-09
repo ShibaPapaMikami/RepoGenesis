@@ -10,7 +10,7 @@ export type FormAction =
   | { type: 'TOGGLE_DOMAIN'; payload: Domain }
   | { type: 'SET_PRIMARY_LANGUAGE'; payload: PrimaryLanguage }
   | { type: 'SET_FRAMEWORKS'; payload: string[] }
-  | { type: 'SET_AI_TOOL'; payload: AiTool }
+  | { type: 'TOGGLE_AI_TOOL'; payload: AiTool }
   | { type: 'SET_AI_TOOL_DETAIL'; payload: string }
   // Security
   | { type: 'SET_HAS_API_KEYS'; payload: boolean }
@@ -45,7 +45,7 @@ export interface FormState {
     domains: Domain[];
     primary_language: PrimaryLanguage;
     frameworks: string[];
-    ai_tool: AiTool;
+    ai_tools: AiTool[];
     ai_tool_detail: string;
   };
   security: {

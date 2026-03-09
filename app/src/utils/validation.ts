@@ -31,6 +31,9 @@ export function validate(state: FormState): Record<string, string> {
   if (state.tech.domains.length === 0) {
     errors['tech.domains'] = '技術ドメインを1つ以上選択してください';
   }
+  if (state.tech.ai_tools.length === 0) {
+    errors['tech.ai_tools'] = 'AI開発ツールを1つ以上選択してください';
+  }
 
   // Security — level is auto-calculated, no user validation needed
 

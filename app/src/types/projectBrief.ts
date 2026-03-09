@@ -1,4 +1,5 @@
 import type { Domain, PrimaryLanguage, AiTool, SecurityLevel, RepoType, RepoKind } from '../constants/enums';
+import type { LegacyAiTool } from '../utils/aiTools';
 import type { SupportedSpecVersion } from '../constants/spec';
 
 export interface ProjectInfo {
@@ -13,7 +14,8 @@ export interface TechInfo {
   domains: Domain[];
   primary_language: PrimaryLanguage;
   frameworks: string[];
-  ai_tool: AiTool;
+  ai_tools: AiTool[];
+  ai_tool: LegacyAiTool;
   ai_tool_detail: string;
 }
 

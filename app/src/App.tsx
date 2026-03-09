@@ -39,7 +39,7 @@ const TEST_FILL_STATE = {
     domains: ['web'] as const,
     primary_language: 'typescript' as const,
     frameworks: ['React', 'Vite'],
-    ai_tool: 'claude_cli' as const,
+    ai_tools: ['claude_code'] as const,
     ai_tool_detail: '',
   },
   security: {

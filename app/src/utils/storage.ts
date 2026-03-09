@@ -1,5 +1,6 @@
 import type { FormState } from '../state/actions';
 import type { IntakeDraft } from './intakeParser';
+import { normalizeAiTools, type LegacyAiTool } from './aiTools.ts';
 
 const STORAGE_KEY = 'draft_project_brief';
 const CONSULTATION_TEXT_KEY = 'consultation_input_text';
@@ -18,7 +19,7 @@ export function loadDraft(): FormState | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as FormState;
+    return migrateDraft(JSON.parse(raw) as FormState);
   } catch {
     return null;
   }
@@ -64,7 +65,11 @@ export function loadConsultationDraft(): IntakeDraft | null {
   try {
     const raw = localStorage.getItem(CONSULTATION_DRAFT_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as IntakeDraft;
+    const draft = JSON.parse(raw) as IntakeDraft;
+    return {
+      ...draft,
+      suggestedState: migrateDraft(draft.suggestedState),
+    };
   } catch {
     return null;
   }
@@ -95,4 +100,16 @@ export function clearConsultationState(): void {
   } catch {
     // silently ignore
   }
+}
+
+function migrateDraft(state: FormState): FormState {
+  const legacyAiTool = (state.tech as { ai_tool?: LegacyAiTool }).ai_tool;
+  return {
+    ...state,
+    tech: {
+      ...state.tech,
+      ai_tools: normalizeAiTools(state.tech.ai_tools ?? [], legacyAiTool),
+      ai_tool_detail: state.tech.ai_tool_detail ?? '',
+    },
+  };
 }

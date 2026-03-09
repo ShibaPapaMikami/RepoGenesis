@@ -16,7 +16,7 @@ function makeState(): FormState {
       domains: ['web'],
       primary_language: 'typescript',
       frameworks: ['React', 'Vite'],
-      ai_tool: 'claude_cli',
+      ai_tools: ['claude_code'],
       ai_tool_detail: '',
     },
     security: {
@@ -52,6 +52,8 @@ test('buildProjectSpec should map form state to ProjectSpec shape', () => {
   assert.equal(spec.structure.repo_type, state.structure.repo_type);
   assert.equal(spec.workflow.phases_count, state.workflow.phases_count);
   assert.equal(Array.isArray(spec.tech.frameworks), true);
+  assert.deepEqual(spec.tech.ai_tools, ['claude_code']);
+  assert.equal(spec.tech.ai_tool, 'claude_cli');
 });
 
 test('buildProjectSpec should set ISO created_at timestamp', () => {

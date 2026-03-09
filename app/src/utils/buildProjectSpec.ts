@@ -1,8 +1,10 @@
 import { SUPPORTED_SPEC_VERSION } from '../constants/spec.ts';
 import type { FormState } from '../state/actions.ts';
 import type { ProjectSpec } from '../types/projectBrief.ts';
+import { deriveLegacyAiTool, deriveLegacyAiToolDetail, normalizeAiTools } from './aiTools.ts';
 
 export function buildProjectSpec(state: FormState): ProjectSpec {
+  const aiTools = normalizeAiTools(state.tech.ai_tools);
   return {
     specVersion: SUPPORTED_SPEC_VERSION,
     project: {
@@ -16,8 +18,9 @@ export function buildProjectSpec(state: FormState): ProjectSpec {
       domains: state.tech.domains,
       primary_language: state.tech.primary_language,
       frameworks: state.tech.frameworks,
-      ai_tool: state.tech.ai_tool,
-      ai_tool_detail: state.tech.ai_tool_detail,
+      ai_tools: aiTools,
+      ai_tool: deriveLegacyAiTool(aiTools),
+      ai_tool_detail: deriveLegacyAiToolDetail(aiTools, state.tech.ai_tool_detail),
     },
     security: {
       level: state.security.level,
