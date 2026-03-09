@@ -9,6 +9,8 @@ import {
   loadConsultationText,
   saveConsultationDraft,
   loadConsultationDraft,
+  saveSimpleIntake,
+  loadSimpleIntake,
   saveInputMode,
   loadInputMode,
   clearConsultationState,
@@ -22,7 +24,9 @@ import { JsonOutput } from './components/output/JsonOutput';
 import { AuthPanel } from './components/auth/AuthPanel';
 import { getGenerationMode, getRemoteAuthMode } from './utils/generateRepository';
 import { ConsultationSection } from './components/sections/ConsultationSection';
-import { getConsultationPromptTemplate, parseConsultationIntake, type ConsultationPromptVariant, type IntakeDraft } from './utils/intakeParser';
+import { getConsultationPromptTemplate, parseConsultationIntake, updateDraftOpenQuestions, type ConsultationPromptVariant, type IntakeDraft } from './utils/intakeParser';
+import { SimpleInputSection } from './components/sections/SimpleInputSection';
+import { buildSimpleIntakeDraft, initialSimpleIntakeState, type SimpleIntakeState } from './utils/simpleIntake';
 import './App.css';
 
 declare const __APP_RELEASE__: string;
@@ -161,9 +165,10 @@ const TEST_CONSULTATION_INPUTS: Record<ConsultationPromptVariant, string> = {
 
 function App() {
   const [state, dispatch] = useReducer(formReducer, initialFormState);
-  const [inputMode, setInputMode] = useState<'consultation' | 'detail'>(loadInputMode());
+  const [inputMode, setInputMode] = useState<'consultation' | 'simple' | 'detail'>(loadInputMode());
   const [consultationText, setConsultationText] = useState(loadConsultationText());
   const [consultationDraft, setConsultationDraft] = useState<IntakeDraft | null>(loadConsultationDraft());
+  const [simpleInput, setSimpleInput] = useState<SimpleIntakeState>(loadSimpleIntake() ?? initialSimpleIntakeState);
   const [consultationPromptVariant, setConsultationPromptVariant] = useState<ConsultationPromptVariant>('internal_tool');
   const [consultationMessage, setConsultationMessage] = useState<string | null>(null);
   const [authSession, setAuthSession] = useState<{ authenticated: boolean; email: string | null }>({
@@ -184,9 +189,11 @@ function App() {
     const restoredMode = loadInputMode();
     const restoredText = loadConsultationText();
     const restoredConsultationDraft = loadConsultationDraft();
+    const restoredSimpleInput = loadSimpleIntake();
     setInputMode(restoredMode);
     setConsultationText(restoredText);
     setConsultationDraft(restoredConsultationDraft);
+    if (restoredSimpleInput) setSimpleInput(restoredSimpleInput);
   }, []);
 
   // state 変更時にデバウンス保存（500ms）
@@ -211,6 +218,10 @@ function App() {
   }, [consultationDraft]);
 
   useEffect(() => {
+    saveSimpleIntake(simpleInput);
+  }, [simpleInput]);
+
+  useEffect(() => {
     saveInputMode(inputMode);
   }, [inputMode]);
 
@@ -225,6 +236,7 @@ function App() {
     setInputMode('consultation');
     setConsultationText('');
     setConsultationDraft(null);
+    setSimpleInput(initialSimpleIntakeState);
     setConsultationMessage(null);
   }
 
@@ -238,6 +250,61 @@ function App() {
     setConsultationDraft(null);
     setConsultationMessage(`相談結果のテスト入力を反映しました（${consultationPromptVariant}）。必要ならそのまま draft を作成してください。`);
     setInputMode('consultation');
+  }
+
+  function handleApplySimpleTestInput() {
+    const sampleMap: Record<ConsultationPromptVariant, Partial<SimpleIntakeState>> = {
+      internal_tool: {
+        variant: 'internal_tool',
+        summary: '社内の案件相談と進行管理をまとめるAI活用ツール',
+        usersText: '営業\nPM\n制作進行',
+        problem: '相談履歴と判断ログが Slack とスプレッドシートに分散している',
+        firstDeliverable: '案件一覧と相談履歴を見られる Web 画面',
+        dataKindsText: '案件名\n担当者\n顧客情報\n相談メモ',
+        integrationStatus: 'maybe',
+        integrationNotes: 'Slack, Google Drive',
+        owner: 'Gugenka QA',
+        dataSensitivity: 'internal',
+        repoConfidence: 'unknown',
+        unresolvedNotes: '権限管理を初期から入れるか',
+      },
+      new_business: {
+        variant: 'new_business',
+        summary: '法人向けに AI で案件提案を支援する新規 SaaS',
+        usersText: '企画担当\n営業責任者\n先行導入企業',
+        problem: '提案準備の質と速度が担当者依存で、仮説整理に時間がかかる',
+        firstDeliverable: '案件情報を入力すると提案のたたき台を出す PoC 画面',
+        dataKindsText: '企業名\n案件概要\n提案メモ',
+        integrationStatus: 'maybe',
+        integrationNotes: 'HubSpot, Notion',
+        owner: 'Gugenka QA',
+        dataSensitivity: 'personal',
+        repoConfidence: 'single',
+        unresolvedNotes: '顧客ごとの権限管理を初期から入れるか',
+      },
+      client_project: {
+        variant: 'client_project',
+        summary: 'クライアント向けの問い合わせ・制作進行管理画面',
+        usersText: 'クライアント担当者\n制作ディレクター\n開発メンバー',
+        problem: '依頼内容と進行状況がメールとチャットに散らばっている',
+        firstDeliverable: '案件ごとの問い合わせ履歴と進行ステータスを見られる画面',
+        dataKindsText: '案件名\nクライアント担当者\n進行ログ',
+        integrationStatus: 'yes',
+        integrationNotes: 'Backlog, Google Drive',
+        owner: 'Gugenka QA',
+        dataSensitivity: 'personal',
+        repoConfidence: 'multi',
+        unresolvedNotes: '納品範囲と運用機能を同じ repo に置くべきか',
+      },
+    };
+
+    setSimpleInput({
+      ...initialSimpleIntakeState,
+      ...sampleMap[simpleInput.variant],
+    });
+    setConsultationDraft(null);
+    setConsultationMessage(`かんたん入力のテスト入力を反映しました（${simpleInput.variant}）。必要ならそのまま draft を作成してください。`);
+    setInputMode('simple');
   }
 
   async function handleCopyConsultationPrompt() {
@@ -268,6 +335,31 @@ function App() {
     });
   }
 
+  function handleChangeDraftOpenQuestions(value: string) {
+    setConsultationDraft((current) => {
+      if (!current) return current;
+      return updateDraftOpenQuestions(current, value);
+    });
+  }
+
+  function handleChangeSimpleInput<K extends keyof SimpleIntakeState>(key: K, value: SimpleIntakeState[K]) {
+    setSimpleInput((current) => {
+      const next = { ...current, [key]: value };
+      if (key === 'variant') {
+        setConsultationPromptVariant(value as ConsultationPromptVariant);
+      }
+      return next;
+    });
+  }
+
+  function handleBuildSimpleDraft() {
+    const draft = buildSimpleIntakeDraft(simpleInput, state);
+    setConsultationPromptVariant(simpleInput.variant);
+    setConsultationDraft(draft);
+    setConsultationMessage('かんたん入力から draft を作成しました。仮置き項目と未確定事項を確認してください。');
+    setInputMode('consultation');
+  }
+
   return (
     <div className="app">
       <header className="app-header">
@@ -293,6 +385,15 @@ function App() {
               <input
                 type="radio"
                 name="inputMode"
+                checked={inputMode === 'simple'}
+                onChange={() => setInputMode('simple')}
+              />
+              かんたん入力
+            </label>
+            <label className="radio-label">
+              <input
+                type="radio"
+                name="inputMode"
                 checked={inputMode === 'detail'}
                 onChange={() => setInputMode('detail')}
               />
@@ -313,12 +414,24 @@ function App() {
             onChangePromptVariant={setConsultationPromptVariant}
             intakeText={consultationText}
             onChangeText={setConsultationText}
+            onApplyTestInput={handleApplyConsultationTestInput}
             onCopyPrompt={handleCopyConsultationPrompt}
             onBuildDraft={handleBuildConsultationDraft}
             onApplyDraft={handleApplyConsultationDraft}
             onApplyDraftAndReviewOutput={handleApplyConsultationDraftAndReviewOutput}
             onSwitchToDetail={() => setInputMode('detail')}
+            onChangeOpenQuestions={handleChangeDraftOpenQuestions}
             draft={consultationDraft}
+            message={consultationMessage}
+          />
+        )}
+
+        {inputMode === 'simple' && (
+          <SimpleInputSection
+            state={simpleInput}
+            onChange={handleChangeSimpleInput}
+            onApplyTestInput={handleApplySimpleTestInput}
+            onBuildDraft={handleBuildSimpleDraft}
             message={consultationMessage}
           />
         )}
@@ -343,6 +456,16 @@ function App() {
                     <ul>
                       {consultationDraft.certainty.unresolved.map((item) => <li key={item}>{item}</li>)}
                     </ul>
+                    <div className="form-row consultation-inline-editor">
+                      <label htmlFor="detailOpenQuestionsEditor">open questions を整理</label>
+                      <textarea
+                        id="detailOpenQuestionsEditor"
+                        rows={4}
+                        value={consultationDraft.review.openQuestions.join('\n')}
+                        onChange={(e) => handleChangeDraftOpenQuestions(e.target.value)}
+                        placeholder={'例:\n外部APIが本当に必要か\nsingle repo で十分か'}
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="output-actions">
@@ -371,12 +494,11 @@ function App() {
         />
 
         <div className="app-actions">
-          <button type="button" onClick={handleApplyTestInput} className="btn-secondary">
-            詳細入力のテスト入力を適用
-          </button>
-          <button type="button" onClick={handleApplyConsultationTestInput} className="btn-secondary">
-            相談結果のテスト入力を適用
-          </button>
+          {inputMode === 'detail' && (
+            <button type="button" onClick={handleApplyTestInput} className="btn-secondary">
+              詳細入力のテスト入力を適用
+            </button>
+          )}
           <button type="button" onClick={handleReset} className="btn-reset">
             Reset
           </button>

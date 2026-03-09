@@ -10,11 +10,13 @@ interface ConsultationSectionProps {
   onChangePromptVariant: (value: ConsultationPromptVariant) => void;
   intakeText: string;
   onChangeText: (value: string) => void;
+  onApplyTestInput: () => void;
   onCopyPrompt: () => void;
   onBuildDraft: () => void;
   onApplyDraft: () => void;
   onApplyDraftAndReviewOutput: () => void;
   onSwitchToDetail: () => void;
+  onChangeOpenQuestions: (value: string) => void;
   draft: IntakeDraft | null;
   message: string | null;
 }
@@ -24,11 +26,13 @@ export function ConsultationSection({
   onChangePromptVariant,
   intakeText,
   onChangeText,
+  onApplyTestInput,
   onCopyPrompt,
   onBuildDraft,
   onApplyDraft,
   onApplyDraftAndReviewOutput,
   onSwitchToDetail,
+  onChangeOpenQuestions,
   draft,
   message,
 }: ConsultationSectionProps) {
@@ -62,6 +66,9 @@ export function ConsultationSection({
       </div>
 
       <div className="output-actions">
+        <button type="button" onClick={onApplyTestInput} className="btn-secondary">
+          相談結果のテスト入力を適用
+        </button>
         <button type="button" onClick={onCopyPrompt} className="btn-secondary">
           相談用プロンプトをコピー
         </button>
@@ -114,6 +121,17 @@ export function ConsultationSection({
               <ul>
                 {draft.review.openQuestions.map((item) => <li key={item}>{item}</li>)}
               </ul>
+              <div className="form-row consultation-inline-editor">
+                <label htmlFor="openQuestionsEditor">未確定事項を編集</label>
+                <textarea
+                  id="openQuestionsEditor"
+                  rows={5}
+                  value={draft.review.openQuestions.join('\n')}
+                  onChange={(e) => onChangeOpenQuestions(e.target.value)}
+                  placeholder={'例:\n外部APIが本当に必要か\n1リポジトリで十分か'}
+                />
+                <p className="hint">1行に1つずつ書くと、そのまま open questions に反映されます。</p>
+              </div>
             </div>
           </div>
 

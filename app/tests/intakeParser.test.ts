@@ -6,6 +6,7 @@ import {
   getConsultationPromptTemplate,
   getConsultationReviewHints,
   parseConsultationIntake,
+  updateDraftOpenQuestions,
 } from '../src/utils/intakeParser.ts';
 import type { FormState } from '../src/state/actions.ts';
 
@@ -21,7 +22,7 @@ function makeState(): FormState {
       domains: [],
       primary_language: 'typescript',
       frameworks: [],
-      ai_tool: 'claude_cli',
+      ai_tools: ['claude_code'],
       ai_tool_detail: '',
     },
     security: {
@@ -154,4 +155,13 @@ test('getConsultationReviewHints should return variant-specific review points', 
   assert.equal(/社内ツール/.test(internalHints.title), true);
   assert.equal(internalHints.points.length > 0, true);
   assert.equal(/クライアント案件/.test(clientHints.title), true);
+});
+
+test('updateDraftOpenQuestions should update review and extracted open questions', () => {
+  const draft = parseConsultationIntake(SAMPLE_INPUT, makeState());
+  const updated = updateDraftOpenQuestions(draft, '権限管理を初期から入れるか\nsingle repo で十分か');
+
+  assert.deepEqual(updated.review.openQuestions, ['権限管理を初期から入れるか', 'single repo で十分か']);
+  assert.deepEqual(updated.extracted.openQuestions, ['権限管理を初期から入れるか', 'single repo で十分か']);
+  assert.equal(updated.sections['未確定事項'].includes('権限管理を初期から入れるか'), true);
 });

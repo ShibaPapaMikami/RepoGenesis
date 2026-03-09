@@ -47,6 +47,13 @@ export interface ConsultationReviewHints {
   points: string[];
 }
 
+function normalizeOpenQuestionLines(input: string): string[] {
+  return input
+    .split('\n')
+    .map((line) => line.replace(/^[-*]\s*/, '').trim())
+    .filter(Boolean);
+}
+
 function isBlockingUnresolved(item: string): boolean {
   if (item === 'プロジェクト名') return true;
   if (/（未入力）$/.test(item)) return true;
@@ -409,5 +416,24 @@ export function parseConsultationIntake(input: string, currentState: FormState):
       unresolved: [...new Set(unresolved)],
     },
     suggestedState,
+  };
+}
+
+export function updateDraftOpenQuestions(draft: IntakeDraft, input: string): IntakeDraft {
+  const questions = normalizeOpenQuestionLines(input);
+  return {
+    ...draft,
+    sections: {
+      ...draft.sections,
+      未確定事項: questions.map((item) => `- ${item}`).join('\n'),
+    },
+    review: {
+      ...draft.review,
+      openQuestions: questions,
+    },
+    extracted: {
+      ...draft.extracted,
+      openQuestions: questions,
+    },
   };
 }
