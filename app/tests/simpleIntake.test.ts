@@ -75,4 +75,8 @@ test('buildSimpleIntakeDraft should reuse parser and reflect owner/security hint
   assert.equal(draft.suggestedState.security.has_api_keys, true);
   assert.equal(draft.suggestedState.security.has_user_data, true);
   assert.equal(draft.suggestedState.structure.repo_type, 'multi');
+  assert.deepEqual(
+    draft.suggestedState.structure.repos.map((repo) => repo.name),
+    ['frontend', 'backend'],
+  );
 });

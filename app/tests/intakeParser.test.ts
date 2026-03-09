@@ -135,6 +135,10 @@ test('parseConsultationIntake should infer multi repo when deliverable mentions 
   const draft = parseConsultationIntake(input, makeState());
 
   assert.equal(draft.suggestedState.structure.repo_type, 'multi');
+  assert.deepEqual(
+    draft.suggestedState.structure.repos.map((repo) => repo.name),
+    ['frontend-admin', 'backend'],
+  );
   assert.equal(draft.certainty.provisional.includes('リポジトリ構成（multi 仮置き）'), true);
 });
 

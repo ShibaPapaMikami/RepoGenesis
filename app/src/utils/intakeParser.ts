@@ -294,6 +294,52 @@ function inferPhasesCount(text: string, integrations: string[]): number {
   return 3;
 }
 
+function inferSuggestedRepos(
+  currentState: FormState,
+  inferredRepoType: RepoType,
+  firstDeliverable: string | null,
+): FormState['structure']['repos'] {
+  if (currentState.structure.repo_type === 'multi' && currentState.structure.repos.length > 0) {
+    return currentState.structure.repos;
+  }
+
+  if (inferredRepoType !== 'multi') {
+    return currentState.structure.repos;
+  }
+
+  const source = (firstDeliverable ?? '').toLowerCase();
+  const includesWorker = /(worker|バッチ|ジョブ)/i.test(firstDeliverable ?? '');
+
+  const repos: FormState['structure']['repos'] = [
+    {
+      name: source.includes('admin') || /管理画面|ダッシュボード/i.test(firstDeliverable ?? '') ? 'frontend-admin' : 'frontend',
+      type: 'frontend',
+      description: 'ユーザー向けまたは管理向けの Web 画面を担当するリポジトリ',
+      owner: currentState.project.owner || '未設定',
+      depends_on: ['backend'],
+    },
+    {
+      name: 'backend',
+      type: 'backend',
+      description: 'API と業務ロジックを担当するリポジトリ',
+      owner: currentState.project.owner || '未設定',
+      depends_on: [],
+    },
+  ];
+
+  if (includesWorker) {
+    repos.push({
+      name: 'worker',
+      type: 'backend',
+      description: '非同期処理やバッチ処理を担当するリポジトリ',
+      owner: currentState.project.owner || '未設定',
+      depends_on: ['backend'],
+    });
+  }
+
+  return repos;
+}
+
 export function parseConsultationIntake(input: string, currentState: FormState): IntakeDraft {
   const rawText = input.trim();
   const sections = parseSections(rawText);
@@ -382,6 +428,7 @@ export function parseConsultationIntake(input: string, currentState: FormState):
     structure: {
       ...currentState.structure,
       repo_type: inferredRepoType,
+      repos: inferSuggestedRepos(currentState, inferredRepoType, firstDeliverable),
     },
     workflow: {
       ...currentState.workflow,
