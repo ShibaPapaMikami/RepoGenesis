@@ -42,6 +42,16 @@ function applyCorsHeaders(reqOrigin: string | undefined, res: ServerResponse): v
   res.setHeader('Vary', 'Origin');
 }
 
+function toServerRequestId(payload: unknown): string {
+  if (payload && typeof payload === 'object' && 'meta' in payload) {
+    const meta = (payload as { meta?: { requestId?: unknown } }).meta;
+    if (meta && typeof meta.requestId === 'string' && meta.requestId.length > 0) {
+      return meta.requestId;
+    }
+  }
+  return `srv-${Date.now()}`;
+}
+
 const server = createServer((req, res) => {
   const reqOrigin = typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
   applyCorsHeaders(reqOrigin, res);
@@ -103,9 +113,14 @@ const server = createServer((req, res) => {
       return;
     }
 
+    const tentativeRequestId = toServerRequestId(payload);
+    // eslint-disable-next-line no-console
+    console.log(`[generate:start] requestId=${tentativeRequestId}`);
     const result = await handleGenerateApiDownloadRequest(authHeader, cookieHeader, payload);
     if (result.status !== 200) {
       const err = result.body as GenerateApiError;
+      // eslint-disable-next-line no-console
+      console.log(`[generate:failure] requestId=${err.requestId ?? tentativeRequestId} status=${result.status}`);
       appendAuditRecord({
         requestId: err.requestId ?? `srv-${Date.now()}`,
         userId: 'unknown',
@@ -129,6 +144,10 @@ const server = createServer((req, res) => {
       repoType: ok.repoType,
       fileCount: ok.fileCount,
     });
+    // eslint-disable-next-line no-console
+    console.log(
+      `[generate:success] requestId=${ok.requestId} repoType=${ok.repoType} fileCount=${ok.fileCount} zipBytes=${ok.zipBuffer.length}`,
+    );
 
     res.writeHead(200, {
       'Content-Type': 'application/zip',

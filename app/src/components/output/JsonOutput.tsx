@@ -2,7 +2,7 @@ import { useEffect, useState, type RefObject } from 'react';
 import type { FormState } from '../../state/actions';
 import { PROJECT_SPEC_FILENAME } from '../../constants/spec';
 import { buildProjectSpec, stringifyProjectSpec } from '../../utils/buildProjectSpec';
-import { generateRepository, getGenerationMode, getRemoteAuthMode } from '../../utils/generateRepository';
+import { GenerateRepositoryError, generateRepository, getGenerationMode, getRemoteAuthMode } from '../../utils/generateRepository';
 import { downloadErrorReport, submitFeedback, type FeedbackType, type ErrorReportPayload } from '../../utils/feedback';
 import { assessIntakeReadiness, getConsultationReviewHints, type ConsultationPromptVariant, type IntakeDraft } from '../../utils/intakeParser';
 
@@ -23,6 +23,7 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateMessage, setGenerateMessage] = useState<string | null>(null);
+  const [lastGenerateRequestId, setLastGenerateRequestId] = useState<string | null>(null);
   const [generatedZip, setGeneratedZip] = useState<{ blob: Blob; filename: string } | null>(null);
   const [authToken, setAuthToken] = useState('');
   const [lastErrorReport, setLastErrorReport] = useState<ErrorReportPayload | null>(null);
@@ -71,17 +72,25 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
       const result = await generateRepository(state, authToken);
       setGeneratedZip({ blob: result.blob, filename: result.filename });
       const fileInfo = result.fileCount ? `${result.fileCount}ファイル` : 'ZIP';
+      setLastGenerateRequestId(result.requestId ?? null);
       setGenerateMessage(`生成完了: ${result.filename} (${fileInfo}, ${result.mode})。ZIPをダウンロードしてください。`);
       setLastErrorReport(null);
     } catch (error) {
       console.error(error);
       const message = error instanceof Error ? error.message : 'リポジトリ生成に失敗しました。';
+      const requestId = error instanceof GenerateRepositoryError ? error.requestId : undefined;
+      const status = error instanceof GenerateRepositoryError ? error.status : undefined;
+      const kind = error instanceof GenerateRepositoryError ? error.kind : undefined;
+      setLastGenerateRequestId(requestId ?? null);
       setGenerateMessage(message);
       setLastErrorReport({
         timestamp: new Date().toISOString(),
         message,
         mode: generationMode,
         spec: buildProjectSpec(state),
+        requestId,
+        status,
+        kind,
       });
     } finally {
       setIsGenerating(false);
@@ -270,7 +279,14 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
       {requiresCookieSessionLogin && !authSession.authenticated && (
         <p className="hint">ZIP 生成には上部の認証セクションでログインが必要です。</p>
       )}
-      {generateMessage && <p>{generateMessage}</p>}
+      {generateMessage && (
+        <div>
+          <p>{generateMessage}</p>
+          {lastGenerateRequestId && (
+            <p className="hint">request id: {lastGenerateRequestId}</p>
+          )}
+        </div>
+      )}
 
       <div className="feedback-panel">
         <h3>フィードバック</h3>

@@ -10,6 +10,9 @@ export interface ErrorReportPayload {
   message: string;
   mode: 'local' | 'remote';
   spec: ReturnType<typeof buildProjectSpec>;
+  requestId?: string;
+  status?: number;
+  kind?: 'timeout' | 'network' | 'response';
 }
 
 export interface SubmitFeedbackInput {
