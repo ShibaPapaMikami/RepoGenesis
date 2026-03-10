@@ -48,6 +48,7 @@ npm run test:e2e
 補足:
 - `playwright.config.ts` が Vite dev server (`npm run dev`) を自動起動する
 - 生成物は `app/test-results/` に出るため Git 管理対象外
+- GitHub Actions の `CI` でも `build -> test:contract -> test:e2e` を実行する
 
 ## ZIP 生成フロー
 
