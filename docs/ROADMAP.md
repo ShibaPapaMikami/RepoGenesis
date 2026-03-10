@@ -50,7 +50,7 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] README/onboarding docs for Web ZIP flow
 - [x] Fixture sync stabilized between app and generator
 
-## Phase 4: Authenticated Web System (Current)
+## Phase 4: Authenticated Web System (Complete)
 **Goal:** Make Web generation usable in production without changing generator behavior.
 - [x] Define auth boundary rule (ADR-0003)
 - [x] Define orchestration API contract (`docs/OAUTH_ORCHESTRATION_API.md`)
@@ -64,28 +64,32 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Add Vercel-side session issue / inspect / logout endpoints
 - [x] Add production deployment runbooks
 - [x] Replace `AUTH_ALLOWED_EMAILS`-centric generation gating with domain-first gating
-- [ ] Remove `manual_bearer` from production UI
+- [x] Fix production deployment to `cookie_session` UI path
+- [ ] Remove `manual_bearer` support from the codebase entirely
 - [ ] Add explicit admin-only mode for local support/debug paths
 
-## Phase 5: Usability for Non-Engineers (Next)
+## Phase 5: Usability for Non-Engineers (Current)
 **Goal:** Reduce input burden and improve spec quality.
 - Reference: `docs/AI_INTAKE_ROADMAP.md`, `docs/AI_INTAKE_CONTRACT.md`
-- [ ] Add `相談結果を反映` mode as the primary non-engineer entry
-- [ ] Add `かんたん入力` mode separate from `詳細入力`
-- [ ] Replace direct spec-first UX with guided business questions
+- [x] Add `相談結果を反映` mode as the primary non-engineer entry
+- [x] Add `かんたん入力` mode separate from `詳細入力`
+- [x] Replace direct spec-first UX with guided business questions
 - [ ] Add field-by-field explanations in plain Japanese
 - [ ] Add example answers for each section
-- [ ] Add AI consultation prompt pack directly in UI
-- [ ] Add `未確定項目` checklist instead of hard-failing ambiguous users early
-- [ ] Add project type presets (Web app / PoC / internal tool / AI workflow)
-- [ ] Add review screen: "生成前の要約" for non-engineers
+- [x] Add AI consultation prompt pack directly in UI
+- [x] Add `未確定項目` checklist instead of hard-failing ambiguous users early
+- [x] Add project type presets (new business / internal tool / client project)
+- [x] Add review screen: "生成前の要約" for non-engineers
+- [x] Allow editing `open questions` before forcing detailed field decisions
+- [x] Auto-seed repos when a generated draft infers `multi`
+- [x] Add Playwright coverage for consultation/simple intake flows
 
 ## Phase 6: AI-Assisted Spec Authoring
 **Goal:** Improve quality without duplicating generator knowledge.
 - [ ] Add AI provider abstraction behind intake flow
 - [ ] Add guided prompt templates for ChatGPT / Claude / Gemini
 - [ ] Convert questionnaire answers into `ProjectSpec draft`
-- [ ] Separate "facts", "assumptions", and "open questions" in output
+- [x] Separate "facts", "assumptions", and "open questions" in output
 - [ ] Add AI-generated recommendations with user-confirmed overrides
 - [ ] Add prompt/export button for continuing requirement refinement outside RepoGenesis
 - [ ] Add deterministic `draft -> spec` mapping tests
@@ -109,6 +113,18 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [ ] Define policy for rules/skills modular layer introduction
 - [ ] Decide whether to replace vendored auth with upstream `@gugenka/auth`
 
+## Phase 9: Optional Skill Layer
+**Goal:** Let projects adopt curated operational knowledge without polluting generator core.
+- Reference: `docs/SKILL_LAYER_ROADMAP.md`, `docs/SKILL_LAYER_CONTRACT.md`
+- [ ] Define central skill registry metadata schema
+- [ ] Define `repogenesis.skills.json` project manifest schema
+- [ ] Generate empty `skills/README.md` and manifest on project bootstrap
+- [ ] Keep install mode as `copy + pin`
+- [ ] Add manual install runbook before any installer code
+- [ ] Add CLI installer only after registry/manifest contracts are fixed
+- [ ] Add Web UI for curated skill selection after CLI flow stabilizes
+- [ ] Keep hooks/editor settings/project scripts out of core scope
+
 ## Immediate Priorities (Next 3 Milestones)
 ### Milestone A: Production Hardening
 - [x] `AUTH_ALLOWED_DOMAINS=gugenka.jp` を generator 側の生成認可に反映
@@ -117,17 +133,23 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [ ] 認証エラー時の文言をユーザー向けに整理
 
 ### Milestone B: Simple UX
-- [ ] `相談結果を反映` の貼り付け導線を追加
-- [ ] `かんたん入力` の質問セットを定義
+- [x] `相談結果を反映` の貼り付け導線を追加
+- [x] `かんたん入力` の質問セットを定義
 - [ ] 入力回答 -> `ProjectSpec` のマッピング表を作る
 - [ ] 非エンジニア向け用語集を UI に埋め込む
-- [ ] 生成前サマリーを追加
+- [x] 生成前サマリーを追加
 
 ### Milestone C: AI Workflow
 - [ ] provider 非依存の intake abstraction を定義
-- [ ] 「ChatGPT/Claude に相談するためのプロンプト」プリセットを追加
+- [x] 相談結果を整理するための用途別プロンプトプリセットを追加
 - [ ] 回答結果をフォームに転記しやすい JSON / markdown 形式で出力
-- [ ] `facts / assumptions / open questions` の 3 区分を導入
+- [x] `facts / assumptions / open questions` の 3 区分を導入
+
+### Milestone D: Skill Layer Planning
+- [ ] skill registry item schema を定義
+- [ ] project manifest (`repogenesis.skills.json`) を定義
+- [ ] `copy + pin` を前提に install/update/remove 契約を定義
+- [ ] `skills` は optional layer、generator core とは分離する
 
 ## Explicit Non-Goals (For Now)
 - [ ] Generator の知識注入機能を先に増やすこと

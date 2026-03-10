@@ -1,10 +1,10 @@
 # ACTIVE_CONTEXT.md — Current Project State
 
 ## Last Updated
-2026-03-06
+2026-03-10
 
 ## Current Phase
-Phase 4 — Authenticated Web System (In Progress)
+Phase 5 — Usability for Non-Engineers (Stabilizing)
 
 ## What Has Been Done
 - Phase 0 完了:
@@ -25,32 +25,59 @@ Phase 4 — Authenticated Web System (In Progress)
     - multi-repo生成ロジック（workspace共通 + repo固有分離）
     - generator.ts / index.ts 実装
     - テスト26件全パス、`npm run build` 成功、`node dist/index.js` で実行可能
+- Phase 3 完了:
+  - app export と generator の単一生成ロジックを統一
+  - browser ZIP と orchestration API ZIP の両経路を整備
+  - JSON export / contract test / fixture sync を安定化
+- Phase 4 完了:
+  - Vercel + Render 構成で、本番相当の cookie-session ZIP 生成を成立
+  - Firebase ログイン -> Vercel `__session` 発行 -> Render 認可 -> ZIP ダウンロードを通した
+  - `gugenka.jp` を実運用ドメインとして認証・認可フローを整理
+  - app 上部の認証パネル、デプロイ版ラベル、Vercel BFF を追加
+- Phase 5 進行中:
+  - `相談結果を反映` モードを追加
+  - `かんたん入力` モードを追加
+  - 用途別プロンプト (`新規事業 / 社内ツール / クライアント案件`) を追加
+  - 用途別テスト入力を追加
+  - consultation draft の `facts / assumptions / open questions` 表示を追加
+  - `open questions` を review / 詳細入力から直接編集可能にした
+  - `block / warning` による生成前チェックを追加
+  - consultation -> 詳細入力反映 / 出力確認導線を追加
+  - simple -> consultation draft -> 詳細入力反映導線を追加
+  - consultation 向け Playwright E2E を拡張 (`13 passed`)
+  - `AI開発ツール` を `ai_tools[]` 複数選択に修正
+  - `multi` draft 反映時に `frontend/backend` 系の repo を自動補完するように修正
+  - 本番確認:
+    - `相談結果を反映`: PASS
+    - `かんたん入力`: PASS
+    - `open questions` 編集: PASS
+    - 詳細入力反映: PASS
+    - JSON 出力: PASS
+    - localStorage 復元: PASS
+    - `multi` draft 初期バリデーションエラー解消: PASS
 
 ## What Is Being Done Now
-- Vercel + Render 構成で、本番相当の cookie-session ZIP 生成を成立させた。
-- 実機状態:
-  - Firebase ログイン: pass
-  - Vercel 側 `__session` 発行: pass
-  - Render 側 ZIP 生成: pass
-  - 個別 allowlist (`AUTH_ALLOWED_EMAILS`) で生成認可: pass
-- 追加した本番構成:
-  - `app/api/orchestration/*` の Vercel BFF
-  - `app/api/auth/*` の Vercel session APIs
-  - `app/public/vendor/gugenka-auth.*` によるブラウザ認証 UI
-  - app 上部の認証パネル
-  - デプロイ版ラベル表示
 - いまの主要テーマ:
-  - 個別メール許可から `gugenka.jp` ドメイン許可へ移行
-  - `相談結果を反映` を主導線にした非エンジニア向け intake 設計
-  - AI 補助導入前の intake architecture 固定
-  - 参照設計 docs: `docs/AI_INTAKE_ROADMAP.md`, `docs/AI_INTAKE_CONTRACT.md`
+  - Phase 5 の安定化
+    - 非エンジニア向け文言の磨き込み
+    - docs と stable baseline の固定
+  - 次の大きい変更を分離
+    - AI tool 非依存化
+    - optional skill layer
+    - CI/docs
+  - 参照設計 docs:
+    - `docs/AI_INTAKE_ROADMAP.md`
+    - `docs/AI_INTAKE_CONTRACT.md`
+    - `docs/SKILL_LAYER_ROADMAP.md`
+    - `docs/SKILL_LAYER_CONTRACT.md`
 
 ## What Is Blocked
 - 技術的 blocker は解消済み。
-- 残る blocker は運用設計:
-  - 非エンジニア向け入力 UX が未整備
-  - 相談結果の取り込み導線がなく、壁打ち結果を活用できない
+- 残る blocker は構造整理と運用整備:
   - feedback 保存がローカルファイルで永続性に欠ける
+  - AI tool 非依存化 (`PROJECT.md + CLAUDE.md + GEMINI.md`) は未反映
+  - skill layer は planning 済みだが、manifest / installer は未反映
+  - 現在の大きい未コミット差分を concern ごとに分離する必要がある
 
 ## Key Decisions Made
 - React + Vite (SPA)。Next.jsは後回し。(ADR-0001)
@@ -75,9 +102,9 @@ Phase 4 — Authenticated Web System (In Progress)
 - dry-runなし（実行前プレビュー未対応）
 - interactive CLIなし（対話的プロンプト未対応）
 - skill injectionなし（テンプレートの外部差し込み未対応）
+- skill registry / manifest / installer なし
 - template versioningなし（テンプレートのバージョン管理未対応）
-- 非エンジニア向け `かんたん入力` が未実装
-- `相談結果を反映` モードが未実装
+- AI tool 非依存の `PROJECT.md` / `GEMINI.md` 分離が未反映
 - feedback 保存先が Render ローカルファイル
 
 ## Files That Exist
@@ -87,7 +114,8 @@ Phase 4 — Authenticated Web System (In Progress)
 - `docs/IMPLEMENTATION.md`, `docs/IMPLEMENTATION_PHASE2.md`
 - `docs/ADR/0000-template.md`, `docs/ADR/0001-frontend-react-vite.md`, `docs/ADR/0002-generator-cli-design.md`
 - `prompts/restart.md`, `SECURITY.md`, `.env.example`, `.gitignore`
-- `app/` — Phase 1 フロントエンド（20ファイル）
+- `app/` — フロントエンド
+  - フォーム、認証、consultation intake、Playwright E2E
 - `generator/` — Phase 2 ジェネレータCLI
   - `src/schema.ts`, `src/args.ts`, `src/generator.ts`, `src/index.ts`
   - `src/utils/fileWriter.ts`
@@ -95,15 +123,14 @@ Phase 4 — Authenticated Web System (In Progress)
   - `tests/schema.test.ts`, `tests/generator.test.ts`
 
 ## Next Phase
-Phase 5 — Usability for Non-Engineers
-- `相談結果を反映` モード追加
-- `かんたん入力` モード追加
-- 生成前要約の導入
-- AI 相談プロンプトの UI 埋め込み
+Phase 6 — AI-Assisted Spec Authoring
+- provider 非依存 intake contract の固定
+- AI による draft 作成導線の追加
+- deterministic `draft -> spec` 変換の強化
 
 ## Upcoming Focus
 Immediate next:
-- 本番 UI から manual bearer を隠す
-- `相談結果を反映` モードの input/output 仕様を固める
-- 非エンジニア向け質問セットを定義する
+- `ROADMAP` / `ACTIVE_CONTEXT` / `ROADMAP_STATUS` を現況に合わせる
+- stable baseline を切る
 - feedback の永続保存先を決める
+- AI tool 非依存化と optional skill layer を別差分で整理する
