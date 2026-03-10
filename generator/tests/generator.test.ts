@@ -19,6 +19,7 @@ const SINGLE_BRIEF = {
     domains: ['web', 'ai'],
     primary_language: 'typescript',
     frameworks: ['Next.js'],
+    ai_tools: ['claude_code'],
     ai_tool: 'claude_cli',
     ai_tool_detail: '',
   },
@@ -52,6 +53,7 @@ const MULTI_BRIEF = {
     domains: ['web'],
     primary_language: 'typescript',
     frameworks: [],
+    ai_tools: ['claude_code'],
     ai_tool: 'claude_cli',
     ai_tool_detail: '',
   },
@@ -97,10 +99,11 @@ describe('generator — single-repo', () => {
     const result = generate({ inputPath, outputPath: tmpDir, force: false });
 
     expect(result.success).toBe(true);
-    expect(result.filesCreated.length).toBe(17);
+    expect(result.filesCreated.length).toBe(18);
 
     const expectedFiles = [
-      'claude.md',
+      'PROJECT.md',
+      'CLAUDE.md',
       'docs/ACTIVE_CONTEXT.md',
       'docs/REQUIREMENTS.md',
       'docs/ARCHITECTURE.md',
@@ -140,7 +143,7 @@ describe('generator — single-repo', () => {
     // Second generate with --force
     const result = generate({ inputPath, outputPath: tmpDir, force: true });
     expect(result.success).toBe(true);
-    expect(result.filesCreated.length).toBe(17);
+    expect(result.filesCreated.length).toBe(18);
   });
 });
 
@@ -152,7 +155,7 @@ describe('generator — multi-repo', () => {
     expect(result.success).toBe(true);
 
     // Workspace-level files
-    const workspaceFiles = ['GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', '.gitignore'];
+    const workspaceFiles = ['PROJECT.md', 'CLAUDE.md', 'GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', '.gitignore'];
     for (const file of workspaceFiles) {
       const fullPath = path.join(result.outputDir, file);
       expect(fs.existsSync(fullPath), `Expected workspace file: ${file}`).toBe(true);
@@ -161,7 +164,8 @@ describe('generator — multi-repo', () => {
     // Per-repo files
     for (const repoName of ['frontend', 'backend']) {
       const repoFiles = [
-        `${repoName}/claude.md`,
+        `${repoName}/PROJECT.md`,
+        `${repoName}/CLAUDE.md`,
         `${repoName}/docs/ACTIVE_CONTEXT.md`,
         `${repoName}/docs/ARCHITECTURE.md`,
         `${repoName}/docs/ROADMAP.md`,
@@ -204,7 +208,7 @@ describe('generator — security flag content', () => {
     expect(security).toContain('PCI DSS');
   });
 
-  it('should include payment rule in claude.md when has_payment_data is true', () => {
+  it('should include payment rule in PROJECT.md when has_payment_data is true', () => {
     const brief = {
       ...SINGLE_BRIEF,
       security: {
@@ -218,11 +222,11 @@ describe('generator — security flag content', () => {
     };
     const inputPath = writeInputFile(brief);
     const result = generate({ inputPath, outputPath: tmpDir, force: true });
-    const claude = fs.readFileSync(path.join(result.outputDir, 'claude.md'), 'utf-8');
-    expect(claude).toContain('payment data');
+    const projectMd = fs.readFileSync(path.join(result.outputDir, 'PROJECT.md'), 'utf-8');
+    expect(projectMd).toContain('payment data');
   });
 
-  it('should include IP confidentiality in claude.md when has_ip_sensitive is true', () => {
+  it('should include IP confidentiality in PROJECT.md when has_ip_sensitive is true', () => {
     const brief = {
       ...SINGLE_BRIEF,
       security: {
@@ -236,8 +240,8 @@ describe('generator — security flag content', () => {
     };
     const inputPath = writeInputFile(brief);
     const result = generate({ inputPath, outputPath: tmpDir, force: true });
-    const claude = fs.readFileSync(path.join(result.outputDir, 'claude.md'), 'utf-8');
-    expect(claude).toContain('client-confidential');
+    const projectMd = fs.readFileSync(path.join(result.outputDir, 'PROJECT.md'), 'utf-8');
+    expect(projectMd).toContain('client-confidential');
   });
 });
 
@@ -281,11 +285,12 @@ describe('generateFromSpec — pure function', () => {
     return result.data;
   }
 
-  it('should return Map with 17 files for single-repo', () => {
+  it('should return Map with 18 files for single-repo', () => {
     const brief = parseBrief(SINGLE_BRIEF);
     const files = generateFromSpec(brief);
-    expect(files.size).toBe(17);
-    expect(files.has('claude.md')).toBe(true);
+    expect(files.size).toBe(18);
+    expect(files.has('PROJECT.md')).toBe(true);
+    expect(files.has('CLAUDE.md')).toBe(true);
     expect(files.has('SECURITY.md')).toBe(true);
     expect(files.has('docs/VERSIONING_STANDARD.md')).toBe(true);
     expect(files.has('.gitignore')).toBe(true);
@@ -295,13 +300,17 @@ describe('generateFromSpec — pure function', () => {
   it('should return Map with correct files for multi-repo', () => {
     const brief = parseBrief(MULTI_BRIEF);
     const files = generateFromSpec(brief);
-    // 9 workspace + 10 * 2 repos + 1 manifest = 30
-    expect(files.size).toBe(30);
+    // 11 workspace + 11 * 2 repos + 1 manifest = 34
+    expect(files.size).toBe(34);
+    expect(files.has('PROJECT.md')).toBe(true);
+    expect(files.has('CLAUDE.md')).toBe(true);
     expect(files.has('GLOBAL_CONTEXT.md')).toBe(true);
     expect(files.has('VERSIONING_STANDARD.md')).toBe(true);
-    expect(files.has('frontend/claude.md')).toBe(true);
+    expect(files.has('frontend/PROJECT.md')).toBe(true);
+    expect(files.has('frontend/CLAUDE.md')).toBe(true);
     expect(files.has('frontend/docs/VERSIONING_STANDARD.md')).toBe(true);
-    expect(files.has('backend/claude.md')).toBe(true);
+    expect(files.has('backend/PROJECT.md')).toBe(true);
+    expect(files.has('backend/CLAUDE.md')).toBe(true);
     expect(files.has('.repogenesis/manifest.json')).toBe(true);
   });
 
@@ -367,7 +376,8 @@ describe('generateFromSpec — pure function', () => {
     const manifest = JSON.parse(manifestRaw as string);
     expect(manifest.specVersion).toBe('1.0');
     expect(manifest.repoType).toBe('single');
-    expect(manifest.fileCount).toBe(17);
+    expect(manifest.fileCount).toBe(18);
     expect(manifest.source).toBe('legacyBrief');
   });
+
 });

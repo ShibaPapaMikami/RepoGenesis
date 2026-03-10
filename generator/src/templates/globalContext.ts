@@ -8,7 +8,6 @@ export function generateGlobalContext(brief: ProjectBrief): string {
     return `- **${r.name}** (${r.type}): ${r.description} — Owner: ${r.owner}${deps}`;
   }).join('\n');
 
-  // Dependency graph (simple text representation)
   const depsWithRelations = structure.repos.filter((r) => r.depends_on.length > 0);
   let depGraph = '';
   if (depsWithRelations.length > 0) {
@@ -36,7 +35,8 @@ ${repoList}
 ${depGraph}
 
 ## Cross-Repo Conventions
-- Each repository has its own \`claude.md\` with repo-specific rules.
+- Each repository has its own \`PROJECT.md\` with repository-specific rules.
+- Tool-specific wrappers such as \`CLAUDE.md\` and \`GEMINI.md\` are thin adapters only.
 - Shared decisions are documented in this file.
 - Dependencies between repos should be managed explicitly.
 - When a change in one repo affects another, update both repos' \`ACTIVE_CONTEXT.md\`.

@@ -14,6 +14,7 @@ const VALID_SPEC = {
     domains: ['web'],
     primary_language: 'typescript',
     frameworks: ['React'],
+    ai_tools: ['claude_code'],
     ai_tool: 'claude_cli',
     ai_tool_detail: '',
   },
@@ -81,7 +82,7 @@ describe('orchestration api', () => {
       expect(res.body.requestId).toBe('req-123');
       expect(res.body.specVersion).toBe('1.0');
       expect(res.body.repoType).toBe('single');
-      expect(res.body.fileCount).toBe(17);
+      expect(res.body.fileCount).toBe(18);
       expect(res.body.artifact.filename).toBe('orchestration-test.zip');
       expect(res.body.artifact.contentType).toBe('application/zip');
     }

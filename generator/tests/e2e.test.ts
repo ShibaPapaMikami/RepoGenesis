@@ -60,7 +60,8 @@ describe('E2E — single-repo', () => {
     const base = path.join(TMP_OUTPUT, 'single', SLUG);
 
     const requiredFiles = [
-      'claude.md',
+      'PROJECT.md',
+      'CLAUDE.md',
       'docs/ACTIVE_CONTEXT.md',
       'docs/REQUIREMENTS.md',
       'docs/ARCHITECTURE.md',
@@ -90,12 +91,12 @@ describe('E2E — single-repo', () => {
     expect(security).toContain('Payment Data Policy');
   });
 
-  it('should reflect has_payment_data in claude.md (payment rule)', () => {
+  it('should reflect has_payment_data in PROJECT.md (payment rule)', () => {
     run('test_brief_single.json', 'single');
-    const claude = fs.readFileSync(
-      path.join(TMP_OUTPUT, 'single', SLUG, 'claude.md'), 'utf-8',
+    const projectMd = fs.readFileSync(
+      path.join(TMP_OUTPUT, 'single', SLUG, 'PROJECT.md'), 'utf-8',
     );
-    expect(claude).toContain('payment data');
+    expect(projectMd).toContain('payment data');
   });
 
   it('should reflect has_api_keys in .env.example', () => {
@@ -133,18 +134,19 @@ describe('E2E — single-repo', () => {
 describe('E2E — app export', () => {
   const SLUG = 'app-export-test';
 
-  it('should exit 0 and generate 17 files from app export JSON', () => {
+  it('should exit 0 and generate 18 files from app export JSON', () => {
     const result = run('test_brief_app_export.json', 'app-export');
     expect(result.exitCode, `CLI failed.\nstdout: ${result.stdout}\nstderr: ${result.stderr}`).toBe(0);
-    expect(result.stdout).toContain('17 files');
+    expect(result.stdout).toContain('18 files');
   });
 
-  it('should create all 17 required single-repo files from app export', () => {
+  it('should create all 18 required single-repo files from app export', () => {
     run('test_brief_app_export.json', 'app-export');
     const base = path.join(TMP_OUTPUT, 'app-export', SLUG);
 
     const requiredFiles = [
-      'claude.md',
+      'PROJECT.md',
+      'CLAUDE.md',
       'docs/ACTIVE_CONTEXT.md',
       'docs/REQUIREMENTS.md',
       'docs/ARCHITECTURE.md',
@@ -163,7 +165,7 @@ describe('E2E — app export', () => {
       '.repogenesis/manifest.json',
     ];
 
-    expect(requiredFiles.length).toBe(17);
+    expect(requiredFiles.length).toBe(18);
 
     for (const file of requiredFiles) {
       const fullPath = path.join(base, file);
@@ -185,19 +187,21 @@ describe('E2E — multi-repo', () => {
     run('test_brief_multi.json', 'multi');
     const base = path.join(TMP_OUTPUT, 'multi', SLUG);
 
-    for (const file of ['GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', '.gitignore', '.repogenesis/manifest.json']) {
+    for (const file of ['PROJECT.md', 'CLAUDE.md', 'GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', '.gitignore', '.repogenesis/manifest.json']) {
       expect(fs.existsSync(path.join(base, file)), `Missing workspace file: ${file}`).toBe(true);
     }
   });
 
-  it('should create per-repo claude.md for all repos', () => {
+  it('should create per-repo PROJECT.md / CLAUDE.md for all repos', () => {
     run('test_brief_multi.json', 'multi');
     const base = path.join(TMP_OUTPUT, 'multi', SLUG);
 
     for (const repo of ['web-app', 'api-server', 'infra']) {
-      const claudePath = path.join(base, repo, 'claude.md');
-      expect(fs.existsSync(claudePath), `Missing: ${repo}/claude.md`).toBe(true);
-      expect(fs.readFileSync(claudePath, 'utf-8')).toContain(repo);
+      const projectPath = path.join(base, repo, 'PROJECT.md');
+      const claudePath = path.join(base, repo, 'CLAUDE.md');
+      expect(fs.existsSync(projectPath), `Missing: ${repo}/PROJECT.md`).toBe(true);
+      expect(fs.existsSync(claudePath), `Missing: ${repo}/CLAUDE.md`).toBe(true);
+      expect(fs.readFileSync(projectPath, 'utf-8')).toContain(repo);
     }
   });
 

@@ -14,6 +14,7 @@ function validBrief(overrides: Record<string, unknown> = {}) {
       domains: ['web'],
       primary_language: 'typescript',
       frameworks: [],
+      ai_tools: ['claude_code'],
       ai_tool: 'claude_cli',
       ai_tool_detail: '',
     },
@@ -40,6 +41,29 @@ describe('projectBriefSchema', () => {
   it('should pass with valid single-repo brief', () => {
     const result = projectBriefSchema.safeParse(validBrief());
     expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.tech.ai_tools).toEqual(['claude_code']);
+      expect(result.data.tech.ai_tool).toBe('claude_cli');
+    }
+  });
+
+  it('should pass with legacy ai_tool only and normalize to ai_tools', () => {
+    const brief = validBrief();
+    delete (brief.tech as Record<string, unknown>).ai_tools;
+    const result = projectBriefSchema.safeParse(brief);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.tech.ai_tools).toEqual(['claude_code']);
+      expect(result.data.tech.ai_tool).toBe('claude_cli');
+    }
+  });
+
+  it('should fail when neither ai_tools nor legacy ai_tool are provided', () => {
+    const brief = validBrief();
+    delete (brief.tech as Record<string, unknown>).ai_tools;
+    delete (brief.tech as Record<string, unknown>).ai_tool;
+    const result = projectBriefSchema.safeParse(brief);
+    expect(result.success).toBe(false);
   });
 
   it('should fail when project.name is empty', () => {

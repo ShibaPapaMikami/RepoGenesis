@@ -1,8 +1,10 @@
 import { z } from 'zod';
+import { deriveLegacyAiTool, deriveLegacyAiToolDetail, type AiTool, type LegacyAiTool, normalizeAiTools } from './aiTools';
 
 const domainEnum = z.enum(['web', 'mobile', 'unity', 'xr', 'ai', 'infra', 'cli', 'iot']);
 const primaryLanguageEnum = z.enum(['typescript', 'python', 'csharp', 'swift', 'go', 'rust', 'kotlin', 'other']);
-const aiToolEnum = z.enum(['claude_cli', 'other']);
+const aiToolEnum = z.enum(['claude_code', 'gemini_cli', 'other']);
+const legacyAiToolEnum = z.enum(['claude_cli', 'other']);
 const securityLevelEnum = z.enum(['low', 'medium', 'high']);
 const repoTypeEnum = z.enum(['single', 'multi']);
 const repoKindEnum = z.enum(['frontend', 'backend', 'infra', 'sdk', 'unity', 'mobile', 'ops']);
@@ -17,12 +19,33 @@ const projectSchema = z.object({
   created_at: z.string(),
 });
 
+type NormalizedTech = {
+  domains: z.infer<typeof domainEnum>[];
+  primary_language: z.infer<typeof primaryLanguageEnum>;
+  frameworks: string[];
+  ai_tools: AiTool[];
+  ai_tool: LegacyAiTool;
+  ai_tool_detail: string;
+};
+
 const techSchema = z.object({
   domains: z.array(domainEnum).min(1, '技術ドメインを1つ以上選択してください'),
   primary_language: primaryLanguageEnum,
   frameworks: z.array(z.string()).default([]),
-  ai_tool: aiToolEnum,
+  ai_tools: z.array(aiToolEnum).default([]),
+  ai_tool: legacyAiToolEnum.optional(),
   ai_tool_detail: z.string().optional().default(''),
+}).refine(
+  (tech) => normalizeAiTools(tech).length > 0,
+  { message: 'AI開発ツールを1つ以上選択してください', path: ['ai_tools'] },
+).transform((tech): NormalizedTech => {
+  const ai_tools = normalizeAiTools(tech);
+  return {
+    ...tech,
+    ai_tools,
+    ai_tool: deriveLegacyAiTool(ai_tools),
+    ai_tool_detail: deriveLegacyAiToolDetail(ai_tools, tech.ai_tool_detail),
+  };
 });
 
 const securitySchema = z.object({

@@ -7,12 +7,14 @@ When starting a new session or restarting, follow these steps:
 
 ## Step 1: Read Constitution
 \`\`\`
-Read claude.md
+Read PROJECT.md
+Read the tool-specific wrapper if present (for example CLAUDE.md or GEMINI.md)
 \`\`\`
 
 ## Step 2: Read Current State
 \`\`\`
-Read docs/ACTIVE_CONTEXT.md
+Read docs/ACTIVE_CONTEXT.md if it exists
+Read GLOBAL_CONTEXT.md or ../GLOBAL_CONTEXT.md if it exists
 \`\`\`
 
 ## Step 3: Summarize

@@ -11,6 +11,7 @@
     "domains": ["web"],
     "primary_language": "typescript",
     "frameworks": ["React", "Vite"],
+    "ai_tools": ["claude_code"],
     "ai_tool": "claude_cli",
     "ai_tool_detail": ""
   },

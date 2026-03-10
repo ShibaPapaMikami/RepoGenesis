@@ -1,4 +1,5 @@
 import type { ProjectBrief } from '../schema';
+import { formatAiTools } from '../aiTools';
 
 export function generateRequirements(brief: ProjectBrief): string {
   const { project, tech } = brief;
@@ -21,7 +22,7 @@ Define what ${project.name} must do. This is the single source of truth for func
 ## Technical Context
 - Domains: ${tech.domains.join(', ')}
 - Primary Language: ${tech.primary_language}
-${frameworkLine}- AI Tool: ${tech.ai_tool}
+${frameworkLine}- AI Tools: ${formatAiTools(tech)}
 
 ## Core Requirements
 
