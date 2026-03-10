@@ -27,6 +27,8 @@ function pickHeader(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
+const UPSTREAM_TIMEOUT_MS = 20_000;
+
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (req.method === 'OPTIONS') {
     res.status(204).end();
@@ -68,9 +70,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       method: 'POST',
       headers,
       body: bodyText,
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
-  } catch {
-    res.status(502).json({ error: 'Upstream request failed' });
+  } catch (error) {
+    const isTimeout = error instanceof Error && error.name === 'TimeoutError';
+    res.status(isTimeout ? 504 : 502).json({
+      error: isTimeout
+        ? 'Upstream request timed out'
+        : 'Upstream request failed',
+    });
     return;
   }
 

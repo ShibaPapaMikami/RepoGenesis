@@ -12,6 +12,7 @@ export interface GenerateRepositoryResult {
 const API_BASE = import.meta.env.VITE_ORCHESTRATION_API_URL as string | undefined;
 const REMOTE_AUTH_MODE = (import.meta.env.VITE_REMOTE_AUTH_MODE as string | undefined) ?? 'manual_bearer';
 const PROXY_BASE = '/api/orchestration';
+const REMOTE_GENERATE_TIMEOUT_MS = 60_000;
 
 export function getOrchestrationApiBase(): string | undefined {
   return API_BASE;
@@ -68,9 +69,15 @@ async function generateRepositoryRemote(state: FormState, authToken: string): Pr
         spec,
         output: { format: 'zip' },
       }),
+      signal: AbortSignal.timeout(REMOTE_GENERATE_TIMEOUT_MS),
     });
-  } catch {
-    throw new Error('通信に失敗しました。CORS設定またはAPI稼働状態を確認してください。');
+  } catch (error) {
+    const isTimeout = error instanceof Error && error.name === 'TimeoutError';
+    throw new Error(
+      isTimeout
+        ? 'ZIP生成がタイムアウトしました。APIの再デプロイ状態または生成内容を確認してください。'
+        : '通信に失敗しました。CORS設定またはAPI稼働状態を確認してください。',
+    );
   }
 
   if (!response.ok) {
