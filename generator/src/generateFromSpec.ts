@@ -19,6 +19,10 @@ import { generatePrTemplate } from './templates/prTemplate';
 import { generateIssueBugReport } from './templates/issueBugReport';
 import { generateIssueFeatureRequest } from './templates/issueFeatureRequest';
 import { generateVersioningStandard } from './templates/versioningStandard';
+import { createEmptySkillsManifest } from './skillsManifest';
+import { generateRunbookReadme } from './templates/runbookReadme';
+import { generateSkillInstallRunbook } from './templates/skillInstallRunbook';
+import { generateSkillsReadme } from './templates/skillsReadme';
 
 type RepoEntry = ProjectBrief['structure']['repos'][number];
 const DEFAULT_SPEC_VERSION: SpecVersion = '1.0';
@@ -176,11 +180,15 @@ function buildSingleRepo(brief: ProjectBrief): Map<string, string> {
     ['docs/ROADMAP.md', generateRoadmap(brief)],
     ['docs/VERSIONING_STANDARD.md', generateVersioningStandard(brief)],
     ['docs/ADR/0000-template.md', generateAdrTemplate(brief)],
+    ['docs/runbooks/README.md', generateRunbookReadme(brief)],
+    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief)],
     ['plans/template.md', generatePlansTemplate(brief)],
     ['prompts/restart.md', generateRestart(brief)],
     ['SECURITY.md', generateSecurity(brief)],
     ['.env.example', generateEnvExample(brief)],
     ['.gitignore', generateGitignore(brief)],
+    ['skills/README.md', generateSkillsReadme(brief)],
+    ['repogenesis.skills.json', `${JSON.stringify(createEmptySkillsManifest(), null, 2)}\n`],
     ['CONTRIBUTING.md', generateContributing(brief)],
     ['.github/PULL_REQUEST_TEMPLATE.md', generatePrTemplate(brief)],
     ['.github/ISSUE_TEMPLATE/bug_report.md', generateIssueBugReport(brief)],
@@ -204,7 +212,11 @@ function buildMultiRepo(brief: ProjectBrief): Map<string, string> {
     ['REQUIREMENTS.md', generateRequirements(brief)],
     ['SECURITY.md', generateSecurity(brief)],
     ['VERSIONING_STANDARD.md', generateVersioningStandard(brief)],
+    ['docs/runbooks/README.md', generateRunbookReadme(brief)],
+    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief)],
     ['.gitignore', generateGitignore(brief)],
+    ['skills/README.md', generateSkillsReadme(brief)],
+    ['repogenesis.skills.json', `${JSON.stringify(createEmptySkillsManifest(), null, 2)}\n`],
     ['CONTRIBUTING.md', generateContributing(brief)],
     ['.github/PULL_REQUEST_TEMPLATE.md', generatePrTemplate(brief)],
     ['.github/ISSUE_TEMPLATE/bug_report.md', generateIssueBugReport(brief)],

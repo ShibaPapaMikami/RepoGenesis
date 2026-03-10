@@ -134,13 +134,13 @@ describe('E2E — single-repo', () => {
 describe('E2E — app export', () => {
   const SLUG = 'app-export-test';
 
-  it('should exit 0 and generate 18 files from app export JSON', () => {
+  it('should exit 0 and generate 22 files from app export JSON', () => {
     const result = run('test_brief_app_export.json', 'app-export');
     expect(result.exitCode, `CLI failed.\nstdout: ${result.stdout}\nstderr: ${result.stderr}`).toBe(0);
-    expect(result.stdout).toContain('18 files');
+    expect(result.stdout).toContain('22 files');
   });
 
-  it('should create all 18 required single-repo files from app export', () => {
+  it('should create all 22 required single-repo files from app export', () => {
     run('test_brief_app_export.json', 'app-export');
     const base = path.join(TMP_OUTPUT, 'app-export', SLUG);
 
@@ -153,11 +153,15 @@ describe('E2E — app export', () => {
       'docs/ROADMAP.md',
       'docs/VERSIONING_STANDARD.md',
       'docs/ADR/0000-template.md',
+      'docs/runbooks/README.md',
+      'docs/runbooks/skill-install.md',
       'plans/template.md',
       'prompts/restart.md',
       'SECURITY.md',
       '.env.example',
       '.gitignore',
+      'skills/README.md',
+      'repogenesis.skills.json',
       'CONTRIBUTING.md',
       '.github/PULL_REQUEST_TEMPLATE.md',
       '.github/ISSUE_TEMPLATE/bug_report.md',
@@ -165,7 +169,7 @@ describe('E2E — app export', () => {
       '.repogenesis/manifest.json',
     ];
 
-    expect(requiredFiles.length).toBe(18);
+    expect(requiredFiles.length).toBe(22);
 
     for (const file of requiredFiles) {
       const fullPath = path.join(base, file);
@@ -187,7 +191,7 @@ describe('E2E — multi-repo', () => {
     run('test_brief_multi.json', 'multi');
     const base = path.join(TMP_OUTPUT, 'multi', SLUG);
 
-    for (const file of ['PROJECT.md', 'CLAUDE.md', 'GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', '.gitignore', '.repogenesis/manifest.json']) {
+    for (const file of ['PROJECT.md', 'CLAUDE.md', 'GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', 'docs/runbooks/README.md', 'docs/runbooks/skill-install.md', '.gitignore', 'skills/README.md', 'repogenesis.skills.json', '.repogenesis/manifest.json']) {
       expect(fs.existsSync(path.join(base, file)), `Missing workspace file: ${file}`).toBe(true);
     }
   });

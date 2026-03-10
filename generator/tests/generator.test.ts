@@ -99,7 +99,7 @@ describe('generator — single-repo', () => {
     const result = generate({ inputPath, outputPath: tmpDir, force: false });
 
     expect(result.success).toBe(true);
-    expect(result.filesCreated.length).toBe(18);
+    expect(result.filesCreated.length).toBe(22);
 
     const expectedFiles = [
       'PROJECT.md',
@@ -110,11 +110,15 @@ describe('generator — single-repo', () => {
       'docs/ROADMAP.md',
       'docs/VERSIONING_STANDARD.md',
       'docs/ADR/0000-template.md',
+      'docs/runbooks/README.md',
+      'docs/runbooks/skill-install.md',
       'plans/template.md',
       'prompts/restart.md',
       'SECURITY.md',
       '.env.example',
       '.gitignore',
+      'skills/README.md',
+      'repogenesis.skills.json',
       '.repogenesis/manifest.json',
     ];
 
@@ -143,7 +147,7 @@ describe('generator — single-repo', () => {
     // Second generate with --force
     const result = generate({ inputPath, outputPath: tmpDir, force: true });
     expect(result.success).toBe(true);
-    expect(result.filesCreated.length).toBe(18);
+    expect(result.filesCreated.length).toBe(22);
   });
 });
 
@@ -155,7 +159,7 @@ describe('generator — multi-repo', () => {
     expect(result.success).toBe(true);
 
     // Workspace-level files
-    const workspaceFiles = ['PROJECT.md', 'CLAUDE.md', 'GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', '.gitignore'];
+    const workspaceFiles = ['PROJECT.md', 'CLAUDE.md', 'GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', 'docs/runbooks/README.md', 'docs/runbooks/skill-install.md', '.gitignore', 'skills/README.md', 'repogenesis.skills.json'];
     for (const file of workspaceFiles) {
       const fullPath = path.join(result.outputDir, file);
       expect(fs.existsSync(fullPath), `Expected workspace file: ${file}`).toBe(true);
@@ -285,27 +289,35 @@ describe('generateFromSpec — pure function', () => {
     return result.data;
   }
 
-  it('should return Map with 18 files for single-repo', () => {
+  it('should return Map with 22 files for single-repo', () => {
     const brief = parseBrief(SINGLE_BRIEF);
     const files = generateFromSpec(brief);
-    expect(files.size).toBe(18);
+    expect(files.size).toBe(22);
     expect(files.has('PROJECT.md')).toBe(true);
     expect(files.has('CLAUDE.md')).toBe(true);
     expect(files.has('SECURITY.md')).toBe(true);
     expect(files.has('docs/VERSIONING_STANDARD.md')).toBe(true);
+    expect(files.has('docs/runbooks/README.md')).toBe(true);
+    expect(files.has('docs/runbooks/skill-install.md')).toBe(true);
     expect(files.has('.gitignore')).toBe(true);
+    expect(files.has('skills/README.md')).toBe(true);
+    expect(files.has('repogenesis.skills.json')).toBe(true);
     expect(files.has('.repogenesis/manifest.json')).toBe(true);
   });
 
   it('should return Map with correct files for multi-repo', () => {
     const brief = parseBrief(MULTI_BRIEF);
     const files = generateFromSpec(brief);
-    // 11 workspace + 11 * 2 repos + 1 manifest = 34
-    expect(files.size).toBe(34);
+    // 15 workspace + 11 * 2 repos + 1 manifest = 38
+    expect(files.size).toBe(38);
     expect(files.has('PROJECT.md')).toBe(true);
     expect(files.has('CLAUDE.md')).toBe(true);
     expect(files.has('GLOBAL_CONTEXT.md')).toBe(true);
     expect(files.has('VERSIONING_STANDARD.md')).toBe(true);
+    expect(files.has('docs/runbooks/README.md')).toBe(true);
+    expect(files.has('docs/runbooks/skill-install.md')).toBe(true);
+    expect(files.has('skills/README.md')).toBe(true);
+    expect(files.has('repogenesis.skills.json')).toBe(true);
     expect(files.has('frontend/PROJECT.md')).toBe(true);
     expect(files.has('frontend/CLAUDE.md')).toBe(true);
     expect(files.has('frontend/docs/VERSIONING_STANDARD.md')).toBe(true);
@@ -376,7 +388,7 @@ describe('generateFromSpec — pure function', () => {
     const manifest = JSON.parse(manifestRaw as string);
     expect(manifest.specVersion).toBe('1.0');
     expect(manifest.repoType).toBe('single');
-    expect(manifest.fileCount).toBe(18);
+    expect(manifest.fileCount).toBe(22);
     expect(manifest.source).toBe('legacyBrief');
   });
 

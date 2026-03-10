@@ -82,7 +82,7 @@ describe('orchestration api', () => {
       expect(res.body.requestId).toBe('req-123');
       expect(res.body.specVersion).toBe('1.0');
       expect(res.body.repoType).toBe('single');
-      expect(res.body.fileCount).toBe(18);
+      expect(res.body.fileCount).toBe(22);
       expect(res.body.artifact.filename).toBe('orchestration-test.zip');
       expect(res.body.artifact.contentType).toBe('application/zip');
     }
