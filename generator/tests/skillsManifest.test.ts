@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createEmptySkillsManifest, projectSkillsManifestSchema } from '../src/skillsManifest';
+import { createEmptySkillsManifest } from '../src/skillsManifest';
+import { projectSkillsManifestSchema } from '../src/skillsManifestSchema';
 
 describe('skills manifest schema', () => {
   it('creates an empty pinned manifest', () => {

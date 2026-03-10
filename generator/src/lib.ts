@@ -6,8 +6,10 @@ export {
 } from './schema';
 export {
   createEmptySkillsManifest,
-  projectSkillsManifestSchema,
 } from './skillsManifest';
+export {
+  projectSkillsManifestSchema,
+} from './skillsManifestSchema';
 export type {
   ProjectBrief,
   ProjectSpec,

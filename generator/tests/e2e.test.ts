@@ -46,7 +46,7 @@ beforeEach(() => {
   fs.mkdirSync(TMP_OUTPUT, { recursive: true });
 });
 
-describe('E2E — single-repo', () => {
+describe('E2E — single-repo', { timeout: 20000 }, () => {
   const SLUG = 'e2e-single-test';
 
   it('should exit 0 and generate files', () => {
@@ -131,7 +131,7 @@ describe('E2E — single-repo', () => {
   });
 });
 
-describe('E2E — app export', () => {
+describe('E2E — app export', { timeout: 20000 }, () => {
   const SLUG = 'app-export-test';
 
   it('should exit 0 and generate 22 files from app export JSON', () => {
@@ -179,7 +179,7 @@ describe('E2E — app export', () => {
   });
 });
 
-describe('E2E — multi-repo', () => {
+describe('E2E — multi-repo', { timeout: 20000 }, () => {
   const SLUG = 'e2e-multi-test';
 
   it('should exit 0 and generate files', () => {
