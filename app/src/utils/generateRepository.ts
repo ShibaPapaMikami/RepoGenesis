@@ -29,6 +29,7 @@ export class GenerateRepositoryError extends Error {
 
 const API_BASE = import.meta.env.VITE_ORCHESTRATION_API_URL as string | undefined;
 const REMOTE_AUTH_MODE = (import.meta.env.VITE_REMOTE_AUTH_MODE as string | undefined) ?? 'manual_bearer';
+const ENABLE_MANUAL_BEARER_UI = (import.meta.env.VITE_ENABLE_MANUAL_BEARER_UI as string | undefined) === 'true';
 const PROXY_BASE = '/api/orchestration';
 const REMOTE_GENERATE_TIMEOUT_MS = 60_000;
 
@@ -43,6 +44,10 @@ export function getGenerationMode(): 'local' | 'remote' {
 
 export function getRemoteAuthMode(): 'manual_bearer' | 'cookie_session' {
   return REMOTE_AUTH_MODE === 'cookie_session' ? 'cookie_session' : 'manual_bearer';
+}
+
+export function canUseManualBearerUi(): boolean {
+  return import.meta.env.DEV || ENABLE_MANUAL_BEARER_UI;
 }
 
 function resolveApiBase(authMode: 'manual_bearer' | 'cookie_session'): string | undefined {

@@ -2,7 +2,13 @@ import { useEffect, useState, type RefObject } from 'react';
 import type { FormState } from '../../state/actions';
 import { PROJECT_SPEC_FILENAME } from '../../constants/spec';
 import { buildProjectSpec, stringifyProjectSpec } from '../../utils/buildProjectSpec';
-import { GenerateRepositoryError, generateRepository, getGenerationMode, getRemoteAuthMode } from '../../utils/generateRepository';
+import {
+  GenerateRepositoryError,
+  canUseManualBearerUi,
+  generateRepository,
+  getGenerationMode,
+  getRemoteAuthMode,
+} from '../../utils/generateRepository';
 import { downloadErrorReport, submitFeedback, type FeedbackType, type ErrorReportPayload } from '../../utils/feedback';
 import { assessIntakeReadiness, getConsultationReviewHints, type ConsultationPromptVariant, type IntakeDraft } from '../../utils/intakeParser';
 
@@ -36,14 +42,18 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
   const generationMode = getGenerationMode();
   const remoteAuthMode = getRemoteAuthMode();
   const requiresCookieSessionLogin = generationMode === 'remote' && remoteAuthMode === 'cookie_session';
+  const manualBearerUiAvailable = canUseManualBearerUi();
+  const manualBearerBlockedInThisDeploy = generationMode === 'remote'
+    && remoteAuthMode === 'manual_bearer'
+    && !manualBearerUiAvailable;
 
   const jsonString = stringifyProjectSpec(state);
 
   useEffect(() => {
-    if (generationMode !== 'remote' || remoteAuthMode !== 'manual_bearer') return;
+    if (generationMode !== 'remote' || remoteAuthMode !== 'manual_bearer' || !manualBearerUiAvailable) return;
     const saved = localStorage.getItem('repogenesis_api_token');
     if (saved) setAuthToken(saved);
-  }, [generationMode, remoteAuthMode]);
+  }, [generationMode, manualBearerUiAvailable, remoteAuthMode]);
 
   function handleDownload() {
     const blob = new Blob([stringifyProjectSpec(state)], { type: 'application/json' });
@@ -66,7 +76,7 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
       setIsGenerating(true);
       setGenerateMessage(null);
       setGeneratedZip(null);
-      if (generationMode === 'remote' && remoteAuthMode === 'manual_bearer') {
+      if (generationMode === 'remote' && remoteAuthMode === 'manual_bearer' && manualBearerUiAvailable) {
         localStorage.setItem('repogenesis_api_token', authToken);
       }
       const result = await generateRepository(state, authToken);
@@ -211,7 +221,7 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
         <pre>{jsonString}</pre>
       </div>
 
-      {generationMode === 'remote' && remoteAuthMode === 'manual_bearer' && (
+      {generationMode === 'remote' && remoteAuthMode === 'manual_bearer' && manualBearerUiAvailable && (
         <div className="form-row">
           <label htmlFor="apiToken">APIトークン (Bearer)</label>
           <input
@@ -222,6 +232,11 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
             placeholder="Bearerトークンを入力"
           />
         </div>
+      )}
+      {manualBearerBlockedInThisDeploy && (
+        <p className="hint">
+          このデプロイでは手動Bearerトークン入力を無効化しています。`cookie_session` 構成で利用するか、ローカル開発でのみ manual bearer を有効にしてください。
+        </p>
       )}
 
       <div className="output-actions">
@@ -248,9 +263,11 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
             !canExport
             || isGenerating
             || blockingItems.length > 0
+            || manualBearerBlockedInThisDeploy
             || (requiresCookieSessionLogin && !authSession.authenticated)
             || (generationMode === 'remote'
               && remoteAuthMode === 'manual_bearer'
+              && manualBearerUiAvailable
               && authToken.trim().length === 0)
           }
           className="btn-primary"

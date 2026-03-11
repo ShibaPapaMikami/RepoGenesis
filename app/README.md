@@ -66,11 +66,13 @@ npm run test:e2e
 cp .env.example .env
 echo 'VITE_ORCHESTRATION_API_URL=http://127.0.0.1:8002' >> .env
 echo 'VITE_REMOTE_AUTH_MODE=manual_bearer' >> .env
+echo 'VITE_ENABLE_MANUAL_BEARER_UI=true' >> .env
 npm run dev
 ```
 
-- `VITE_REMOTE_AUTH_MODE=manual_bearer`（default）: UI に `API Token (Bearer)` 入力欄が表示される
+- `VITE_REMOTE_AUTH_MODE=manual_bearer`: ローカル開発時、または `VITE_ENABLE_MANUAL_BEARER_UI=true` を明示したときだけ UI に `API Token (Bearer)` 入力欄が表示される
 - `VITE_REMOTE_AUTH_MODE=cookie_session`: 手動トークン入力なし。`/api/orchestration` プロキシ経由で API を呼ぶ
+- 本番 UI では `manual_bearer` 入力欄を出さない前提。production deploy は `cookie_session` を使う
 - `VITE_RELEASE_VERSION`: UI 上に表示するリリースラベル（例: `v0.1.0`）
 - `cookie_session` では追加で以下が必要:
   - Vercel: `ORCHESTRATION_API_URL`, `NEXTAUTH_SECRET`, `SESSION_AUDIENCE`
