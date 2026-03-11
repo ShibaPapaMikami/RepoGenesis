@@ -1,7 +1,7 @@
 # ROADMAP_STATUS.md — Current Position
 
 ## Last Updated
-2026-03-10
+2026-03-11
 
 ## Roadmap Position
 Phase 5 / Stabilizing
@@ -9,6 +9,8 @@ Phase 5 / Stabilizing
 ## What Is Already Done
 - Phase 0-4 are complete.
 - Production deployment works with authenticated ZIP generation.
+- Latest production redeploy was confirmed on 2026-03-11 with commit `6d75da1`.
+- Remote ZIP generation succeeds in production and surfaces request IDs for log correlation (`srv-1773186465441` confirmed).
 - `相談結果を反映` flow is implemented and production-tested.
 - `かんたん入力` flow is implemented.
 - `facts / assumptions / open questions` review is implemented.
@@ -19,12 +21,12 @@ Phase 5 / Stabilizing
 
 ## What This Phase Still Needs
 - Wording polish for non-engineer guidance.
-- Final docs sync and stable tag.
-- Public confirmation after each production redeploy when UX changes.
+- Stable baseline tag.
+- Public confirmation after each future production redeploy when UX changes.
 
 ## Next Three Tasks
-1. Sync `ROADMAP.md` and `ACTIVE_CONTEXT.md` with the current implemented state.
-2. Cut a stable baseline tag after confirming the latest production deploy.
+1. Cut a stable baseline tag after confirming the latest production deploy.
+2. Sync any remaining docs/runbooks with the 2026-03-11 production confirmation details.
 3. Split pending large changes into separate tracks:
    - AI tool independence (`PROJECT.md` / `CLAUDE.md` / `GEMINI.md`)
    - skill layer (`repogenesis.skills.json`, `skills/README.md`)

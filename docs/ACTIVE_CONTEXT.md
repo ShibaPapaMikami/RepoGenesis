@@ -1,7 +1,7 @@
 # ACTIVE_CONTEXT.md — Current Project State
 
 ## Last Updated
-2026-03-10
+2026-03-11
 
 ## Current Phase
 Phase 5 — Usability for Non-Engineers (Stabilizing)
@@ -55,12 +55,16 @@ Phase 5 — Usability for Non-Engineers (Stabilizing)
     - JSON 出力: PASS
     - localStorage 復元: PASS
     - `multi` draft 初期バリデーションエラー解消: PASS
+    - remote ZIP request tracing (`commit: 6d75da1`): PASS
+      - 本番 UI 表示: `コミット: 6d75da1`
+      - 生成結果: `repogenesis-test.zip` (`22` files, remote)
+      - request id: `srv-1773186465441`
 
 ## What Is Being Done Now
 - いまの主要テーマ:
   - Phase 5 の安定化
     - 非エンジニア向け文言の磨き込み
-    - docs と stable baseline の固定
+    - stable baseline の固定
   - 次の大きい変更を分離
     - AI tool 非依存化
     - optional skill layer
@@ -130,7 +134,7 @@ Phase 6 — AI-Assisted Spec Authoring
 
 ## Upcoming Focus
 Immediate next:
-- `ROADMAP` / `ACTIVE_CONTEXT` / `ROADMAP_STATUS` を現況に合わせる
 - stable baseline を切る
+- 2026-03-11 の本番確認結果を runbook / 運用メモへ必要に応じて反映する
 - feedback の永続保存先を決める
 - AI tool 非依存化と optional skill layer を別差分で整理する
