@@ -43,13 +43,35 @@ function hasFirebaseConfig(): boolean {
   return Boolean(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.authDomain && FIREBASE_CONFIG.projectId);
 }
 
+function getAuthErrorMessage(status: number, error?: string): string {
+  const normalized = error?.trim().toLowerCase();
+
+  if (normalized === 'email is not allowed' || status === 403) {
+    return 'このアカウントでは利用できません。Gugenka スタッフ用アカウントでログインしてください。';
+  }
+  if (normalized === 'email is required' || status === 400) {
+    return 'ログイン情報を確認できませんでした。もう一度ログインしてください。';
+  }
+  if (normalized?.includes('nextauth_secret') || normalized?.includes('session setup failed') || status >= 500) {
+    return '認証のサーバー設定で問題が発生しています。管理者に連絡してください。';
+  }
+  return '認証に失敗しました。時間をおいて再度お試しください。';
+}
+
 async function fetchSessionState(): Promise<{ authenticated: boolean; email: string | null }> {
   const response = await fetch('/api/auth/me', {
     method: 'GET',
     credentials: 'include',
   });
   if (!response.ok) {
-    throw new Error(`認証状態の確認に失敗しました (${response.status})`);
+    let errorMessage: string | undefined;
+    try {
+      const json = await response.json() as { error?: string };
+      errorMessage = json.error;
+    } catch {
+      // keep fallback
+    }
+    throw new Error(getAuthErrorMessage(response.status, errorMessage));
   }
   const json = await response.json() as { authenticated?: boolean; email?: string | null };
   return {
@@ -158,7 +180,7 @@ export function AuthPanel({ enabled, onSessionChange }: AuthPanelProps) {
               });
               const data = await response.json() as { error?: string; email?: string };
               if (!response.ok) {
-                throw new Error(data.error ?? `セッション作成に失敗しました (${response.status})`);
+                throw new Error(getAuthErrorMessage(response.status, data.error));
               }
               const normalized = (data.email ?? user.email).toLowerCase();
               syncedEmailRef.current = normalized;
@@ -200,7 +222,7 @@ export function AuthPanel({ enabled, onSessionChange }: AuthPanelProps) {
       await window.GugenkaAuth.loginWithGoogle();
     } catch (error) {
       setStatus('error');
-      setMessage(error instanceof Error ? error.message : 'ログインに失敗しました');
+      setMessage('Google ログインに失敗しました。もう一度お試しください。');
     } finally {
       setIsBusy(false);
     }

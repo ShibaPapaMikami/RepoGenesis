@@ -64,6 +64,35 @@ function parseFilenameFromContentDisposition(headerValue: string | null, fallbac
   return match[1];
 }
 
+function getRemoteGenerateErrorMessage(
+  status: number,
+  error?: string,
+  authMode?: 'manual_bearer' | 'cookie_session',
+): string {
+  const normalized = error?.trim().toLowerCase();
+
+  if (status === 401) {
+    if (authMode === 'cookie_session') {
+      return 'ログイン状態を確認できませんでした。上部の認証セクションでログインし直してから再実行してください。';
+    }
+    return '認証トークンを確認できませんでした。APIトークンを見直して再実行してください。';
+  }
+
+  if (status === 403) {
+    return 'このアカウントでは生成を実行できません。権限設定を確認してください。';
+  }
+
+  if (normalized === 'upstream request timed out' || status === 504) {
+    return 'ZIP生成がタイムアウトしました。APIの再デプロイ状態または生成内容を確認してください。';
+  }
+
+  if (normalized === 'upstream request failed' || status === 502) {
+    return '生成APIとの通信に失敗しました。時間をおいて再度お試しください。';
+  }
+
+  return error ? `リモート生成に失敗しました (${status}): ${error}` : `リモート生成に失敗しました (${status})`;
+}
+
 async function generateRepositoryRemote(state: FormState, authToken: string): Promise<GenerateRepositoryResult> {
   const authMode = getRemoteAuthMode();
   const apiBase = resolveApiBase(authMode);
@@ -105,14 +134,15 @@ async function generateRepositoryRemote(state: FormState, authToken: string): Pr
   }
 
   if (!response.ok) {
-    let msg = `リモート生成に失敗しました (${response.status})`;
+    let serverError: string | undefined;
     const requestId = response.headers.get('X-Request-Id') ?? undefined;
     try {
       const json = await response.json() as { error?: string };
-      if (json?.error) msg = `${msg}: ${json.error}`;
+      serverError = json?.error;
     } catch {
       // no-op: keep default message
     }
+    const msg = getRemoteGenerateErrorMessage(response.status, serverError, authMode);
     throw new GenerateRepositoryError(msg, {
       status: response.status,
       requestId,
