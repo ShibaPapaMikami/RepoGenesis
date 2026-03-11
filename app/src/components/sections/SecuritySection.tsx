@@ -37,6 +37,7 @@ export function SecuritySection({ state, dispatch }: SecuritySectionProps) {
 
       <div className="form-row">
         <label>セキュリティフラグ</label>
+        <p className="hint">扱う情報に近いものだけを選んでください。厳密さより「ありそうかどうか」の判断で大丈夫です。</p>
         <div className="toggle-group">
           <ToggleRow
             label="APIキー使用"
@@ -68,6 +69,7 @@ export function SecuritySection({ state, dispatch }: SecuritySectionProps) {
 
       <div className="form-row">
         <label>セキュリティレベル</label>
+        <p className="hint">フラグから最低ラインを自動計算します。必要があれば、より高いレベルにだけ上げられます。</p>
         <SecurityLevel
           currentLevel={state.security.level}
           minLevel={minLevel}

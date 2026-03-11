@@ -25,6 +25,7 @@ export function TechSection({ state, dispatch, errors }: TechSectionProps) {
 
       <div className="form-row">
         <label>技術ドメイン *（1つ以上選択）</label>
+        <p className="hint">プロダクトの中心に近い領域を選んでください。迷う場合は利用者に見える機能寄りで選ぶと十分です。</p>
         <div className="checkbox-group">
           {DOMAINS.map((domain) => (
             <label key={domain} className="checkbox-label">
@@ -42,6 +43,7 @@ export function TechSection({ state, dispatch, errors }: TechSectionProps) {
 
       <div className="form-row">
         <label htmlFor="primary-language">主要言語 *</label>
+        <p className="hint">今の想定で最も中心になる言語を1つ選んでください。未確定でも第一候補で進められます。</p>
         <select
           id="primary-language"
           value={state.tech.primary_language}
@@ -59,6 +61,7 @@ export function TechSection({ state, dispatch, errors }: TechSectionProps) {
 
       <div className="form-row">
         <label>フレームワーク（任意）</label>
+        <p className="hint">確定しているものだけで十分です。候補段階なら主要なものを1〜2個入れるだけでも使えます。</p>
         <TagInput
           tags={state.tech.frameworks}
           onChange={(tags) => dispatch({ type: 'SET_FRAMEWORKS', payload: tags })}
@@ -68,6 +71,7 @@ export function TechSection({ state, dispatch, errors }: TechSectionProps) {
 
       <div className="form-row">
         <label>AI開発ツール *（複数選択可）</label>
+        <p className="hint">実際に開発や設計で併用するツールを選んでください。生成物のガイド文に反映されます。</p>
         <div className="checkbox-group">
           {AI_TOOLS.map((tool) => (
             <label key={tool} className="checkbox-label">
@@ -86,6 +90,7 @@ export function TechSection({ state, dispatch, errors }: TechSectionProps) {
       {state.tech.ai_tools.includes('other') && (
         <div className="form-row">
           <label htmlFor="ai-tool-detail">AI開発ツール詳細</label>
+          <p className="hint">一覧にない場合だけ具体名を書いてください。</p>
           <input
             id="ai-tool-detail"
             type="text"

@@ -19,6 +19,7 @@ export function StructureSection({ state, dispatch, errors }: StructureSectionPr
 
       <div className="form-row">
         <label>リポジトリタイプ *</label>
+        <p className="hint">最初は `single` で十分なことが多いです。画面・API・インフラを明確に分けたいときに `multi` を選んでください。</p>
         <div className="radio-group">
           <label className="radio-label">
             <input
@@ -45,6 +46,7 @@ export function StructureSection({ state, dispatch, errors }: StructureSectionPr
 
       {state.structure.repo_type === 'multi' && (
         <div className="form-row">
+          <p className="hint">repo 名、役割、担当、依存関係をざっくり埋めれば十分です。完全に固まっていなくても進められます。</p>
           <div className="repos-list">
             {state.structure.repos.map((repo, index) => (
               <RepoEntry

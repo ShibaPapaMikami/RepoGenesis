@@ -14,6 +14,7 @@ export function ProjectSection({ state, dispatch, errors }: ProjectSectionProps)
 
       <div className="form-row">
         <label htmlFor="project-name">プロジェクト名 *</label>
+        <p className="hint">社内で呼ぶ名前で構いません。正式名称が未定でも、識別しやすい仮名で進められます。</p>
         <input
           id="project-name"
           type="text"
@@ -31,6 +32,7 @@ export function ProjectSection({ state, dispatch, errors }: ProjectSectionProps)
             <span className="hint">（プロジェクト名から自動生成）</span>
           )}
         </label>
+        <p className="hint">URL やディレクトリ名に使う短い識別子です。通常は自動生成のままで問題ありません。</p>
         <input
           id="project-slug"
           type="text"
@@ -43,6 +45,7 @@ export function ProjectSection({ state, dispatch, errors }: ProjectSectionProps)
 
       <div className="form-row">
         <label htmlFor="project-description">概要 *（10文字以上）</label>
+        <p className="hint">誰のための何の仕組みか、1〜3文で書いてください。背景より目的を先に書くと整理しやすくなります。</p>
         <textarea
           id="project-description"
           value={state.project.description}
@@ -57,6 +60,7 @@ export function ProjectSection({ state, dispatch, errors }: ProjectSectionProps)
 
       <div className="form-row">
         <label htmlFor="project-owner">責任者 *</label>
+        <p className="hint">最終判断や要件確認を持つ人を書いてください。個人名でも部署名でも構いません。</p>
         <input
           id="project-owner"
           type="text"
