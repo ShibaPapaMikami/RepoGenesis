@@ -27,6 +27,7 @@ export function SimpleInputSection({
         <div className="form-row">
           <label htmlFor="simple-variant">相談の種類</label>
           <p className="hint">近い用途を選ぶと、後続の draft 整理で見る観点が用途寄りになります。</p>
+          <p className="hint">記入例: 社内向けなら「社内ツール」、顧客向け納品なら「クライアント案件」</p>
           <select
             id="simple-variant"
             value={state.variant}
@@ -43,6 +44,7 @@ export function SimpleInputSection({
         <div className="form-row">
           <label htmlFor="simple-owner">責任者</label>
           <p className="hint">個人名でも部署名でも構いません。最終判断や確認を持つ人を書いてください。</p>
+          <p className="hint">記入例: Gugenka 企画チーム</p>
           <input
             id="simple-owner"
             type="text"
@@ -56,6 +58,7 @@ export function SimpleInputSection({
       <div className="form-row">
         <label htmlFor="simple-summary">何を作るか</label>
         <p className="hint">サービス名より、「誰の何を助ける仕組みか」が分かる書き方がおすすめです。</p>
+        <p className="hint">記入例: 社内の案件相談と進行管理をまとめるAI活用ツール</p>
         <textarea
           id="simple-summary"
           rows={3}
@@ -68,6 +71,7 @@ export function SimpleInputSection({
       <div className="form-row">
         <label htmlFor="simple-problem">いま困っていること</label>
         <p className="hint">現場で起きている困りごとを、そのまま文章で書いてください。運用の分散や手戻りがあると有効です。</p>
+        <p className="hint">記入例: 相談履歴と判断ログが Slack とスプレッドシートに分散している</p>
         <textarea
           id="simple-problem"
           rows={3}
@@ -81,6 +85,7 @@ export function SimpleInputSection({
         <div className="form-row">
           <label htmlFor="simple-users">誰が使うか</label>
           <p className="hint">役割ごとに1行ずつ書くのがおすすめです。社内担当、顧客、管理者が混ざっていても構いません。</p>
+          <p className="hint">記入例: 営業 / PM / 制作進行</p>
           <textarea
             id="simple-users"
             rows={4}
@@ -93,6 +98,7 @@ export function SimpleInputSection({
         <div className="form-row">
           <label htmlFor="simple-first">まず作るもの</label>
           <p className="hint">最初の公開範囲だけを書いてください。理想形より「初回リリースで必要な画面や機能」を優先します。</p>
+          <p className="hint">記入例: 案件一覧と相談履歴を見られる管理画面</p>
           <textarea
             id="simple-first"
             rows={4}
@@ -107,6 +113,7 @@ export function SimpleInputSection({
         <div className="form-row">
           <label htmlFor="simple-data">扱うデータ</label>
           <p className="hint">テーブル設計ではなく、画面や業務で扱う情報の種類を書けば十分です。</p>
+          <p className="hint">記入例: 案件名 / 担当者 / 顧客情報 / 相談メモ</p>
           <textarea
             id="simple-data"
             rows={4}
@@ -119,6 +126,7 @@ export function SimpleInputSection({
         <div className="form-row">
           <label htmlFor="simple-unresolved">まだ決めていないこと</label>
           <p className="hint">迷っている点や後で判断したい点を書いてください。未確定でも draft は作れます。</p>
+          <p className="hint">記入例: 権限管理を初期から入れるか / 将来 multi repo に分けるべきか</p>
           <textarea
             id="simple-unresolved"
             rows={4}
@@ -133,6 +141,7 @@ export function SimpleInputSection({
         <div className="form-row">
           <label htmlFor="simple-integration-status">外部APIや外部サービス連携</label>
           <p className="hint">Slack や Google Drive、顧客管理ツールなど、外の仕組みとつなぐ可能性で選んでください。</p>
+          <p className="hint">記入例: Slack と Google Drive を使いそうなら「必要かもしれない」</p>
           <select
             id="simple-integration-status"
             value={state.integrationStatus}
@@ -148,6 +157,7 @@ export function SimpleInputSection({
         <div className="form-row">
           <label htmlFor="simple-data-sensitivity">データの重さ</label>
           <p className="hint">セキュリティの初期方針に使います。迷う場合は少し重めに見積もって構いません。</p>
+          <p className="hint">記入例: 顧客名や担当者情報を扱うなら「個人情報・顧客情報」</p>
           <select
             id="simple-data-sensitivity"
             value={state.dataSensitivity}
@@ -164,6 +174,7 @@ export function SimpleInputSection({
         <div className="form-row">
           <label htmlFor="simple-repo">リポジトリ構成の見込み</label>
           <p className="hint">分からなければ未確定で大丈夫です。画面とAPIが大きく分かれそうなら `multi` 寄りです。</p>
+          <p className="hint">記入例: 管理画面とAPIを分けたくなりそうなら「将来は複数に分かれそう」</p>
           <select
             id="simple-repo"
             value={state.repoConfidence}
@@ -178,6 +189,7 @@ export function SimpleInputSection({
         <div className="form-row">
           <label htmlFor="simple-integration-notes">連携候補（任意）</label>
           <p className="hint">ツール名をカンマ区切りで書けば十分です。未定なら空欄で進められます。</p>
+          <p className="hint">記入例: Slack, Google Drive, Backlog</p>
           <input
             id="simple-integration-notes"
             type="text"

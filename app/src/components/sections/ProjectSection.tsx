@@ -15,6 +15,7 @@ export function ProjectSection({ state, dispatch, errors }: ProjectSectionProps)
       <div className="form-row">
         <label htmlFor="project-name">プロジェクト名 *</label>
         <p className="hint">社内で呼ぶ名前で構いません。正式名称が未定でも、識別しやすい仮名で進められます。</p>
+        <p className="hint">記入例: 営業案件相談ダッシュボード</p>
         <input
           id="project-name"
           type="text"
@@ -33,6 +34,7 @@ export function ProjectSection({ state, dispatch, errors }: ProjectSectionProps)
           )}
         </label>
         <p className="hint">URL やディレクトリ名に使う短い識別子です。通常は自動生成のままで問題ありません。</p>
+        <p className="hint">記入例: sales-consultation-dashboard</p>
         <input
           id="project-slug"
           type="text"
@@ -46,6 +48,7 @@ export function ProjectSection({ state, dispatch, errors }: ProjectSectionProps)
       <div className="form-row">
         <label htmlFor="project-description">概要 *（10文字以上）</label>
         <p className="hint">誰のための何の仕組みか、1〜3文で書いてください。背景より目的を先に書くと整理しやすくなります。</p>
+        <p className="hint">記入例: 営業担当が案件相談の履歴と判断理由をまとめて確認できる社内Webツール。</p>
         <textarea
           id="project-description"
           value={state.project.description}
@@ -61,6 +64,7 @@ export function ProjectSection({ state, dispatch, errors }: ProjectSectionProps)
       <div className="form-row">
         <label htmlFor="project-owner">責任者 *</label>
         <p className="hint">最終判断や要件確認を持つ人を書いてください。個人名でも部署名でも構いません。</p>
+        <p className="hint">記入例: Gugenka 営業企画チーム</p>
         <input
           id="project-owner"
           type="text"
