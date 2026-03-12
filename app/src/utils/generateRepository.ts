@@ -135,10 +135,11 @@ async function generateRepositoryRemote(state: FormState, authToken: string): Pr
 
   if (!response.ok) {
     let serverError: string | undefined;
-    const requestId = response.headers.get('X-Request-Id') ?? undefined;
+    let requestId = response.headers.get('X-Request-Id') ?? undefined;
     try {
-      const json = await response.json() as { error?: string };
+      const json = await response.json() as { error?: string; requestId?: string };
       serverError = json?.error;
+      requestId = requestId ?? json?.requestId;
     } catch {
       // no-op: keep default message
     }

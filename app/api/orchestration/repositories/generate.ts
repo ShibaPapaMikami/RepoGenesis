@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import type { IncomingMessage, ServerResponse } from 'http';
 
 type VercelRequest = IncomingMessage & {
@@ -28,6 +29,38 @@ function pickHeader(value: string | string[] | undefined): string | undefined {
 
 const UPSTREAM_TIMEOUT_MS = 45_000;
 
+function createRequestId(): string {
+  return `bff-${randomUUID()}`;
+}
+
+function buildUpstreamBody(body: unknown, requestId: string): string {
+  if (typeof body === 'string') {
+    try {
+      const parsed = JSON.parse(body) as Record<string, unknown>;
+      const meta = parsed.meta && typeof parsed.meta === 'object' ? parsed.meta as Record<string, unknown> : {};
+      return JSON.stringify({
+        ...parsed,
+        meta: {
+          ...meta,
+          requestId,
+        },
+      });
+    } catch {
+      return body;
+    }
+  }
+
+  const parsed = body && typeof body === 'object' ? body as Record<string, unknown> : {};
+  const meta = parsed.meta && typeof parsed.meta === 'object' ? parsed.meta as Record<string, unknown> : {};
+  return JSON.stringify({
+    ...parsed,
+    meta: {
+      ...meta,
+      requestId,
+    },
+  });
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (req.method === 'OPTIONS') {
     res.status(204).end();
@@ -39,22 +72,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 
   let upstreamUrl: string;
+  const requestId = createRequestId();
   try {
     upstreamUrl = `${getUpstreamBase()}/api/v1/repositories/generate`;
   } catch (error) {
-    res.status(500).json({ error: error instanceof Error ? error.message : 'Misconfigured upstream' });
+    res.setHeader('X-Request-Id', requestId);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Misconfigured upstream',
+      requestId,
+      status: 500,
+      kind: 'response',
+    });
     return;
   }
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'X-Request-Id': requestId,
   };
   const auth = pickHeader(req.headers.authorization);
   const cookie = pickHeader(req.headers.cookie);
   if (auth) headers.Authorization = auth;
   if (cookie) headers.Cookie = cookie;
 
-  const bodyText = typeof req.body === 'string' ? req.body : JSON.stringify(req.body ?? {});
+  const bodyText = buildUpstreamBody(req.body, requestId);
 
   let upstreamRes: Response;
   try {
@@ -66,10 +107,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     });
   } catch (error) {
     const isTimeout = error instanceof Error && error.name === 'TimeoutError';
+    res.setHeader('X-Request-Id', requestId);
     res.status(isTimeout ? 504 : 502).json({
       error: isTimeout
         ? 'Upstream request timed out'
         : 'Upstream request failed',
+      requestId,
+      status: isTimeout ? 504 : 502,
+      kind: isTimeout ? 'timeout' : 'network',
     });
     return;
   }
@@ -77,19 +122,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   const contentType = upstreamRes.headers.get('content-type') ?? '';
   if (!upstreamRes.ok || !contentType.includes('application/zip')) {
     const text = await upstreamRes.text();
+    const upstreamRequestId = upstreamRes.headers.get('x-request-id') ?? requestId;
     res.status(upstreamRes.status).setHeader('Content-Type', contentType || 'application/json; charset=utf-8');
+    res.setHeader('X-Request-Id', upstreamRequestId);
     res.send(text);
     return;
   }
 
   const bytes = Buffer.from(await upstreamRes.arrayBuffer());
   const contentDisposition = upstreamRes.headers.get('content-disposition');
-  const requestId = upstreamRes.headers.get('x-request-id');
+  const upstreamRequestId = upstreamRes.headers.get('x-request-id') ?? requestId;
   const specVersion = upstreamRes.headers.get('x-spec-version');
   const fileCount = upstreamRes.headers.get('x-file-count');
 
   if (contentDisposition) res.setHeader('Content-Disposition', contentDisposition);
-  if (requestId) res.setHeader('X-Request-Id', requestId);
+  res.setHeader('X-Request-Id', upstreamRequestId);
   if (specVersion) res.setHeader('X-Spec-Version', specVersion);
   if (fileCount) res.setHeader('X-File-Count', fileCount);
   res.setHeader('Content-Type', 'application/zip');
