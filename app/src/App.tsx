@@ -314,6 +314,13 @@ function App() {
 
   function handleBuildConsultationDraft() {
     const draft = parseConsultationIntake(consultationText, state);
+    if (draft.review.facts.length === 0) {
+      setConsultationDraft(null);
+      setConsultationMessage(
+        'draft を作成できませんでした。見出し付きの相談結果を貼り付けてください。少なくとも「プロジェクト概要」「想定ユーザー」「解決したい課題」の本文が必要です。',
+      );
+      return;
+    }
     setConsultationDraft(draft);
     setConsultationMessage('draft を作成しました。仮置き項目と未確定事項を確認してください。');
   }

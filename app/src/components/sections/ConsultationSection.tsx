@@ -79,6 +79,9 @@ export function ConsultationSection({
 
       <div className="form-row">
         <label htmlFor="consultationInput">相談結果の貼り付け</label>
+        <p className="hint">
+          `## プロジェクト概要` のような見出し付きで貼り付けてください。本文が空だと draft を作成できません。
+        </p>
         <textarea
           id="consultationInput"
           value={intakeText}
