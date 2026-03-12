@@ -104,6 +104,40 @@ test('parseConsultationIntake should mark missing required sections as unresolve
   assert.equal(draft.certainty.unresolved.includes('未確定事項（未入力）'), true);
 });
 
+test('parseConsultationIntake should accept heading lines without markdown markers', () => {
+  const input = `プロジェクト概要
+社内ミーティング音声を文字起こしして保存する社内ツール
+
+想定ユーザー
+経営・マネジメント
+プロジェクトマネージャー
+
+解決したい課題
+議事録作成に時間がかかり、会議内容の共有漏れが起きやすい
+
+最初に作るべきもの
+音声ファイルを入力して文字起こし結果を確認できる画面
+
+扱うデータ
+会議音声
+文字起こしテキスト
+
+外部連携候補
+未定
+
+未確定事項
+ローカル処理で十分な精度を出せるか未確定
+
+RepoGenesis入力候補
+domain は web が候補`;
+  const draft = parseConsultationIntake(input, makeState());
+
+  assert.equal(draft.review.facts.length > 0, true);
+  assert.equal(draft.extracted.summary?.includes('文字起こしして保存する社内ツール'), true);
+  assert.equal(draft.extracted.users.includes('経営・マネジメント'), true);
+  assert.equal(draft.extracted.problem?.includes('議事録作成に時間がかかり'), true);
+});
+
 test('assessIntakeReadiness should separate blocking items from warnings', () => {
   const draft = parseConsultationIntake('## プロジェクト概要\nテスト', makeState());
   const readiness = assessIntakeReadiness(draft);

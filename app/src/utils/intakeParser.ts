@@ -84,6 +84,17 @@ const REQUIRED_SECTION_KEYS = [
   '未確定事項',
 ] as const;
 
+const ALL_SECTION_KEYS = [
+  'プロジェクト概要',
+  '想定ユーザー',
+  '解決したい課題',
+  '最初に作るべきもの',
+  '扱うデータ',
+  '外部連携候補',
+  '未確定事項',
+  'RepoGenesis入力候補',
+] as const;
+
 const PROMPT_SKELETON = `## プロジェクト概要
 
 ## 想定ユーザー
@@ -208,10 +219,15 @@ function parseSections(input: string): Record<string, string> {
   let current = '';
 
   for (const line of lines) {
-    const match = line.match(/^##\s+(.+)\s*$/);
-    if (match) {
-      current = match[1].trim();
+    const trimmed = line.trim();
+    const headingMatch = trimmed.match(/^(?:#+\s*)?(プロジェクト概要|想定ユーザー|解決したい課題|最初に作るべきもの|扱うデータ|外部連携候補|未確定事項|RepoGenesis入力候補)\s*([:：]\s*(.*))?$/);
+    if (headingMatch) {
+      current = headingMatch[1].trim();
       if (!sections[current]) sections[current] = [];
+      const inlineBody = headingMatch[3]?.trim();
+      if (inlineBody) {
+        sections[current].push(inlineBody);
+      }
       continue;
     }
     if (!current) continue;
@@ -219,7 +235,9 @@ function parseSections(input: string): Record<string, string> {
   }
 
   return Object.fromEntries(
-    Object.entries(sections).map(([key, value]) => [key, value.join('\n').trim()]),
+    Object.entries(sections)
+      .filter(([key]) => (ALL_SECTION_KEYS as readonly string[]).includes(key))
+      .map(([key, value]) => [key, value.join('\n').trim()]),
   );
 }
 
