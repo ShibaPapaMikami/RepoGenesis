@@ -19,6 +19,7 @@ Define how this project exposes version and release identity at runtime and in G
   - commit SHA
   - environment
 - Exposure method is implementation-specific.
+- If shown in UI, prefer a compact low-emphasis label such as `v2.2.13 (4094d23)`.
 - Header display is allowed, but not required.
 - It must be inspectable without reading source code.
 
@@ -46,4 +47,5 @@ Define how this project exposes version and release identity at runtime and in G
 ## Current RepoGenesis Convention
 - Release label: environment variable driven (`VITE_RELEASE_VERSION` when set)
 - Commit label: build-time Git SHA (`VERCEL_GIT_COMMIT_SHA` when available)
+- Preferred UI label: `v<release> (<commit>)`
 - Stable releases: Git tags on `main`

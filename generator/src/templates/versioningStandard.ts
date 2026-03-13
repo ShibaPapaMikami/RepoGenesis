@@ -18,6 +18,7 @@ Define how ${brief.project.name} should expose release identity and runtime trac
   - commit SHA
   - environment
 - The display location is implementation-specific.
+- If the identity is shown in UI, prefer a compact low-emphasis label such as \`v2.2.13 (4094d23)\`.
 - The requirement is observability, not a fixed UI layout.
 
 ### 3. API services
@@ -36,7 +37,11 @@ Define how ${brief.project.name} should expose release identity and runtime trac
 - Commit SHA is the exact deployed code identity.
 - Both should be retained for rollback and incident handling.
 
-### 6. Minimum operational requirement
+### 6. Preferred UI label
+- When a web UI shows version identity, prefer the format \`v<release> (<commit>)\`.
+- Keep the label visible but visually low-emphasis so it supports debugging without competing with the main product UI.
+
+### 7. Minimum operational requirement
 - Operators must be able to answer:
   - What release is running?
   - What commit is running?
