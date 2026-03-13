@@ -4,10 +4,11 @@
 2026-03-13
 
 ## Roadmap Position
-Phase 5 / Complete
+Phase 6 / Hardening
 
 ## What Is Already Done
 - Phase 0-4 are complete.
+- Phase 5 is complete.
 - Production deployment works with authenticated ZIP generation.
 - Latest confirmed production UI during the current timeout triage is `v0.1.1 (b4cacf5)` on 2026-03-13.
 - Remote ZIP generation succeeds in production and surfaces request IDs for log correlation (`srv-1773186465441` confirmed).
@@ -21,13 +22,15 @@ Phase 5 / Complete
 - Consultation/simple/detail flows have contract and Playwright coverage.
 - `multi` draft reflection now seeds repos automatically and no longer trips the initial validation error.
 - Phase 5 UX scope is complete; remaining work is operational follow-up and later-phase separation.
+- Phase 6 intake contract hardening has started with a provider-independent draft contract refresh.
 
 ## What This Phase Still Needs
-- No blocking implementation work remains in Phase 5.
-- Ongoing production timeout recurrence monitoring remains as operational follow-up.
+- Fix the provider-independent intake contract against current parser behavior.
+- Add deterministic `draft -> spec` mapping rules and tests.
+- Keep AI provider integration behind the normalized intake boundary.
 
 ## Next Three Tasks
-1. Move to Phase 6 intake-contract hardening without introducing provider lock-in.
+1. Add deterministic `draft -> spec` mapping tests for current intake flows.
 2. Decide persistent storage for feedback and generation support data.
 3. Split pending large changes into separate tracks:
    - AI tool independence (`PROJECT.md` / `CLAUDE.md` / `GEMINI.md`)

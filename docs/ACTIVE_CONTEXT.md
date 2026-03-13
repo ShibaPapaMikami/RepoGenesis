@@ -4,7 +4,7 @@
 2026-03-13
 
 ## Current Phase
-Phase 5 — Usability for Non-Engineers (Complete)
+Phase 6 — AI-Assisted Spec Authoring (Hardening)
 
 ## What Has Been Done
 - Phase 0 完了:
@@ -69,6 +69,10 @@ Phase 5 — Usability for Non-Engineers (Complete)
 
 ## What Is Being Done Now
 - いまの主要テーマ:
+  - Phase 6 入口の contract hardening
+    - provider 非依存 intake contract の更新
+    - parser 実装とのズレ整理
+    - deterministic `draft -> spec` 境界の固定
   - Phase 5 完了後の運用フォロー
     - timeout 時の運用切り分けを runbook 化済み
     - remote ZIP timeout の再発監視
