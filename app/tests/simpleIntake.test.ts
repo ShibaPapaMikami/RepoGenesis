@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildSimpleIntakeDraft, buildSimpleIntakeMarkdown, initialSimpleIntakeState } from '../src/utils/simpleIntake.ts';
+import {
+  applySimpleIntakeOverrides,
+  buildSimpleIntakeDraft,
+  buildSimpleIntakeMarkdown,
+  initialSimpleIntakeState,
+} from '../src/utils/simpleIntake.ts';
 import type { FormState } from '../src/state/actions.ts';
 
 function makeState(): FormState {
@@ -79,4 +84,18 @@ test('buildSimpleIntakeDraft should reuse parser and reflect owner/security hint
     draft.suggestedState.structure.repos.map((repo) => repo.name),
     ['frontend', 'backend'],
   );
+});
+
+test('applySimpleIntakeOverrides should deterministically layer simple-input specific hints', () => {
+  const adjusted = applySimpleIntakeOverrides(makeState(), {
+    ...initialSimpleIntakeState,
+    owner: 'Gugenka PM',
+    dataSensitivity: 'personal',
+    integrationStatus: 'yes',
+  });
+
+  assert.equal(adjusted.project.owner, 'Gugenka PM');
+  assert.equal(adjusted.security.has_user_data, true);
+  assert.equal(adjusted.security.has_ip_sensitive, true);
+  assert.equal(adjusted.security.has_api_keys, true);
 });

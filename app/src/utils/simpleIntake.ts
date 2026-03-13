@@ -126,26 +126,31 @@ ${buildUnresolvedLines(input)}
 ${buildCandidateInputs(input)}`;
 }
 
-export function buildSimpleIntakeDraft(input: SimpleIntakeState, currentState: FormState): IntakeDraft {
-  const draft = parseConsultationIntake(buildSimpleIntakeMarkdown(input), currentState);
-
-  const suggestedState: FormState = {
-    ...draft.suggestedState,
+export function applySimpleIntakeOverrides(
+  suggestedState: FormState,
+  input: SimpleIntakeState,
+): FormState {
+  return {
+    ...suggestedState,
     project: {
-      ...draft.suggestedState.project,
-      owner: input.owner.trim() || draft.suggestedState.project.owner,
+      ...suggestedState.project,
+      owner: input.owner.trim() || suggestedState.project.owner,
     },
     security: {
-      ...draft.suggestedState.security,
-      has_user_data: input.dataSensitivity === 'personal' || draft.suggestedState.security.has_user_data,
-      has_ip_sensitive: input.dataSensitivity !== 'none' || draft.suggestedState.security.has_ip_sensitive,
-      has_api_keys: input.integrationStatus === 'yes' || draft.suggestedState.security.has_api_keys,
+      ...suggestedState.security,
+      has_user_data: input.dataSensitivity === 'personal' || suggestedState.security.has_user_data,
+      has_ip_sensitive: input.dataSensitivity !== 'none' || suggestedState.security.has_ip_sensitive,
+      has_api_keys: input.integrationStatus === 'yes' || suggestedState.security.has_api_keys,
     },
   };
+}
+
+export function buildSimpleIntakeDraft(input: SimpleIntakeState, currentState: FormState): IntakeDraft {
+  const draft = parseConsultationIntake(buildSimpleIntakeMarkdown(input), currentState);
 
   return {
     ...draft,
     source: 'pasted_consultation',
-    suggestedState,
+    suggestedState: applySimpleIntakeOverrides(draft.suggestedState, input),
   };
 }
