@@ -9,6 +9,7 @@ import {
   parseConsultationIntake,
   updateDraftOpenQuestions,
 } from '../src/utils/intakeParser.ts';
+import { createIntakeEnvelope } from '../src/utils/intakeProvider.ts';
 import type { FormState } from '../src/state/actions.ts';
 
 function makeState(): FormState {
@@ -253,6 +254,19 @@ test('deriveDraftSuggestions should build provider-independent suggested state',
   assert.equal(suggestions.suggestedState.security.level, 'medium');
   assert.equal(suggestions.suggestedState.structure.repo_type, 'single');
   assert.equal(suggestions.suggestedState.workflow.phases_count, 4);
+});
+
+test('createIntakeEnvelope should normalize provider-agnostic intake input', () => {
+  const envelope = createIntakeEnvelope('## プロジェクト概要\r\nテスト\r\n', {
+    provider: 'chatgpt',
+    model: 'gpt-x',
+    promptVersion: 'v1',
+  });
+
+  assert.equal(envelope.source, 'provider_markdown');
+  assert.equal(envelope.normalizedText, '## プロジェクト概要\nテスト');
+  assert.equal(envelope.provider.provider, 'chatgpt');
+  assert.equal(envelope.provider.model, 'gpt-x');
 });
 
 test('getConsultationPromptTemplate should return variant-specific guidance', () => {

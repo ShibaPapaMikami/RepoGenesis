@@ -1,4 +1,5 @@
 import { slugify } from './slugify.ts';
+import { createIntakeEnvelope } from './intakeProvider.ts';
 import type { FormState } from '../state/actions.ts';
 import type { Domain, RepoType, SecurityLevel } from '../constants/enums.ts';
 
@@ -524,7 +525,8 @@ export function deriveDraftSuggestions(
 }
 
 export function parseConsultationIntake(input: string, currentState: FormState): IntakeDraft {
-  const rawText = input.trim();
+  const envelope = createIntakeEnvelope(input);
+  const rawText = envelope.normalizedText;
   const sections = parseSections(rawText);
   const combined = Object.values(sections).join('\n');
   const summary = sections['プロジェクト概要'] || null;
