@@ -176,6 +176,66 @@ test('parseConsultationIntake should infer multi repo when deliverable mentions 
   assert.equal(draft.certainty.provisional.includes('リポジトリ構成（multi 仮置き）'), true);
 });
 
+test('parseConsultationIntake should prefer consultation-derived project fields over stale form values', () => {
+  const state = makeState();
+  state.project.name = 'Old Test Project';
+  state.project.slug = 'old-test-project';
+  state.project.description = '以前の説明';
+  state.project.owner = '';
+  state.slugManuallyEdited = false;
+
+  const input = `## プロジェクト概要
+社内ミーティングの音声を文字起こしして保存する社内ツール
+
+## 想定ユーザー
+- 経営
+
+## 解決したい課題
+議事録作成に時間がかかる
+
+## 扱うデータ
+- 会議音声
+
+## 未確定事項
+- ローカル処理の精度は未確定`;
+  const draft = parseConsultationIntake(input, state);
+
+  assert.equal(draft.suggestedState.project.name.startsWith('社内ミーティングの音声を文字起こし'), true);
+  assert.notEqual(draft.suggestedState.project.name, 'Old Test Project');
+  assert.equal(draft.suggestedState.project.slug, 'project-draft');
+  assert.equal(draft.suggestedState.project.description, '議事録作成に時間がかかる');
+  assert.equal(draft.suggestedState.project.owner, '');
+});
+
+test('parseConsultationIntake should apply candidate inputs for domain security and repo hints', () => {
+  const input = `## プロジェクト概要
+社内の相談記録をまとめるツール
+
+## 想定ユーザー
+- 営業
+
+## 解決したい課題
+相談履歴の確認に時間がかかる
+
+## 扱うデータ
+- 顧客情報
+
+## 未確定事項
+- 初回スコープは未確定
+
+## RepoGenesis入力候補
+- domain は web と ai が候補
+- security は medium を想定
+- single repo を想定
+- has_api_keys を想定`;
+  const draft = parseConsultationIntake(input, makeState());
+
+  assert.deepEqual(draft.suggestedState.tech.domains, ['web', 'ai']);
+  assert.equal(draft.suggestedState.security.level, 'medium');
+  assert.equal(draft.suggestedState.security.has_api_keys, true);
+  assert.equal(draft.suggestedState.structure.repo_type, 'single');
+});
+
 test('getConsultationPromptTemplate should return variant-specific guidance', () => {
   const internalPrompt = getConsultationPromptTemplate('internal_tool');
   const businessPrompt = getConsultationPromptTemplate('new_business');

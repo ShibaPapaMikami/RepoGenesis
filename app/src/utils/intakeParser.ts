@@ -1,6 +1,6 @@
 import { slugify } from './slugify.ts';
 import type { FormState } from '../state/actions.ts';
-import type { Domain, RepoType } from '../constants/enums.ts';
+import type { Domain, RepoType, SecurityLevel } from '../constants/enums.ts';
 
 export interface IntakeReadiness {
   blocking: string[];
@@ -267,6 +267,36 @@ function inferDomains(text: string): Domain[] {
   return [...new Set(domains)];
 }
 
+function inferDomainsFromCandidateInputs(items: string[]): Domain[] {
+  return inferDomains(items.join('\n'));
+}
+
+function inferSecurityLevelFromCandidateInputs(items: string[]): SecurityLevel | null {
+  const text = items.join('\n').toLowerCase();
+  if (/\bhigh\b|高/.test(text)) return 'high';
+  if (/\bmedium\b|中/.test(text)) return 'medium';
+  if (/\blow\b|低/.test(text)) return 'low';
+  return null;
+}
+
+function inferRepoTypeFromCandidateInputs(items: string[]): RepoType | null {
+  const text = items.join('\n').toLowerCase();
+  if (/\bmulti\b|複数リポジトリ/.test(text)) return 'multi';
+  if (/\bsingle\b|1リポジトリ|単一リポジトリ/.test(text)) return 'single';
+  return null;
+}
+
+function inferHasApiKeysFromCandidateInputs(items: string[]): boolean | null {
+  const text = items.join('\n').toLowerCase();
+  if (/has_api_keys|api keys|apiキー/.test(text)) return true;
+  if (/api連携あり|外部連携あり/.test(text)) return true;
+  return null;
+}
+
+function cleanFieldValue(value: string | null | undefined): string {
+  return value?.trim() ?? '';
+}
+
 function guessProjectName(summary: string | null): string {
   if (!summary) return '未確定プロジェクト';
   const firstLine = summary.split('\n')[0].trim();
@@ -410,7 +440,8 @@ export function parseConsultationIntake(input: string, currentState: FormState):
   const integrations = toList(sections['外部連携候補']);
   const openQuestions = toList(sections['未確定事項']);
   const candidateInputs = toList(sections['RepoGenesis入力候補']);
-  const inferredDomains = inferDomains(combined);
+  const explicitCandidateDomains = inferDomainsFromCandidateInputs(candidateInputs);
+  const inferredDomains = [...new Set([...explicitCandidateDomains, ...inferDomains(combined)])];
   const inferenceSource = [
     summary ?? '',
     problem ?? '',
@@ -418,16 +449,21 @@ export function parseConsultationIntake(input: string, currentState: FormState):
     candidateInputs.join('\n'),
     integrations.join('\n'),
   ].join('\n');
-
-  const projectName = currentState.project.name || guessProjectName(summary);
-  const projectDescription = currentState.project.description || problem || summary || '';
-  const owner = currentState.project.owner || '未設定';
-  const slug = currentState.project.slug || slugify(projectName);
-  const hasUserData = currentState.security.has_user_data || detectHasUserData(combined);
-  const hasIpSensitive = currentState.security.has_ip_sensitive || detectHasIpSensitive(combined);
-  const hasApiKeys = currentState.security.has_api_keys;
-  const inferredRepoType = inferRepoType(inferenceSource);
+  const projectName = cleanFieldValue(summary) ? guessProjectName(summary) : currentState.project.name;
+  const projectDescription = cleanFieldValue(problem) || cleanFieldValue(summary) || currentState.project.description;
+  const owner = currentState.project.owner;
+  const generatedSlug = slugify(projectName);
+  const slug = currentState.slugManuallyEdited && currentState.project.slug
+    ? currentState.project.slug
+    : (generatedSlug || 'project-draft');
+  const hasUserData = detectHasUserData(combined);
+  const hasIpSensitive = detectHasIpSensitive(combined);
+  const candidateHasApiKeys = inferHasApiKeysFromCandidateInputs(candidateInputs);
+  const hasApiKeys = candidateHasApiKeys ?? false;
+  const candidateRepoType = inferRepoTypeFromCandidateInputs(candidateInputs);
+  const inferredRepoType = candidateRepoType ?? inferRepoType(inferenceSource);
   const inferredPhasesCount = inferPhasesCount(inferenceSource, integrations);
+  const inferredSecurityLevel = inferSecurityLevelFromCandidateInputs(candidateInputs);
 
   const confirmed: string[] = [];
   const provisional: string[] = [];
@@ -444,7 +480,7 @@ export function parseConsultationIntake(input: string, currentState: FormState):
     provisional.push('プロジェクト名');
   }
 
-  if (!currentState.project.owner) {
+  if (!owner) {
     provisional.push('責任者');
   }
 
@@ -475,10 +511,11 @@ export function parseConsultationIntake(input: string, currentState: FormState):
     },
     tech: {
       ...currentState.tech,
-      domains: currentState.tech.domains.length > 0 ? currentState.tech.domains : inferredDomains,
+      domains: inferredDomains.length > 0 ? inferredDomains : currentState.tech.domains,
     },
     security: {
       ...currentState.security,
+      level: inferredSecurityLevel ?? currentState.security.level,
       has_user_data: hasUserData,
       has_ip_sensitive: hasIpSensitive,
       has_api_keys: hasApiKeys,
@@ -490,10 +527,10 @@ export function parseConsultationIntake(input: string, currentState: FormState):
     },
     workflow: {
       ...currentState.workflow,
-      phases_count: currentState.workflow.phases_count === 3 ? inferredPhasesCount : currentState.workflow.phases_count,
+      phases_count: inferredPhasesCount,
     },
-    slugManuallyEdited: Boolean(currentState.project.slug),
-    securityLevelOverride: currentState.securityLevelOverride,
+    slugManuallyEdited: currentState.slugManuallyEdited,
+    securityLevelOverride: inferredSecurityLevel ?? currentState.securityLevelOverride,
   };
 
   return {
