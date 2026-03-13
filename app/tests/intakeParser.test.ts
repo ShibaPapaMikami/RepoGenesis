@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   assessIntakeReadiness,
   CONSULTATION_PROMPT_OPTIONS,
+  deriveDraftSuggestions,
   getConsultationPromptTemplate,
   getConsultationReviewHints,
   parseConsultationIntake,
@@ -234,6 +235,24 @@ test('parseConsultationIntake should apply candidate inputs for domain security 
   assert.equal(draft.suggestedState.security.level, 'medium');
   assert.equal(draft.suggestedState.security.has_api_keys, true);
   assert.equal(draft.suggestedState.structure.repo_type, 'single');
+});
+
+test('deriveDraftSuggestions should build provider-independent suggested state', () => {
+  const suggestions = deriveDraftSuggestions(makeState(), {
+    summary: '社内の案件相談を整理するツール',
+    problem: 'Slack とスプレッドシートに情報が散らばっている',
+    firstDeliverable: '案件一覧と相談履歴を見られる Web 画面',
+    integrations: ['Slack'],
+    candidateInputs: ['domain は web と ai が候補', 'security は medium を想定', 'single repo を想定'],
+    combinedText: '社内の案件相談を整理するツール\nSlack とスプレッドシートに情報が散らばっている\n案件一覧と相談履歴を見られる Web 画面',
+  });
+
+  assert.equal(suggestions.suggestedState.project.name, '社内の案件相談を整理するツール');
+  assert.equal(suggestions.suggestedState.project.description, 'Slack とスプレッドシートに情報が散らばっている');
+  assert.deepEqual(suggestions.suggestedState.tech.domains, ['web', 'ai']);
+  assert.equal(suggestions.suggestedState.security.level, 'medium');
+  assert.equal(suggestions.suggestedState.structure.repo_type, 'single');
+  assert.equal(suggestions.suggestedState.workflow.phases_count, 4);
 });
 
 test('getConsultationPromptTemplate should return variant-specific guidance', () => {

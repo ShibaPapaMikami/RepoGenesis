@@ -47,6 +47,23 @@ export interface ConsultationReviewHints {
   points: string[];
 }
 
+interface IntakeExtractionInput {
+  summary: string | null;
+  problem: string | null;
+  firstDeliverable: string | null;
+  integrations: string[];
+  candidateInputs: string[];
+  combinedText: string;
+}
+
+interface DraftSuggestions {
+  suggestedState: FormState;
+  projectName: string;
+  inferredDomains: Domain[];
+  inferredRepoType: RepoType;
+  inferredPhasesCount: number;
+}
+
 function normalizeOpenQuestionLines(input: string): string[] {
   return input
     .split('\n')
@@ -428,20 +445,21 @@ function inferSuggestedRepos(
   return repos;
 }
 
-export function parseConsultationIntake(input: string, currentState: FormState): IntakeDraft {
-  const rawText = input.trim();
-  const sections = parseSections(rawText);
-  const combined = Object.values(sections).join('\n');
-  const summary = sections['プロジェクト概要'] || null;
-  const users = toList(sections['想定ユーザー']);
-  const problem = sections['解決したい課題'] || null;
-  const firstDeliverable = sections['最初に作るべきもの'] || null;
-  const dataKinds = toList(sections['扱うデータ']);
-  const integrations = toList(sections['外部連携候補']);
-  const openQuestions = toList(sections['未確定事項']);
-  const candidateInputs = toList(sections['RepoGenesis入力候補']);
+export function deriveDraftSuggestions(
+  currentState: FormState,
+  extracted: IntakeExtractionInput,
+): DraftSuggestions {
+  const {
+    summary,
+    problem,
+    firstDeliverable,
+    integrations,
+    candidateInputs,
+    combinedText,
+  } = extracted;
+
   const explicitCandidateDomains = inferDomainsFromCandidateInputs(candidateInputs);
-  const inferredDomains = [...new Set([...explicitCandidateDomains, ...inferDomains(combined)])];
+  const inferredDomains = [...new Set([...explicitCandidateDomains, ...inferDomains(combinedText)])];
   const inferenceSource = [
     summary ?? '',
     problem ?? '',
@@ -456,14 +474,75 @@ export function parseConsultationIntake(input: string, currentState: FormState):
   const slug = currentState.slugManuallyEdited && currentState.project.slug
     ? currentState.project.slug
     : (generatedSlug || 'project-draft');
-  const hasUserData = detectHasUserData(combined);
-  const hasIpSensitive = detectHasIpSensitive(combined);
+  const hasUserData = detectHasUserData(combinedText);
+  const hasIpSensitive = detectHasIpSensitive(combinedText);
   const candidateHasApiKeys = inferHasApiKeysFromCandidateInputs(candidateInputs);
   const hasApiKeys = candidateHasApiKeys ?? false;
   const candidateRepoType = inferRepoTypeFromCandidateInputs(candidateInputs);
   const inferredRepoType = candidateRepoType ?? inferRepoType(inferenceSource);
   const inferredPhasesCount = inferPhasesCount(inferenceSource, integrations);
   const inferredSecurityLevel = inferSecurityLevelFromCandidateInputs(candidateInputs);
+
+  return {
+    projectName,
+    inferredDomains,
+    inferredRepoType,
+    inferredPhasesCount,
+    suggestedState: {
+      ...currentState,
+      project: {
+        ...currentState.project,
+        name: projectName,
+        slug,
+        description: projectDescription,
+        owner,
+      },
+      tech: {
+        ...currentState.tech,
+        domains: inferredDomains.length > 0 ? inferredDomains : currentState.tech.domains,
+      },
+      security: {
+        ...currentState.security,
+        level: inferredSecurityLevel ?? currentState.security.level,
+        has_user_data: hasUserData,
+        has_ip_sensitive: hasIpSensitive,
+        has_api_keys: hasApiKeys,
+      },
+      structure: {
+        ...currentState.structure,
+        repo_type: inferredRepoType,
+        repos: inferSuggestedRepos(currentState, inferredRepoType, firstDeliverable),
+      },
+      workflow: {
+        ...currentState.workflow,
+        phases_count: inferredPhasesCount,
+      },
+      slugManuallyEdited: currentState.slugManuallyEdited,
+      securityLevelOverride: inferredSecurityLevel ?? currentState.securityLevelOverride,
+    },
+  };
+}
+
+export function parseConsultationIntake(input: string, currentState: FormState): IntakeDraft {
+  const rawText = input.trim();
+  const sections = parseSections(rawText);
+  const combined = Object.values(sections).join('\n');
+  const summary = sections['プロジェクト概要'] || null;
+  const users = toList(sections['想定ユーザー']);
+  const problem = sections['解決したい課題'] || null;
+  const firstDeliverable = sections['最初に作るべきもの'] || null;
+  const dataKinds = toList(sections['扱うデータ']);
+  const integrations = toList(sections['外部連携候補']);
+  const openQuestions = toList(sections['未確定事項']);
+  const candidateInputs = toList(sections['RepoGenesis入力候補']);
+  const suggestions = deriveDraftSuggestions(currentState, {
+    summary,
+    problem,
+    firstDeliverable,
+    integrations,
+    candidateInputs,
+    combinedText: combined,
+  });
 
   const confirmed: string[] = [];
   const provisional: string[] = [];
@@ -474,24 +553,24 @@ export function parseConsultationIntake(input: string, currentState: FormState):
   if (problem) confirmed.push('解決したい課題');
   if (dataKinds.length > 0) confirmed.push('扱うデータ');
 
-  if (projectName === '未確定プロジェクト') {
+  if (suggestions.projectName === '未確定プロジェクト') {
     unresolved.push('プロジェクト名');
   } else if (!currentState.project.name) {
     provisional.push('プロジェクト名');
   }
 
-  if (!owner) {
+  if (!suggestions.suggestedState.project.owner) {
     provisional.push('責任者');
   }
 
-  if (inferredDomains.length === 0 && currentState.tech.domains.length === 0) {
+  if (suggestions.inferredDomains.length === 0 && currentState.tech.domains.length === 0) {
     unresolved.push('技術ドメイン');
   } else if (currentState.tech.domains.length === 0) {
     provisional.push('技術ドメイン');
   }
 
-  provisional.push(`リポジトリ構成（${inferredRepoType} 仮置き）`);
-  provisional.push(`フェーズ数（${inferredPhasesCount} 仮置き）`);
+  provisional.push(`リポジトリ構成（${suggestions.inferredRepoType} 仮置き）`);
+  provisional.push(`フェーズ数（${suggestions.inferredPhasesCount} 仮置き）`);
   provisional.push('外部API有無');
 
   for (const key of REQUIRED_SECTION_KEYS) {
@@ -500,46 +579,13 @@ export function parseConsultationIntake(input: string, currentState: FormState):
     }
   }
 
-  const suggestedState: FormState = {
-    ...currentState,
-    project: {
-      ...currentState.project,
-      name: projectName,
-      slug,
-      description: projectDescription,
-      owner,
-    },
-    tech: {
-      ...currentState.tech,
-      domains: inferredDomains.length > 0 ? inferredDomains : currentState.tech.domains,
-    },
-    security: {
-      ...currentState.security,
-      level: inferredSecurityLevel ?? currentState.security.level,
-      has_user_data: hasUserData,
-      has_ip_sensitive: hasIpSensitive,
-      has_api_keys: hasApiKeys,
-    },
-    structure: {
-      ...currentState.structure,
-      repo_type: inferredRepoType,
-      repos: inferSuggestedRepos(currentState, inferredRepoType, firstDeliverable),
-    },
-    workflow: {
-      ...currentState.workflow,
-      phases_count: inferredPhasesCount,
-    },
-    slugManuallyEdited: currentState.slugManuallyEdited,
-    securityLevelOverride: inferredSecurityLevel ?? currentState.securityLevelOverride,
-  };
-
   return {
     source: 'pasted_consultation',
     rawText,
     sections,
     review: {
       facts: toFactList(summary, users, problem, firstDeliverable, dataKinds, integrations),
-      assumptions: toAssumptionList([...new Set(provisional)], inferredRepoType, inferredPhasesCount),
+      assumptions: toAssumptionList([...new Set(provisional)], suggestions.inferredRepoType, suggestions.inferredPhasesCount),
       openQuestions: toOpenQuestionList([...new Set(unresolved)], openQuestions),
     },
     extracted: {
@@ -557,7 +603,7 @@ export function parseConsultationIntake(input: string, currentState: FormState):
       provisional: [...new Set(provisional)],
       unresolved: [...new Set(unresolved)],
     },
-    suggestedState,
+    suggestedState: suggestions.suggestedState,
   };
 }
 
