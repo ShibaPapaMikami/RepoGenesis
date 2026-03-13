@@ -4,7 +4,7 @@
 2026-03-13
 
 ## Current Phase
-Phase 5 — Usability for Non-Engineers (Stabilizing)
+Phase 5 — Usability for Non-Engineers (Complete)
 
 ## What Has Been Done
 - Phase 0 完了:
@@ -34,7 +34,7 @@ Phase 5 — Usability for Non-Engineers (Stabilizing)
   - Firebase ログイン -> Vercel `__session` 発行 -> Render 認可 -> ZIP ダウンロードを通した
   - `gugenka.jp` を実運用ドメインとして認証・認可フローを整理
   - app 上部の認証パネル、デプロイ版ラベル、Vercel BFF を追加
-- Phase 5 進行中:
+- Phase 5 完了:
   - `相談結果を反映` モードを追加
   - `かんたん入力` モードを追加
   - 用途別プロンプト (`新規事業 / 社内ツール / クライアント案件`) を追加
@@ -69,10 +69,8 @@ Phase 5 — Usability for Non-Engineers (Stabilizing)
 
 ## What Is Being Done Now
 - いまの主要テーマ:
-  - Phase 5 の安定化
-    - 非エンジニア向け文言の磨き込み
-    - stable baseline の固定
-    - timeout 時の運用切り分けを runbook 化
+  - Phase 5 完了後の運用フォロー
+    - timeout 時の運用切り分けを runbook 化済み
     - remote ZIP timeout の再発監視
   - 次の大きい変更を分離
     - AI tool 非依存化
@@ -144,7 +142,6 @@ Phase 6 — AI-Assisted Spec Authoring
 
 ## Upcoming Focus
 Immediate next:
-- stable baseline を切る
-- 2026-03-11 の本番確認結果を runbook / 運用メモへ必要に応じて反映する
+- Phase 6 に向けて intake contract の境界を整理する
 - feedback の永続保存先を決める
 - AI tool 非依存化と optional skill layer を別差分で整理する

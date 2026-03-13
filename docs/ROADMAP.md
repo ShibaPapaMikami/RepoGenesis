@@ -68,14 +68,14 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [ ] Remove `manual_bearer` support from the codebase entirely
 - [ ] Add explicit admin-only mode for local support/debug paths
 
-## Phase 5: Usability for Non-Engineers (Current)
+## Phase 5: Usability for Non-Engineers (Complete)
 **Goal:** Reduce input burden and improve spec quality.
 - Reference: `docs/AI_INTAKE_ROADMAP.md`, `docs/AI_INTAKE_CONTRACT.md`
 - [x] Add `相談結果を反映` mode as the primary non-engineer entry
 - [x] Add `かんたん入力` mode separate from `詳細入力`
 - [x] Replace direct spec-first UX with guided business questions
-- [ ] Add field-by-field explanations in plain Japanese
-- [ ] Add example answers for each section
+- [x] Add field-by-field explanations in plain Japanese
+- [x] Add example answers for each section
 - [x] Add AI consultation prompt pack directly in UI
 - [x] Add `未確定項目` checklist instead of hard-failing ambiguous users early
 - [x] Add project type presets (new business / internal tool / client project)
@@ -83,6 +83,7 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Allow editing `open questions` before forcing detailed field decisions
 - [x] Auto-seed repos when a generated draft infers `multi`
 - [x] Add Playwright coverage for consultation/simple intake flows
+- [x] Confirm production behavior after latest UX updates
 
 ## Phase 6: AI-Assisted Spec Authoring
 **Goal:** Improve quality without duplicating generator knowledge.

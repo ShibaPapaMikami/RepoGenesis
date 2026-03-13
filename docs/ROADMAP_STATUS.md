@@ -4,7 +4,7 @@
 2026-03-13
 
 ## Roadmap Position
-Phase 5 / Stabilizing
+Phase 5 / Complete
 
 ## What Is Already Done
 - Phase 0-4 are complete.
@@ -20,16 +20,15 @@ Phase 5 / Stabilizing
 - `AI開発ツール` supports multiple selection (`ai_tools[]`).
 - Consultation/simple/detail flows have contract and Playwright coverage.
 - `multi` draft reflection now seeds repos automatically and no longer trips the initial validation error.
+- Phase 5 UX scope is complete; remaining work is operational follow-up and later-phase separation.
 
 ## What This Phase Still Needs
-- Wording polish for non-engineer guidance.
-- Stable baseline tag.
-- Public confirmation after each future production redeploy when UX changes.
-- Render-side timeout recurrence monitoring.
+- No blocking implementation work remains in Phase 5.
+- Ongoing production timeout recurrence monitoring remains as operational follow-up.
 
 ## Next Three Tasks
-1. Cut a stable baseline tag after confirming the latest production deploy.
-2. Sync any remaining docs/runbooks with the 2026-03-11 production confirmation details.
+1. Move to Phase 6 intake-contract hardening without introducing provider lock-in.
+2. Decide persistent storage for feedback and generation support data.
 3. Split pending large changes into separate tracks:
    - AI tool independence (`PROJECT.md` / `CLAUDE.md` / `GEMINI.md`)
    - skill layer (`repogenesis.skills.json`, `skills/README.md`)
