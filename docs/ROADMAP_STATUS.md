@@ -12,6 +12,7 @@ Phase 5 / Stabilizing
 - Latest confirmed production UI during the current timeout triage is `v0.1.1 (b4cacf5)` on 2026-03-13.
 - Remote ZIP generation succeeds in production and surfaces request IDs for log correlation (`srv-1773186465441` confirmed).
 - Timeout responses in production now also surface BFF request IDs for log correlation (`bff-eeab21ca-35a3-4acd-a51b-80d9b15bf8b5` confirmed).
+- After the timeout observation, a same-day retry on production succeeded again.
 - `相談結果を反映` flow is implemented and production-tested.
 - `かんたん入力` flow is implemented.
 - `facts / assumptions / open questions` review is implemented.
@@ -24,7 +25,7 @@ Phase 5 / Stabilizing
 - Wording polish for non-engineer guidance.
 - Stable baseline tag.
 - Public confirmation after each future production redeploy when UX changes.
-- Render-side timeout root cause check and redeploy confirmation.
+- Render-side timeout recurrence monitoring.
 
 ## Next Three Tasks
 1. Cut a stable baseline tag after confirming the latest production deploy.

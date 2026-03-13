@@ -63,6 +63,9 @@ Phase 5 — Usability for Non-Engineers (Stabilizing)
       - 本番 UI 表示: `v0.1.1 (b4cacf5)`
       - timeout 結果: `ZIP生成がタイムアウトしました。APIの再デプロイ状態または生成内容を確認してください。`
       - request id: `bff-eeab21ca-35a3-4acd-a51b-80d9b15bf8b5`
+    - timeout 後の再試行成功 (`commit: b4cacf5` deploy 上): PASS
+      - 同日中の再試行で ZIP 生成成功
+      - timeout は常時再現ではなく、Render 側の一時的な遅延の可能性あり
 
 ## What Is Being Done Now
 - いまの主要テーマ:
@@ -70,6 +73,7 @@ Phase 5 — Usability for Non-Engineers (Stabilizing)
     - 非エンジニア向け文言の磨き込み
     - stable baseline の固定
     - timeout 時の運用切り分けを runbook 化
+    - remote ZIP timeout の再発監視
   - 次の大きい変更を分離
     - AI tool 非依存化
     - optional skill layer
@@ -84,7 +88,7 @@ Phase 5 — Usability for Non-Engineers (Stabilizing)
 - 技術的 blocker は解消済み。
 - 残る blocker は構造整理と運用整備:
   - feedback 保存がローカルファイルで永続性に欠ける
-  - remote ZIP timeout は request id で追えるが、Render 側の再デプロイ/性能確認が未完
+  - remote ZIP timeout は request id で追える状態。再試行成功済みのため、当面は Render 側の再発監視を継続
   - AI tool 非依存化 (`PROJECT.md + CLAUDE.md + GEMINI.md`) は未反映
   - skill layer は planning 済みだが、manifest / installer は未反映
   - 現在の大きい未コミット差分を concern ごとに分離する必要がある
