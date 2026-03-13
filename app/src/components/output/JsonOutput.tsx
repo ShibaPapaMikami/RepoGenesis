@@ -74,8 +74,10 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
   async function handleGenerateRepository() {
     try {
       setIsGenerating(true);
-      setGenerateMessage(null);
+      setGenerateMessage('ZIP生成を開始しました。最大60秒ほどかかる場合があります。完了または失敗までこのままお待ちください。');
       setGeneratedZip(null);
+      setLastGenerateRequestId(null);
+      setLastErrorReport(null);
       if (generationMode === 'remote' && remoteAuthMode === 'manual_bearer' && manualBearerUiAvailable) {
         localStorage.setItem('repogenesis_api_token', authToken);
       }
@@ -157,6 +159,13 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
   const warningItems = readiness.warnings;
   const hasConsultationWarnings = blockingItems.length > 0 || warningItems.length > 0;
   const reviewHints = getConsultationReviewHints(consultationPromptVariant);
+  const generationTone = isGenerating
+    ? 'pending'
+    : lastErrorReport
+      ? 'error'
+      : generatedZip
+        ? 'success'
+        : 'info';
 
   return (
     <section ref={sectionRef} className="form-section output-section">
@@ -259,6 +268,7 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
         <button
           type="button"
           onClick={handleGenerateRepository}
+          aria-busy={isGenerating}
           disabled={
             !canExport
             || isGenerating
@@ -270,7 +280,7 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
               && manualBearerUiAvailable
               && authToken.trim().length === 0)
           }
-          className="btn-primary"
+          className={`btn-primary ${isGenerating ? 'btn-busy' : ''}`}
         >
           {isGenerating ? '生成中...' : `リポジトリ生成 (ZIP / ${generationMode})`}
         </button>
@@ -297,8 +307,11 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
         <p className="hint">ZIP 生成には上部の認証セクションでログインが必要です。</p>
       )}
       {generateMessage && (
-        <div>
+        <div className={`generation-status generation-status-${generationTone}`}>
           <p>{generateMessage}</p>
+          {isGenerating && (
+            <p className="hint generation-status-hint">処理中は生成ボタンがロックされます。完了後にZIPダウンロードまたはエラーJSON保存へ進めます。</p>
+          )}
           {lastGenerateRequestId && (
             <p className="hint">request id: {lastGenerateRequestId}</p>
           )}
@@ -358,8 +371,9 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
           <button
             type="button"
             onClick={handleSubmitFeedback}
+            aria-busy={isSubmittingFeedback}
             disabled={isSubmittingFeedback}
-            className="btn-primary"
+            className={`btn-primary ${isSubmittingFeedback ? 'btn-busy' : ''}`}
           >
             {isSubmittingFeedback ? '送信中...' : 'フィードバックを送信'}
           </button>
