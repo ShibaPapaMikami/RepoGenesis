@@ -1,7 +1,7 @@
 # ACTIVE_CONTEXT.md — Current Project State
 
 ## Last Updated
-2026-03-11
+2026-03-13
 
 ## Current Phase
 Phase 5 — Usability for Non-Engineers (Stabilizing)
@@ -59,12 +59,17 @@ Phase 5 — Usability for Non-Engineers (Stabilizing)
       - 本番 UI 表示: `コミット: 6d75da1`
       - 生成結果: `repogenesis-test.zip` (`22` files, remote)
       - request id: `srv-1773186465441`
+    - timeout 時 request id 保持 (`commit: b4cacf5` deploy 上で確認): PASS
+      - 本番 UI 表示: `v0.1.1 (b4cacf5)`
+      - timeout 結果: `ZIP生成がタイムアウトしました。APIの再デプロイ状態または生成内容を確認してください。`
+      - request id: `bff-eeab21ca-35a3-4acd-a51b-80d9b15bf8b5`
 
 ## What Is Being Done Now
 - いまの主要テーマ:
   - Phase 5 の安定化
     - 非エンジニア向け文言の磨き込み
     - stable baseline の固定
+    - timeout 時の運用切り分けを runbook 化
   - 次の大きい変更を分離
     - AI tool 非依存化
     - optional skill layer
@@ -79,6 +84,7 @@ Phase 5 — Usability for Non-Engineers (Stabilizing)
 - 技術的 blocker は解消済み。
 - 残る blocker は構造整理と運用整備:
   - feedback 保存がローカルファイルで永続性に欠ける
+  - remote ZIP timeout は request id で追えるが、Render 側の再デプロイ/性能確認が未完
   - AI tool 非依存化 (`PROJECT.md + CLAUDE.md + GEMINI.md`) は未反映
   - skill layer は planning 済みだが、manifest / installer は未反映
   - 現在の大きい未コミット差分を concern ごとに分離する必要がある

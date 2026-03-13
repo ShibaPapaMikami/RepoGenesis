@@ -1,7 +1,7 @@
 # ROADMAP_STATUS.md — Current Position
 
 ## Last Updated
-2026-03-11
+2026-03-13
 
 ## Roadmap Position
 Phase 5 / Stabilizing
@@ -9,8 +9,9 @@ Phase 5 / Stabilizing
 ## What Is Already Done
 - Phase 0-4 are complete.
 - Production deployment works with authenticated ZIP generation.
-- Latest production redeploy was confirmed on 2026-03-11 with commit `6d75da1`.
+- Latest confirmed production UI during the current timeout triage is `v0.1.1 (b4cacf5)` on 2026-03-13.
 - Remote ZIP generation succeeds in production and surfaces request IDs for log correlation (`srv-1773186465441` confirmed).
+- Timeout responses in production now also surface BFF request IDs for log correlation (`bff-eeab21ca-35a3-4acd-a51b-80d9b15bf8b5` confirmed).
 - `相談結果を反映` flow is implemented and production-tested.
 - `かんたん入力` flow is implemented.
 - `facts / assumptions / open questions` review is implemented.
@@ -23,6 +24,7 @@ Phase 5 / Stabilizing
 - Wording polish for non-engineer guidance.
 - Stable baseline tag.
 - Public confirmation after each future production redeploy when UX changes.
+- Render-side timeout root cause check and redeploy confirmation.
 
 ## Next Three Tasks
 1. Cut a stable baseline tag after confirming the latest production deploy.

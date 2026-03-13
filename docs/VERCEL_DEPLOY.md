@@ -75,3 +75,36 @@ npm run smoke:api
 
 「手動Bearer入力のまま本番公開」が最大の運用リスク。
 公開前に `VITE_REMOTE_AUTH_MODE=cookie_session` に固定し、Bearer入力を無効化すること。
+
+## 6. Timeout triage
+
+UI で次のような失敗が出た場合:
+
+- `ZIP生成がタイムアウトしました。APIの再デプロイ状態または生成内容を確認してください。`
+- `request id: bff-...`
+
+意味:
+
+- Vercel BFF は request id を発行できている
+- ただし upstream(Render 側) は 45 秒以内に ZIP 応答を返せなかった
+- UI 側の追跡は機能していて、調査対象は BFF より upstream 側に寄っている
+
+確認手順:
+
+1. UI に出た `request id` を控える
+2. Vercel 側で同じ `bff-...` を確認する
+3. Render 側ログで `generate:start`, `generate:failure`, `generate:success` を `requestId=<same id>` で検索する
+4. Render 側に該当ログがない、または古い build のままなら `Deploy latest commit`
+5. 再試行して、成功か、少なくとも同じ request id で相関できることを確認する
+
+期待ログ例:
+
+- Vercel BFF: `X-Request-Id: bff-...`
+- Render start: `[generate:start] requestId=bff-...`
+- Render failure: `[generate:failure] requestId=bff-... status=...`
+- Render success: `[generate:success] requestId=bff-... fileCount=...`
+
+備考:
+
+- `bff-...` が UI に出ていれば、timeout 時の追跡改善は反映済み
+- timeout 自体の解消には Render 再デプロイか生成時間短縮が別途必要
