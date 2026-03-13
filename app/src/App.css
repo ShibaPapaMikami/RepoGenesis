@@ -23,9 +23,10 @@
 
 .app-version {
   margin-top: 0.5rem;
-  font-size: 0.82rem;
-  color: #0d47a1;
-  font-weight: 600;
+  font-size: 0.78rem;
+  color: #8893a3;
+  font-weight: 400;
+  letter-spacing: 0.02em;
 }
 
 .app-main {

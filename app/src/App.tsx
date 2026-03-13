@@ -367,12 +367,15 @@ function App() {
     setInputMode('consultation');
   }
 
+  const releaseLabel = __APP_RELEASE__.startsWith('v') ? __APP_RELEASE__ : `v${__APP_RELEASE__}`;
+  const buildLabel = `${releaseLabel} (${__APP_COMMIT__})`;
+
   return (
     <div className="app">
       <header className="app-header">
         <h1>RepoGenesis</h1>
         <p>AI対応リポジトリ構造ジェネレータ</p>
-        <p className="app-version">リリース: {__APP_RELEASE__} / コミット: {__APP_COMMIT__}</p>
+        <p className="app-version">{buildLabel}</p>
       </header>
 
       <main className="app-main">
