@@ -11,6 +11,7 @@ interface ConsultationSectionProps {
   intakeText: string;
   onChangeText: (value: string) => void;
   onCopyPrompt: () => void;
+  promptCopied: boolean;
   onBuildDraft: () => void;
   onContinueToOptions: () => void;
   onChangeOpenQuestions: (value: string) => void;
@@ -24,6 +25,7 @@ export function ConsultationSection({
   intakeText,
   onChangeText,
   onCopyPrompt,
+  promptCopied,
   onBuildDraft,
   onContinueToOptions,
   onChangeOpenQuestions,
@@ -61,11 +63,11 @@ export function ConsultationSection({
       </div>
 
       <div className="output-actions">
+        <button type="button" onClick={onCopyPrompt} className="btn-secondary">
+          {promptCopied ? 'コピーしました' : '相談用プロンプトをコピー'}
+        </button>
         <button type="button" onClick={onBuildDraft} className="btn-primary" disabled={!intakeText.trim()}>
           ドラフトを作成
-        </button>
-        <button type="button" onClick={onCopyPrompt} className="btn-secondary">
-          相談用プロンプトをもう一度コピー
         </button>
       </div>
 
@@ -83,7 +85,7 @@ export function ConsultationSection({
         />
       </div>
 
-      {message && <p className="consultation-message">{message}</p>}
+      {message && <p className="consultation-message" role="status" aria-live="polite">{message}</p>}
 
       {draft && (
         <div className="consultation-review">
@@ -104,21 +106,21 @@ export function ConsultationSection({
             <div className="consultation-card">
               <h4>確認できたこと</h4>
               <ul>
-                {draft.certainty.confirmed.map((item) => <li key={item}>{item}</li>)}
+                {draft.review.facts.map((item) => <li key={item}>{item}</li>)}
               </ul>
             </div>
 
             <div className="consultation-card">
               <h4>仮置きした内容</h4>
               <ul>
-                {draft.certainty.provisional.map((item) => <li key={item}>{item}</li>)}
+                {draft.review.assumptions.map((item) => <li key={item}>{item}</li>)}
               </ul>
             </div>
 
             <div className="consultation-card">
               <h4>未確定事項</h4>
               <ul>
-                {draft.certainty.unresolved.map((item) => <li key={item}>{item}</li>)}
+                {draft.review.openQuestions.map((item) => <li key={item}>{item}</li>)}
               </ul>
               <div className="form-row consultation-inline-editor">
                 <label htmlFor="openQuestionsEditor">未確定事項を編集</label>

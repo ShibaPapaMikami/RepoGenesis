@@ -65,6 +65,11 @@ interface DraftSuggestions {
   inferredPhasesCount: number;
 }
 
+interface ProjectKeywordRule {
+  pattern: RegExp;
+  label: string;
+}
+
 function normalizeOpenQuestionLines(input: string): string[] {
   return input
     .split('\n')
@@ -270,17 +275,17 @@ function toList(text: string | undefined): string[] {
 }
 
 function inferDomains(text: string): Domain[] {
-  const normalized = text.toLowerCase();
   const domains: Domain[] = [];
+  const normalized = text.trim();
 
-  if (/(web|サイト|画面|ブラウザ)/i.test(normalized)) domains.push('web');
-  if (/(ai|llm|生成ai|機械学習)/i.test(normalized)) domains.push('ai');
-  if (/(mobile|ios|android|スマホ)/i.test(normalized)) domains.push('mobile');
-  if (/(unity)/i.test(normalized)) domains.push('unity');
-  if (/(xr|vr|ar|mr)/i.test(normalized)) domains.push('xr');
-  if (/(infra|devops|aws|gcp|azure)/i.test(normalized)) domains.push('infra');
-  if (/(cli|コマンド)/i.test(normalized)) domains.push('cli');
-  if (/(iot|センサー|デバイス)/i.test(normalized)) domains.push('iot');
+  if (/\bweb\b|webアプリ|ウェブ|サイト|管理画面|ダッシュボード|ブラウザ|画面/i.test(normalized)) domains.push('web');
+  if (/\bai\b|\bllm\b|生成ai|生成 ai|機械学習|大規模言語モデル/i.test(normalized)) domains.push('ai');
+  if (/\bmobile\b|\bios\b|\bandroid\b|モバイル|スマホ/i.test(normalized)) domains.push('mobile');
+  if (/\bunity\b|ユニティ/i.test(normalized)) domains.push('unity');
+  if (/\bxr\b|\bvr\b|\bar\b|\bmr\b|空間コンピューティング|仮想現実|拡張現実|mixed reality|spatial/i.test(normalized)) domains.push('xr');
+  if (/\binfra\b|\bdevops\b|\baws\b|\bgcp\b|\bazure\b|インフラ|デプロイ/i.test(normalized)) domains.push('infra');
+  if (/\bcli\b|コマンドライン|コマンド|ターミナル/i.test(normalized)) domains.push('cli');
+  if (/\biot\b|センサー|デバイス|組み込み/i.test(normalized)) domains.push('iot');
 
   return [...new Set(domains)];
 }
@@ -315,11 +320,91 @@ function cleanFieldValue(value: string | null | undefined): string {
   return value?.trim() ?? '';
 }
 
-function guessProjectName(summary: string | null): string {
-  if (!summary) return '未確定プロジェクト';
-  const firstLine = summary.split('\n')[0].trim();
-  if (firstLine.length <= 36) return firstLine;
-  return `${firstLine.slice(0, 33)}...`;
+function formatRepoTypeLabel(repoType: RepoType): string {
+  return repoType === 'single' ? 'シングル' : 'マルチ';
+}
+
+const PROJECT_KEYWORD_RULES: ProjectKeywordRule[] = [
+  { pattern: /社内/i, label: '社内' },
+  { pattern: /会議|ミーティング/i, label: '会議' },
+  { pattern: /音声|録音/i, label: '音声' },
+  { pattern: /文字起こし/i, label: '文字起こし' },
+  { pattern: /議事録/i, label: '議事録' },
+  { pattern: /案件/i, label: '案件' },
+  { pattern: /相談/i, label: '相談' },
+  { pattern: /進行/i, label: '進行' },
+  { pattern: /管理/i, label: '管理' },
+  { pattern: /提案/i, label: '提案' },
+  { pattern: /営業/i, label: '営業' },
+  { pattern: /問い合わせ/i, label: '問い合わせ' },
+  { pattern: /制作/i, label: '制作' },
+  { pattern: /顧客|クライアント/i, label: '顧客' },
+  { pattern: /\bai\b|生成ai|生成 ai|llm/i, label: 'AI' },
+];
+
+function firstSentence(text: string): string {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  return normalized.split(/[。！？\n]/).find((segment) => segment.trim().length > 0)?.trim() ?? normalized;
+}
+
+function detectProjectSuffix(text: string): string {
+  if (/管理画面/i.test(text)) return '管理画面';
+  if (/ダッシュボード/i.test(text)) return 'ダッシュボード';
+  if (/\bsaas\b/i.test(text)) return 'SaaS';
+  if (/システム/i.test(text)) return 'システム';
+  if (/アプリ/i.test(text)) return 'アプリ';
+  if (/サービス/i.test(text)) return 'サービス';
+  if (/webツール|web ツール/i.test(text)) return 'Webツール';
+  return 'ツール';
+}
+
+function normalizeProjectTitleSentence(text: string): string {
+  return firstSentence(text)
+    .replace(/[「」『』（）()]/g, '')
+    .replace(/を(作りたい|構築したい|作成したい|立ち上げたい|導入したい|始めたい|作る|構築する|作成する|立ち上げる|導入する)$/u, '')
+    .replace(/^(新しい|新規の)\s*/u, '')
+    .trim();
+}
+
+function compactProjectName(source: string, context: string): string {
+  const normalized = normalizeProjectTitleSentence(source);
+  if (normalized.length <= 24) return normalized;
+
+  const suffix = detectProjectSuffix(context || normalized);
+  const keywordLabels = PROJECT_KEYWORD_RULES
+    .filter((rule) => rule.pattern.test(context))
+    .map((rule) => rule.label)
+    .filter((label, index, list) => list.indexOf(label) === index);
+
+  if (keywordLabels.length > 0) {
+    const compact = `${keywordLabels.slice(0, 4).join('')}${suffix}`;
+    if (compact.length <= 24) return compact;
+  }
+
+  const tightened = normalized
+    .replace(/向けの?/g, '')
+    .replace(/のための/g, '')
+    .replace(/まとめて/g, '')
+    .replace(/自動で/g, '')
+    .replace(/できる/g, '')
+    .replace(/して/g, '')
+    .replace(/する/g, '')
+    .replace(/[、,]/g, '')
+    .trim();
+
+  if (tightened.length <= 24) return tightened;
+  return `${tightened.slice(0, 25)}...`;
+}
+
+function guessProjectName(
+  summary: string | null,
+  firstDeliverable: string | null,
+  problem: string | null,
+): string {
+  const primary = cleanFieldValue(summary) || cleanFieldValue(firstDeliverable) || cleanFieldValue(problem);
+  if (!primary) return '未確定プロジェクト';
+  const context = [summary, firstDeliverable, problem].filter(Boolean).join('\n');
+  return compactProjectName(primary, context);
 }
 
 function detectHasUserData(text: string): boolean {
@@ -355,13 +440,13 @@ function toAssumptionList(
 ): string[] {
   return provisional.map((item) => {
     if (item.startsWith('リポジトリ構成')) {
-      return `リポジトリ構成は ${inferredRepoType} を仮置き`;
+      return `リポジトリ構成は ${formatRepoTypeLabel(inferredRepoType)} を仮置き`;
     }
-    if (item.startsWith('フェーズ数')) {
-      return `フェーズ数は ${inferredPhasesCount} を仮置き`;
+    if (item.startsWith('進め方の段階数')) {
+      return `進め方の段階数は ${inferredPhasesCount} を仮置き`;
     }
-    if (item === '外部API有無') {
-      return '外部API有無は未確定のため仮置き';
+    if (item === '外部APIが必要か') {
+      return '外部APIが必要かは未確定のため仮置き';
     }
     if (item === '技術ドメイン') {
       return '技術ドメインは文面から推定';
@@ -468,7 +553,9 @@ export function deriveDraftSuggestions(
     candidateInputs.join('\n'),
     integrations.join('\n'),
   ].join('\n');
-  const projectName = cleanFieldValue(summary) ? guessProjectName(summary) : currentState.project.name;
+  const projectName = cleanFieldValue(summary) || cleanFieldValue(firstDeliverable)
+    ? guessProjectName(summary, firstDeliverable, problem)
+    : currentState.project.name;
   const projectDescription = cleanFieldValue(problem) || cleanFieldValue(summary) || currentState.project.description;
   const owner = currentState.project.owner;
   const generatedSlug = slugify(projectName);
@@ -528,7 +615,6 @@ export function parseConsultationIntake(input: string, currentState: FormState):
   const envelope = createIntakeEnvelope(input);
   const rawText = envelope.normalizedText;
   const sections = parseSections(rawText);
-  const combined = Object.values(sections).join('\n');
   const summary = sections['プロジェクト概要'] || null;
   const users = toList(sections['想定ユーザー']);
   const problem = sections['解決したい課題'] || null;
@@ -537,13 +623,22 @@ export function parseConsultationIntake(input: string, currentState: FormState):
   const integrations = toList(sections['外部連携候補']);
   const openQuestions = toList(sections['未確定事項']);
   const candidateInputs = toList(sections['RepoGenesis入力候補']);
+  const inferenceText = [
+    summary ?? '',
+    users.join('\n'),
+    problem ?? '',
+    firstDeliverable ?? '',
+    dataKinds.join('\n'),
+    integrations.join('\n'),
+    candidateInputs.join('\n'),
+  ].join('\n');
   const suggestions = deriveDraftSuggestions(currentState, {
     summary,
     problem,
     firstDeliverable,
     integrations,
     candidateInputs,
-    combinedText: combined,
+    combinedText: inferenceText,
   });
 
   const confirmed: string[] = [];
@@ -571,9 +666,9 @@ export function parseConsultationIntake(input: string, currentState: FormState):
     provisional.push('技術ドメイン');
   }
 
-  provisional.push(`リポジトリ構成（${suggestions.inferredRepoType} 仮置き）`);
-  provisional.push(`フェーズ数（${suggestions.inferredPhasesCount} 仮置き）`);
-  provisional.push('外部API有無');
+  provisional.push(`リポジトリ構成（${formatRepoTypeLabel(suggestions.inferredRepoType)} 仮置き）`);
+  provisional.push(`進め方の段階数（${suggestions.inferredPhasesCount} 仮置き）`);
+  provisional.push('外部APIが必要か');
 
   for (const key of REQUIRED_SECTION_KEYS) {
     if (!sections[key]) {

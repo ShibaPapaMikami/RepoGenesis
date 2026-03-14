@@ -670,6 +670,10 @@
 .consultation-message {
   color: #0d47a1;
   font-weight: 600;
+  background: #eef6ff;
+  border: 1px solid #c9def8;
+  border-radius: 6px;
+  padding: 0.8rem 0.95rem;
 }
 
 @keyframes button-spin {

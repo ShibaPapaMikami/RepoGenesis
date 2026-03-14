@@ -5,6 +5,7 @@ import { PROJECT_SPEC_FILENAME, SUPPORTED_SPEC_VERSION } from '../src/constants/
 import { parseConsultationIntake } from '../src/utils/intakeParser.ts';
 import { buildSimpleIntakeDraft, initialSimpleIntakeState } from '../src/utils/simpleIntake.ts';
 import type { FormState } from '../src/state/actions.ts';
+import { getConsultationTestTemplate } from './fixtures/consultationTemplates.ts';
 
 function makeState(): FormState {
   return {
@@ -149,4 +150,28 @@ test('buildProjectSpec should deterministically map simple intake draft state in
     ['frontend', 'backend'],
   );
   assert.equal(spec.workflow.phases_count, 4);
+});
+
+test('buildProjectSpec should support the named meeting transcription template', () => {
+  const draft = parseConsultationIntake(getConsultationTestTemplate('meeting_transcription_internal_tool'), {
+    ...makeState(),
+    project: {
+      name: '',
+      slug: '',
+      description: '',
+      owner: 'Gugenka Ops',
+    },
+    tech: {
+      ...makeState().tech,
+      domains: [],
+    },
+  });
+  const spec = buildProjectSpec(draft.suggestedState);
+
+  assert.equal(spec.project.name, '社内会議音声文字起こしツール');
+  assert.equal(spec.project.owner, 'Gugenka Ops');
+  assert.equal(spec.structure.repo_type, 'single');
+  assert.equal(spec.workflow.phases_count, 4);
+  assert.equal(spec.security.has_ip_sensitive, true);
+  assert.deepEqual(spec.tech.domains, []);
 });

@@ -11,6 +11,7 @@ import {
 } from '../src/utils/intakeParser.ts';
 import { createIntakeEnvelope } from '../src/utils/intakeProvider.ts';
 import type { FormState } from '../src/state/actions.ts';
+import { getConsultationTestTemplate } from './fixtures/consultationTemplates.ts';
 
 function makeState(): FormState {
   return {
@@ -91,10 +92,10 @@ test('parseConsultationIntake should create provisional state without changing s
   assert.equal(draft.suggestedState.tech.domains.includes('web'), true);
   assert.equal(draft.suggestedState.tech.domains.includes('ai'), true);
   assert.equal(draft.suggestedState.security.has_user_data, true);
-  assert.equal(draft.certainty.provisional.includes('リポジトリ構成（single 仮置き）'), true);
-  assert.equal(draft.certainty.provisional.includes('フェーズ数（4 仮置き）'), true);
+  assert.equal(draft.certainty.provisional.includes('リポジトリ構成（シングル 仮置き）'), true);
+  assert.equal(draft.certainty.provisional.includes('進め方の段階数（4 仮置き）'), true);
   assert.equal(draft.suggestedState.workflow.phases_count, 4);
-  assert.equal(draft.review.assumptions.some((item) => item.includes('リポジトリ構成は single を仮置き')), true);
+  assert.equal(draft.review.assumptions.some((item) => item.includes('リポジトリ構成は シングル を仮置き')), true);
 });
 
 test('parseConsultationIntake should mark missing required sections as unresolved', () => {
@@ -146,8 +147,8 @@ test('assessIntakeReadiness should separate blocking items from warnings', () =>
 
   assert.equal(readiness.blocking.includes('想定ユーザー（未入力）'), true);
   assert.equal(readiness.blocking.includes('解決したい課題（未入力）'), true);
-  assert.equal(readiness.warnings.includes('リポジトリ構成（single 仮置き）'), true);
-  assert.equal(readiness.warnings.includes('外部API有無'), true);
+  assert.equal(readiness.warnings.includes('リポジトリ構成（シングル 仮置き）'), true);
+  assert.equal(readiness.warnings.includes('外部APIが必要か'), true);
 });
 
 test('parseConsultationIntake should infer multi repo when deliverable mentions ui and api parts', () => {
@@ -175,7 +176,7 @@ test('parseConsultationIntake should infer multi repo when deliverable mentions 
     draft.suggestedState.structure.repos.map((repo) => repo.name),
     ['frontend-admin', 'backend'],
   );
-  assert.equal(draft.certainty.provisional.includes('リポジトリ構成（multi 仮置き）'), true);
+  assert.equal(draft.certainty.provisional.includes('リポジトリ構成（マルチ 仮置き）'), true);
 });
 
 test('parseConsultationIntake should prefer consultation-derived project fields over stale form values', () => {
@@ -202,11 +203,24 @@ test('parseConsultationIntake should prefer consultation-derived project fields 
 - ローカル処理の精度は未確定`;
   const draft = parseConsultationIntake(input, state);
 
-  assert.equal(draft.suggestedState.project.name.startsWith('社内ミーティングの音声を文字起こし'), true);
+  assert.equal(draft.suggestedState.project.name.includes('文字起こし'), true);
+  assert.equal(draft.suggestedState.project.name.length <= 24, true);
   assert.notEqual(draft.suggestedState.project.name, 'Old Test Project');
   assert.equal(draft.suggestedState.project.slug, 'project-draft');
   assert.equal(draft.suggestedState.project.description, '議事録作成に時間がかかる');
   assert.equal(draft.suggestedState.project.owner, '');
+});
+
+test('parseConsultationIntake should avoid false positive domains for calendar and transcription text', () => {
+  const input = getConsultationTestTemplate('meeting_transcription_internal_tool');
+  const draft = parseConsultationIntake(input, makeState());
+
+  assert.equal(draft.suggestedState.tech.domains.includes('xr'), false);
+  assert.equal(draft.suggestedState.tech.domains.includes('cli'), false);
+  assert.equal(draft.suggestedState.tech.domains.includes('ai'), false);
+  assert.equal(draft.suggestedState.project.name.includes('文字起こし'), true);
+  assert.equal(draft.extracted.integrations.includes('Google Calendar（会議と議事録の紐付け）'), true);
+  assert.equal(draft.review.openQuestions.some((item) => item.includes('ツールのUI形式')), true);
 });
 
 test('parseConsultationIntake should apply candidate inputs for domain security and repo hints', () => {

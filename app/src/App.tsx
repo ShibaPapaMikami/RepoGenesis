@@ -46,6 +46,7 @@ function App() {
   const [consultationDraft, setConsultationDraft] = useState<IntakeDraft | null>(loadConsultationDraft());
   const [consultationPromptVariant, setConsultationPromptVariant] = useState<ConsultationPromptVariant>('internal_tool');
   const [consultationMessage, setConsultationMessage] = useState<string | null>(null);
+  const [promptCopied, setPromptCopied] = useState(false);
   const [guidedStep, setGuidedStep] = useState<GuidedStep>(() => deriveInitialGuidedStep(loadConsultationText(), loadConsultationDraft()));
   const [showAdvancedDetail, setShowAdvancedDetail] = useState(false);
   const [draftApplied, setDraftApplied] = useState(false);
@@ -55,6 +56,7 @@ function App() {
     email: null,
   });
   const initialized = useRef(false);
+  const promptCopyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const outputRef = useRef<HTMLElement | null>(null);
   const optionsRef = useRef<HTMLElement | null>(null);
   const reviewRef = useRef<HTMLElement | null>(null);
@@ -94,6 +96,12 @@ function App() {
   useEffect(() => {
     saveConsultationDraft(consultationDraft);
   }, [consultationDraft]);
+
+  useEffect(() => () => {
+    if (promptCopyTimerRef.current) {
+      clearTimeout(promptCopyTimerRef.current);
+    }
+  }, []);
 
   const errors = validationErrors(state);
   const exportable = canExport(state);
@@ -136,6 +144,7 @@ function App() {
     setConsultationText('');
     setConsultationDraft(null);
     setConsultationMessage(null);
+    setPromptCopied(false);
     setGuidedStep('prompt');
     setShowAdvancedDetail(false);
     setDraftApplied(false);
@@ -145,21 +154,25 @@ function App() {
   async function handleCopyConsultationPrompt() {
     await navigator.clipboard.writeText(getConsultationPromptTemplate(consultationPromptVariant));
     setConsultationMessage('相談用プロンプトをコピーしました。壁打ち結果をこの画面に貼り付けてください。');
+    setPromptCopied(true);
+    if (promptCopyTimerRef.current) clearTimeout(promptCopyTimerRef.current);
+    promptCopyTimerRef.current = setTimeout(() => setPromptCopied(false), 2400);
     setGuidedStep('paste');
   }
 
   function handleBuildConsultationDraft() {
+    setPromptCopied(false);
     const draft = parseConsultationIntake(consultationText, state);
     if (draft.review.facts.length === 0) {
       setConsultationDraft(null);
       setConsultationMessage(
-        'draft を作成できませんでした。見出し付きの相談結果を貼り付けてください。少なくとも「プロジェクト概要」「想定ユーザー」「解決したい課題」の本文が必要です。',
+        'ドラフトを作成できませんでした。見出し付きの相談結果を貼り付けてください。少なくとも「プロジェクト概要」「想定ユーザー」「解決したい課題」の本文が必要です。',
       );
       setGuidedStep('paste');
       return;
     }
     setConsultationDraft(draft);
-    setConsultationMessage('draft を作成しました。仮置き項目と未確定事項を確認してください。');
+    setConsultationMessage('ドラフトを作成しました。確認できたこと、仮置きした内容、未確定事項を確認してください。');
     setGuidedStep('draft');
     setShowAdvancedDetail(false);
     setDraftApplied(false);
@@ -171,10 +184,10 @@ function App() {
     dispatch({ type: 'RESTORE_DRAFT', payload: consultationDraft.suggestedState });
     setConsultationMessage(
       nextStep === 'options'
-        ? 'draft をフォームに反映しました。おすすめオプションを確認してください。'
+        ? 'ドラフトをフォームに反映しました。おすすめオプションを確認してください。'
         : openAdvancedDetail
-          ? 'draft をフォームに反映しました。詳細調整を開きます。'
-          : 'draft をフォームに反映しました。最終確認へ進みます。',
+          ? 'ドラフトをフォームに反映しました。詳細調整を開きます。'
+          : 'ドラフトをフォームに反映しました。最終確認へ進みます。',
     );
     setGuidedStep(nextStep);
     setShowAdvancedDetail(openAdvancedDetail);
@@ -220,6 +233,7 @@ function App() {
                 intakeText={consultationText}
                 onChangeText={setConsultationText}
                 onCopyPrompt={handleCopyConsultationPrompt}
+                promptCopied={promptCopied}
                 onBuildDraft={handleBuildConsultationDraft}
                 onContinueToOptions={() => applyConsultationDraft('options')}
                 onChangeOpenQuestions={handleChangeDraftOpenQuestions}
