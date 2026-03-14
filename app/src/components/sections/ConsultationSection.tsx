@@ -10,12 +10,9 @@ interface ConsultationSectionProps {
   onChangePromptVariant: (value: ConsultationPromptVariant) => void;
   intakeText: string;
   onChangeText: (value: string) => void;
-  onApplyTestInput: () => void;
   onCopyPrompt: () => void;
   onBuildDraft: () => void;
   onContinueToOptions: () => void;
-  onSkipToReview: () => void;
-  onOpenAdvancedDetail: () => void;
   onChangeOpenQuestions: (value: string) => void;
   draft: IntakeDraft | null;
   message: string | null;
@@ -26,12 +23,9 @@ export function ConsultationSection({
   onChangePromptVariant,
   intakeText,
   onChangeText,
-  onApplyTestInput,
   onCopyPrompt,
   onBuildDraft,
   onContinueToOptions,
-  onSkipToReview,
-  onOpenAdvancedDetail,
   onChangeOpenQuestions,
   draft,
   message,
@@ -69,9 +63,6 @@ export function ConsultationSection({
       <div className="output-actions">
         <button type="button" onClick={onBuildDraft} className="btn-primary" disabled={!intakeText.trim()}>
           ドラフトを作成
-        </button>
-        <button type="button" onClick={onApplyTestInput} className="btn-secondary">
-          相談結果のテスト入力を適用
         </button>
         <button type="button" onClick={onCopyPrompt} className="btn-secondary">
           相談用プロンプトをもう一度コピー
@@ -154,12 +145,6 @@ export function ConsultationSection({
           <div className="output-actions">
             <button type="button" onClick={onContinueToOptions} className="btn-primary">
               この内容で進む
-            </button>
-            <button type="button" onClick={onSkipToReview} className="btn-secondary">
-              おすすめオプションを飛ばして最終確認へ
-            </button>
-            <button type="button" onClick={onOpenAdvancedDetail} className="btn-secondary">
-              詳細調整を開く
             </button>
           </div>
         </div>
