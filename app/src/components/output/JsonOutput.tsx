@@ -14,6 +14,11 @@ import { assessIntakeReadiness, getConsultationReviewHints, type ConsultationPro
 
 interface JsonOutputProps {
   sectionRef?: RefObject<HTMLElement | null>;
+  title?: string;
+  lead?: string;
+  showFeedback?: boolean;
+  collapseJsonByDefault?: boolean;
+  onGenerationStateChange?: (state: 'idle' | 'running' | 'done') => void;
   state: FormState;
   canExport: boolean;
   errors: Record<string, string>;
@@ -25,7 +30,20 @@ interface JsonOutputProps {
   consultationPromptVariant: ConsultationPromptVariant;
 }
 
-export function JsonOutput({ sectionRef, state, canExport, errors, authSession, consultationDraft, consultationPromptVariant }: JsonOutputProps) {
+export function JsonOutput({
+  sectionRef,
+  title = '出力',
+  lead,
+  showFeedback = true,
+  collapseJsonByDefault = false,
+  onGenerationStateChange,
+  state,
+  canExport,
+  errors,
+  authSession,
+  consultationDraft,
+  consultationPromptVariant,
+}: JsonOutputProps) {
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateMessage, setGenerateMessage] = useState<string | null>(null);
@@ -39,6 +57,7 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
   const [feedbackEmail, setFeedbackEmail] = useState('');
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const [jsonPreviewOpen, setJsonPreviewOpen] = useState(!collapseJsonByDefault);
   const generationMode = getGenerationMode();
   const remoteAuthMode = getRemoteAuthMode();
   const requiresCookieSessionLogin = generationMode === 'remote' && remoteAuthMode === 'cookie_session';
@@ -54,6 +73,12 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
     const saved = localStorage.getItem('repogenesis_api_token');
     if (saved) setAuthToken(saved);
   }, [generationMode, manualBearerUiAvailable, remoteAuthMode]);
+
+  useEffect(() => {
+    if (!collapseJsonByDefault) {
+      setJsonPreviewOpen(true);
+    }
+  }, [collapseJsonByDefault]);
 
   function handleDownload() {
     const blob = new Blob([stringifyProjectSpec(state)], { type: 'application/json' });
@@ -74,6 +99,7 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
   async function handleGenerateRepository() {
     try {
       setIsGenerating(true);
+      onGenerationStateChange?.('running');
       setGenerateMessage('ZIP生成を開始しました。最大60秒ほどかかる場合があります。完了または失敗までこのままお待ちください。');
       setGeneratedZip(null);
       setLastGenerateRequestId(null);
@@ -87,6 +113,7 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
       setLastGenerateRequestId(result.requestId ?? null);
       setGenerateMessage(`生成完了: ${result.filename} (${fileInfo}, ${result.mode})。ZIPをダウンロードしてください。`);
       setLastErrorReport(null);
+      onGenerationStateChange?.('done');
     } catch (error) {
       console.error(error);
       const message = error instanceof Error ? error.message : 'リポジトリ生成に失敗しました。';
@@ -104,6 +131,7 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
         status,
         kind,
       });
+      onGenerationStateChange?.('done');
     } finally {
       setIsGenerating(false);
     }
@@ -169,7 +197,8 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
 
   return (
     <section ref={sectionRef} className="form-section output-section">
-      <h2>出力</h2>
+      <h2>{title}</h2>
+      {lead && <p className="consultation-lead">{lead}</p>}
 
       {errorList.length > 0 && (
         <div className="error-summary">
@@ -192,7 +221,7 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
             </ul>
           </div>
           {blockingItems.length > 0 ? (
-            <p>この draft には、生成前に確定すべき項目があります。先に詳細入力で補完してください。</p>
+            <p>この draft には、生成前に確定すべき項目があります。先に詳細調整で補完してください。</p>
           ) : (
             <p>この draft には仮置きの項目があります。生成はできますが、後で見直しが必要になる可能性があります。</p>
           )}
@@ -226,9 +255,16 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
         </div>
       )}
 
-      <div className="json-preview">
-        <pre>{jsonString}</pre>
-      </div>
+      <details
+        className="json-preview-toggle"
+        open={jsonPreviewOpen}
+        onToggle={(event) => setJsonPreviewOpen(event.currentTarget.open)}
+      >
+        <summary>JSONプレビューを確認</summary>
+        <div className="json-preview">
+          <pre>{jsonString}</pre>
+        </div>
+      </details>
 
       {generationMode === 'remote' && remoteAuthMode === 'manual_bearer' && manualBearerUiAvailable && (
         <div className="form-row">
@@ -318,69 +354,71 @@ export function JsonOutput({ sectionRef, state, canExport, errors, authSession, 
         </div>
       )}
 
-      <div className="feedback-panel">
-        <h3>フィードバック</h3>
-        <div className="feedback-grid">
-          <div className="form-row">
-            <label htmlFor="feedbackType">種別</label>
-            <select
-              id="feedbackType"
-              value={feedbackType}
-              onChange={(e) => setFeedbackType(e.target.value as FeedbackType)}
+      {showFeedback && (
+        <div className="feedback-panel">
+          <h3>フィードバック</h3>
+          <div className="feedback-grid">
+            <div className="form-row">
+              <label htmlFor="feedbackType">種別</label>
+              <select
+                id="feedbackType"
+                value={feedbackType}
+                onChange={(e) => setFeedbackType(e.target.value as FeedbackType)}
+              >
+                <option value="bug">不具合報告</option>
+                <option value="request">要望</option>
+              </select>
+            </div>
+
+            <div className="form-row">
+              <label htmlFor="feedbackTitle">タイトル</label>
+              <input
+                id="feedbackTitle"
+                type="text"
+                value={feedbackTitle}
+                onChange={(e) => setFeedbackTitle(e.target.value)}
+                placeholder="例: ZIP生成が失敗する"
+              />
+            </div>
+
+            <div className="form-row feedback-description">
+              <label htmlFor="feedbackDescription">詳細</label>
+              <textarea
+                id="feedbackDescription"
+                value={feedbackDescription}
+                onChange={(e) => setFeedbackDescription(e.target.value)}
+                placeholder="再現手順や発生条件を記載してください"
+                rows={4}
+              />
+            </div>
+
+            <div className="form-row">
+              <label htmlFor="feedbackEmail">連絡先メール（任意）</label>
+              <input
+                id="feedbackEmail"
+                type="email"
+                value={feedbackEmail}
+                onChange={(e) => setFeedbackEmail(e.target.value)}
+                placeholder="name@gugenka.jp"
+              />
+            </div>
+          </div>
+
+          <div className="output-actions">
+            <button
+              type="button"
+              onClick={handleSubmitFeedback}
+              aria-busy={isSubmittingFeedback}
+              disabled={isSubmittingFeedback}
+              className={`btn-primary ${isSubmittingFeedback ? 'btn-busy' : ''}`}
             >
-              <option value="bug">不具合報告</option>
-              <option value="request">要望</option>
-            </select>
+              {isSubmittingFeedback ? '送信中...' : 'フィードバックを送信'}
+            </button>
           </div>
-
-          <div className="form-row">
-            <label htmlFor="feedbackTitle">タイトル</label>
-            <input
-              id="feedbackTitle"
-              type="text"
-              value={feedbackTitle}
-              onChange={(e) => setFeedbackTitle(e.target.value)}
-              placeholder="例: ZIP生成が失敗する"
-            />
-          </div>
-
-          <div className="form-row feedback-description">
-            <label htmlFor="feedbackDescription">詳細</label>
-            <textarea
-              id="feedbackDescription"
-              value={feedbackDescription}
-              onChange={(e) => setFeedbackDescription(e.target.value)}
-              placeholder="再現手順や発生条件を記載してください"
-              rows={4}
-            />
-          </div>
-
-          <div className="form-row">
-            <label htmlFor="feedbackEmail">連絡先メール（任意）</label>
-            <input
-              id="feedbackEmail"
-              type="email"
-              value={feedbackEmail}
-              onChange={(e) => setFeedbackEmail(e.target.value)}
-              placeholder="name@gugenka.jp"
-            />
-          </div>
+          <p className="hint">入力目安: タイトル3文字以上、詳細10文字以上</p>
+          {feedbackMessage && <p>{feedbackMessage}</p>}
         </div>
-
-        <div className="output-actions">
-          <button
-            type="button"
-            onClick={handleSubmitFeedback}
-            aria-busy={isSubmittingFeedback}
-            disabled={isSubmittingFeedback}
-            className={`btn-primary ${isSubmittingFeedback ? 'btn-busy' : ''}`}
-          >
-            {isSubmittingFeedback ? '送信中...' : 'フィードバックを送信'}
-          </button>
-        </div>
-        <p className="hint">入力目安: タイトル3文字以上、詳細10文字以上</p>
-        {feedbackMessage && <p>{feedbackMessage}</p>}
-      </div>
+      )}
     </section>
   );
 }

@@ -13,9 +13,9 @@ interface ConsultationSectionProps {
   onApplyTestInput: () => void;
   onCopyPrompt: () => void;
   onBuildDraft: () => void;
-  onApplyDraft: () => void;
-  onApplyDraftAndReviewOutput: () => void;
-  onSwitchToDetail: () => void;
+  onContinueToOptions: () => void;
+  onSkipToReview: () => void;
+  onOpenAdvancedDetail: () => void;
   onChangeOpenQuestions: (value: string) => void;
   draft: IntakeDraft | null;
   message: string | null;
@@ -29,9 +29,9 @@ export function ConsultationSection({
   onApplyTestInput,
   onCopyPrompt,
   onBuildDraft,
-  onApplyDraft,
-  onApplyDraftAndReviewOutput,
-  onSwitchToDetail,
+  onContinueToOptions,
+  onSkipToReview,
+  onOpenAdvancedDetail,
   onChangeOpenQuestions,
   draft,
   message,
@@ -40,9 +40,10 @@ export function ConsultationSection({
 
   return (
     <section className="form-section consultation-section">
-      <h2>相談結果を反映</h2>
+      <p className="section-kicker">Step 2</p>
+      <h2>AIの整理結果を貼る</h2>
       <p className="consultation-lead">
-        ChatGPT / Claude などで壁打ちした結果を貼り付け、RepoGenesis 用の draft に変換します。
+        ChatGPT / Claude などで壁打ちした結果を貼り付け、RepoGenesis 用の draft に変換します。見出しが揺れていても、まずはここから取り込みます。
       </p>
 
       <div className="consultation-prompt-picker">
@@ -70,17 +71,17 @@ export function ConsultationSection({
           相談結果のテスト入力を適用
         </button>
         <button type="button" onClick={onCopyPrompt} className="btn-secondary">
-          相談用プロンプトをコピー
+          相談用プロンプトをもう一度コピー
         </button>
         <button type="button" onClick={onBuildDraft} className="btn-primary" disabled={!intakeText.trim()}>
-          draft を作成
+          ドラフトを作成
         </button>
       </div>
 
       <div className="form-row">
         <label htmlFor="consultationInput">相談結果の貼り付け</label>
         <p className="hint">
-          `## プロジェクト概要` のような見出し付きで貼り付けてください。本文が空だと draft を作成できません。
+          `## プロジェクト概要` のような見出し付きが理想ですが、多少崩れていても取り込めます。本文が空だと draft を作成できません。
         </p>
         <textarea
           id="consultationInput"
@@ -95,7 +96,8 @@ export function ConsultationSection({
 
       {draft && (
         <div className="consultation-review">
-          <h3>生成前レビュー</h3>
+          <p className="section-kicker">Step 3</p>
+          <h3>ドラフト確認</h3>
 
           <div className="consultation-guidance">
             <h4>{reviewHints.title}</h4>
@@ -170,14 +172,14 @@ export function ConsultationSection({
           </div>
 
           <div className="output-actions">
-            <button type="button" onClick={onApplyDraft} className="btn-primary">
-              この draft をフォームへ反映
+            <button type="button" onClick={onContinueToOptions} className="btn-primary">
+              この内容で進む
             </button>
-            <button type="button" onClick={onApplyDraftAndReviewOutput} className="btn-secondary">
-              この draft で出力確認へ進む
+            <button type="button" onClick={onSkipToReview} className="btn-secondary">
+              おすすめオプションを飛ばして最終確認へ
             </button>
-            <button type="button" onClick={onSwitchToDetail} className="btn-secondary">
-              詳細入力で調整
+            <button type="button" onClick={onOpenAdvancedDetail} className="btn-secondary">
+              詳細調整を開く
             </button>
           </div>
         </div>
