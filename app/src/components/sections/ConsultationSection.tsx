@@ -67,14 +67,14 @@ export function ConsultationSection({
       </div>
 
       <div className="output-actions">
+        <button type="button" onClick={onBuildDraft} className="btn-primary" disabled={!intakeText.trim()}>
+          ドラフトを作成
+        </button>
         <button type="button" onClick={onApplyTestInput} className="btn-secondary">
           相談結果のテスト入力を適用
         </button>
         <button type="button" onClick={onCopyPrompt} className="btn-secondary">
           相談用プロンプトをもう一度コピー
-        </button>
-        <button type="button" onClick={onBuildDraft} className="btn-primary" disabled={!intakeText.trim()}>
-          ドラフトを作成
         </button>
       </div>
 
@@ -98,6 +98,9 @@ export function ConsultationSection({
         <div className="consultation-review">
           <p className="section-kicker">Step 3</p>
           <h3>ドラフト確認</h3>
+          <p className="consultation-lead">
+            ここでは「確認できたこと」「仮置きした内容」「未確定事項」だけを見ます。細かい JSON や詳細調整はあとで開けます。
+          </p>
 
           <div className="consultation-guidance">
             <h4>{reviewHints.title}</h4>
@@ -108,41 +111,7 @@ export function ConsultationSection({
 
           <div className="consultation-columns">
             <div className="consultation-card">
-              <h4>facts</h4>
-              <ul>
-                {draft.review.facts.map((item) => <li key={item}>{item}</li>)}
-              </ul>
-            </div>
-
-            <div className="consultation-card">
-              <h4>assumptions</h4>
-              <ul>
-                {draft.review.assumptions.map((item) => <li key={item}>{item}</li>)}
-              </ul>
-            </div>
-
-            <div className="consultation-card">
-              <h4>open questions</h4>
-              <ul>
-                {draft.review.openQuestions.map((item) => <li key={item}>{item}</li>)}
-              </ul>
-              <div className="form-row consultation-inline-editor">
-                <label htmlFor="openQuestionsEditor">未確定事項を編集</label>
-                <textarea
-                  id="openQuestionsEditor"
-                  rows={5}
-                  value={draft.review.openQuestions.join('\n')}
-                  onChange={(e) => onChangeOpenQuestions(e.target.value)}
-                  placeholder={'例:\n外部APIが本当に必要か\n1リポジトリで十分か'}
-                />
-                <p className="hint">1行に1つずつ書くと、そのまま open questions に反映されます。</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="consultation-columns">
-            <div className="consultation-card">
-              <h4>確定した内容</h4>
+              <h4>確認できたこと</h4>
               <ul>
                 {draft.certainty.confirmed.map((item) => <li key={item}>{item}</li>)}
               </ul>
@@ -160,6 +129,17 @@ export function ConsultationSection({
               <ul>
                 {draft.certainty.unresolved.map((item) => <li key={item}>{item}</li>)}
               </ul>
+              <div className="form-row consultation-inline-editor">
+                <label htmlFor="openQuestionsEditor">未確定事項を編集</label>
+                <textarea
+                  id="openQuestionsEditor"
+                  rows={5}
+                  value={draft.review.openQuestions.join('\n')}
+                  onChange={(e) => onChangeOpenQuestions(e.target.value)}
+                  placeholder={'例:\n外部APIが本当に必要か\n1リポジトリで十分か'}
+                />
+                <p className="hint">1行に1つずつ書くと、そのまま open questions に反映されます。</p>
+              </div>
             </div>
           </div>
 

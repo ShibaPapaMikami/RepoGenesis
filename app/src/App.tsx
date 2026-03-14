@@ -264,7 +264,7 @@ function App() {
   const errors = validationErrors(state);
   const exportable = canExport(state);
   const requiresCookieSession = getGenerationMode() === 'remote' && getRemoteAuthMode() === 'cookie_session';
-  const activeStep = resultPhase === 'idle' ? guidedStep : 'result';
+  const activeStep = guidedStep === 'result' || resultPhase !== 'idle' ? 'result' : guidedStep;
   const activeStepIndex = GUIDED_STEPS.findIndex((step) => step.id === activeStep);
   const promptVariantLabel = CONSULTATION_PROMPT_OPTIONS.find((option) => option.id === consultationPromptVariant)?.label ?? '相談テンプレート';
   const suggestedRepoType = consultationDraft?.suggestedState.structure.repo_type ?? state.structure.repo_type;
@@ -272,7 +272,10 @@ function App() {
   const summaryProjectName = state.project.name || consultationDraft?.suggestedState.project.name || '未確定';
   const summaryDescription = state.project.description || consultationDraft?.suggestedState.project.description || '未確定';
   const summaryDomains = state.tech.domains.length > 0 ? state.tech.domains.join(', ') : consultationDraft?.suggestedState.tech.domains.join(', ') || '未確定';
-  const showOutputSection = draftApplied && (guidedStep === 'review' || resultPhase !== 'idle');
+  const showConsultationSection = !showSimpleFallback && (guidedStep === 'paste' || guidedStep === 'draft');
+  const showOptionsSection = draftApplied && guidedStep === 'options';
+  const showReviewSection = draftApplied && guidedStep === 'review';
+  const showOutputSection = draftApplied && activeStep === 'result';
 
   const recommendationNotes = [
     suggestedRepoType === 'multi'
@@ -527,6 +530,7 @@ function App() {
         <AuthPanel
           enabled={requiresCookieSession}
           onSessionChange={setAuthSession}
+          compact
         />
 
         {showSimpleFallback ? (
@@ -560,24 +564,69 @@ function App() {
             />
           </>
         ) : (
-          <ConsultationSection
-            promptVariant={consultationPromptVariant}
-            onChangePromptVariant={setConsultationPromptVariant}
-            intakeText={consultationText}
-            onChangeText={setConsultationText}
-            onApplyTestInput={handleApplyConsultationTestInput}
-            onCopyPrompt={handleCopyConsultationPrompt}
-            onBuildDraft={handleBuildConsultationDraft}
-            onContinueToOptions={() => applyConsultationDraft('options')}
-            onSkipToReview={() => applyConsultationDraft('review')}
-            onOpenAdvancedDetail={() => applyConsultationDraft('review', true)}
-            onChangeOpenQuestions={handleChangeDraftOpenQuestions}
-            draft={consultationDraft}
-            message={consultationMessage}
-          />
+          <>
+            {showConsultationSection ? (
+              <ConsultationSection
+                promptVariant={consultationPromptVariant}
+                onChangePromptVariant={setConsultationPromptVariant}
+                intakeText={consultationText}
+                onChangeText={setConsultationText}
+                onApplyTestInput={handleApplyConsultationTestInput}
+                onCopyPrompt={handleCopyConsultationPrompt}
+                onBuildDraft={handleBuildConsultationDraft}
+                onContinueToOptions={() => applyConsultationDraft('options')}
+                onSkipToReview={() => applyConsultationDraft('review')}
+                onOpenAdvancedDetail={() => applyConsultationDraft('review', true)}
+                onChangeOpenQuestions={handleChangeDraftOpenQuestions}
+                draft={consultationDraft}
+                message={consultationMessage}
+              />
+            ) : (
+              <section className="form-section step-summary">
+                <p className="section-kicker">{consultationDraft ? 'Step 3' : 'Step 2'}</p>
+                <h2>{consultationDraft ? 'ドラフト確認' : 'AIの整理結果を貼る'}</h2>
+                <p className="consultation-lead">
+                  {consultationDraft
+                    ? `プロジェクト名候補は「${consultationDraft.suggestedState.project.name || '未確定'}」です。必要ならここを開いて確認できます。`
+                    : consultationText.trim()
+                      ? '相談結果は入力済みです。必要なら貼り付け欄を開いて編集できます。'
+                      : 'プロンプトをコピーしたら、次は AI の整理結果を貼り付けます。'}
+                </p>
+                <div className="output-actions">
+                  <button
+                    type="button"
+                    onClick={() => setGuidedStep(consultationDraft ? 'draft' : 'paste')}
+                    className="btn-secondary"
+                  >
+                    {consultationDraft ? 'ドラフト確認を開く' : '貼り付け欄を開く'}
+                  </button>
+                </div>
+              </section>
+            )}
+          </>
         )}
 
-        {draftApplied && (
+        {!draftApplied && !showSimpleFallback && (
+          <>
+            <section className="form-section step-summary step-summary-locked">
+              <p className="section-kicker">Step 4</p>
+              <h2>おすすめオプション</h2>
+              <p className="consultation-lead">ドラフト確定後に、repo 構成・security・フェーズ数だけを確認します。</p>
+            </section>
+            <section className="form-section step-summary step-summary-locked">
+              <p className="section-kicker">Step 5</p>
+              <h2>最終確認</h2>
+              <p className="consultation-lead">プロジェクト要点と JSON プレビューは、この後の確認ステップでまとめて表示します。</p>
+            </section>
+            <section className="form-section step-summary step-summary-locked">
+              <p className="section-kicker">Step 6</p>
+              <h2>ZIP生成と結果</h2>
+              <p className="consultation-lead">ZIP 生成、request id、ダウンロード導線は最後にだけ表示します。</p>
+            </section>
+          </>
+        )}
+
+        {draftApplied && showOptionsSection && (
           <section ref={optionsRef} className="form-section options-section">
             <p className="section-kicker">Step 4</p>
             <h2>おすすめオプション</h2>
@@ -680,7 +729,29 @@ function App() {
           </section>
         )}
 
-        {draftApplied && (
+        {draftApplied && !showOptionsSection && (
+          <section className="form-section step-summary">
+            <p className="section-kicker">Step 4</p>
+            <h2>おすすめオプション</h2>
+            <p className="consultation-lead">
+              repo: {state.structure.repo_type} / security: {state.security.level} / フェーズ数: {state.workflow.phases_count}
+            </p>
+            <div className="output-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  setGuidedStep('options');
+                  scrollToSection(optionsRef);
+                }}
+                className="btn-secondary"
+              >
+                おすすめオプションを開く
+              </button>
+            </div>
+          </section>
+        )}
+
+        {draftApplied && showReviewSection && (
           <section ref={reviewRef} className="form-section final-review-section">
             <p className="section-kicker">Step 5</p>
             <h2>最終確認</h2>
@@ -717,7 +788,8 @@ function App() {
               <button
                 type="button"
                 onClick={() => {
-                  setGuidedStep('review');
+                  setGuidedStep('result');
+                  setResultPhase('idle');
                   scrollToSection(outputRef);
                 }}
                 className="btn-primary"
@@ -777,6 +849,28 @@ function App() {
           </section>
         )}
 
+        {draftApplied && !showReviewSection && (
+          <section className="form-section step-summary">
+            <p className="section-kicker">Step 5</p>
+            <h2>最終確認</h2>
+            <p className="consultation-lead">
+              project: {summaryProjectName} / domain: {summaryDomains} / repo: {state.structure.repo_type}
+            </p>
+            <div className="output-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  setGuidedStep('review');
+                  scrollToSection(reviewRef);
+                }}
+                className="btn-secondary"
+              >
+                最終確認を開く
+              </button>
+            </div>
+          </section>
+        )}
+
         {showOutputSection && (
           <JsonOutput
             sectionRef={outputRef}
@@ -792,6 +886,31 @@ function App() {
             consultationDraft={consultationDraft}
             consultationPromptVariant={consultationPromptVariant}
           />
+        )}
+
+        {draftApplied && !showOutputSection && (
+          <section className="form-section step-summary">
+            <p className="section-kicker">Step 6</p>
+            <h2>ZIP生成と結果</h2>
+            <p className="consultation-lead">
+              {resultPhase === 'done'
+                ? '前回の生成結果があります。必要ならもう一度このステップを開いて確認できます。'
+                : 'まだ生成していません。最終確認ができたら、ここで ZIP を生成します。'}
+            </p>
+            <div className="output-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  setGuidedStep('result');
+                  setResultPhase('idle');
+                  scrollToSection(outputRef);
+                }}
+                className="btn-secondary"
+              >
+                ZIP生成ステップを開く
+              </button>
+            </div>
+          </section>
         )}
 
         <div className="app-actions">

@@ -496,6 +496,26 @@
   color: #455a64;
 }
 
+.auth-panel-compact {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.auth-panel-compact-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.auth-panel-compact-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .feedback-panel {
   margin-top: 1rem;
   border-top: 1px solid #e0e0e0;
@@ -605,6 +625,16 @@
 
 .flow-callout p + p {
   margin-top: 0.35rem;
+}
+
+.step-summary {
+  background: #fff;
+  border-color: #dbe5f0;
+}
+
+.step-summary-locked {
+  background: #f8fafc;
+  border-style: dashed;
 }
 
 .consultation-section {
@@ -764,6 +794,15 @@
 @media (max-width: 640px) {
   .auth-panel-header {
     flex-direction: column;
+  }
+
+  .auth-panel-compact-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .auth-panel-compact-actions {
+    justify-content: flex-start;
   }
 
   .feedback-grid {

@@ -21,6 +21,7 @@ declare global {
 interface AuthPanelProps {
   enabled: boolean;
   onSessionChange: (session: { authenticated: boolean; email: string | null }) => void;
+  compact?: boolean;
 }
 
 type Status = 'disabled' | 'loading' | 'ready' | 'authenticated' | 'error';
@@ -80,7 +81,7 @@ async function fetchSessionState(): Promise<{ authenticated: boolean; email: str
   };
 }
 
-export function AuthPanel({ enabled, onSessionChange }: AuthPanelProps) {
+export function AuthPanel({ enabled, onSessionChange, compact = false }: AuthPanelProps) {
   const [status, setStatus] = useState<Status>(enabled ? 'loading' : 'disabled');
   const [message, setMessage] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -252,6 +253,48 @@ export function AuthPanel({ enabled, onSessionChange }: AuthPanelProps) {
   }
 
   if (!enabled) return null;
+
+  if (compact) {
+    return (
+      <section className="form-section auth-panel auth-panel-compact">
+        <div className="auth-panel-compact-row">
+          <div>
+            <p className="section-kicker">Auth</p>
+            <p className="auth-panel-subtitle">
+              {email ? `ログイン中: ${email}` : 'ZIP生成の前に Gugenka アカウントでログインします。'}
+            </p>
+            {message && <p className={status === 'error' ? 'error auth-message' : 'auth-message'}>{message}</p>}
+          </div>
+          <div className="auth-panel-compact-actions">
+            <span className={`auth-badge auth-badge-${status}`}>
+              {status === 'authenticated' ? '認証済み' : status === 'loading' ? '確認中' : status === 'error' ? 'エラー' : '未認証'}
+            </span>
+            {!missingConfig && (
+              <div className="output-actions">
+                <button
+                  type="button"
+                  onClick={handleLogin}
+                  disabled={isBusy}
+                  className="btn-primary"
+                >
+                  {isBusy ? '処理中...' : 'Google でログイン'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={isBusy || !email}
+                  className="btn-secondary"
+                >
+                  ログアウト
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        {missingConfig && <p className="error">Vercel に Firebase 認証設定が不足しています。</p>}
+      </section>
+    );
+  }
 
   return (
     <section className="form-section auth-panel">
