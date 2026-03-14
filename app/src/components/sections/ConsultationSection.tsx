@@ -34,10 +34,10 @@ export function ConsultationSection({
 
   return (
     <section className="form-section consultation-section">
-      <p className="section-kicker">Step 2</p>
-      <h2>AIの整理結果を貼る</h2>
+      <p className="section-kicker">Step 1</p>
+      <h2>相談準備と貼り付け</h2>
       <p className="consultation-lead">
-        ChatGPT / Claude などで壁打ちした結果を貼り付け、RepoGenesis 用の draft に変換します。見出しが揺れていても、まずはここから取り込みます。
+        まず相談用プロンプトをコピーし、ChatGPT / Claude などで壁打ちした結果を貼り付けて RepoGenesis 用の draft に変換します。見出しが揺れていても、まずはここから取り込みます。
       </p>
 
       <div className="consultation-prompt-picker">
@@ -87,7 +87,7 @@ export function ConsultationSection({
 
       {draft && (
         <div className="consultation-review">
-          <p className="section-kicker">Step 3</p>
+          <p className="section-kicker">Step 2</p>
           <h3>ドラフト確認</h3>
           <p className="consultation-lead">
             ここでは「確認できたこと」「仮置きした内容」「未確定事項」だけを見ます。細かい JSON や詳細調整はあとで開けます。

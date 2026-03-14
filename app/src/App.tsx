@@ -9,8 +9,6 @@ import {
   loadConsultationText,
   saveConsultationDraft,
   loadConsultationDraft,
-  saveInputMode,
-  loadInputMode,
   clearConsultationState,
 } from './utils/storage';
 import { ProjectSection } from './components/sections/ProjectSection';
@@ -36,12 +34,7 @@ declare const __APP_COMMIT__: string;
 
 type GuidedStep = 'prompt' | 'paste' | 'draft' | 'options' | 'review' | 'result';
 
-function deriveInitialGuidedStep(
-  savedMode: 'consultation' | 'detail',
-  savedText: string,
-  savedDraft: IntakeDraft | null,
-): GuidedStep {
-  if (savedMode === 'detail') return 'review';
+function deriveInitialGuidedStep(savedText: string, savedDraft: IntakeDraft | null): GuidedStep {
   if (savedDraft) return 'draft';
   if (savedText.trim().length > 0) return 'paste';
   return 'prompt';
@@ -53,9 +46,9 @@ function App() {
   const [consultationDraft, setConsultationDraft] = useState<IntakeDraft | null>(loadConsultationDraft());
   const [consultationPromptVariant, setConsultationPromptVariant] = useState<ConsultationPromptVariant>('internal_tool');
   const [consultationMessage, setConsultationMessage] = useState<string | null>(null);
-  const [guidedStep, setGuidedStep] = useState<GuidedStep>(() => deriveInitialGuidedStep(loadInputMode(), loadConsultationText(), loadConsultationDraft()));
-  const [showAdvancedDetail, setShowAdvancedDetail] = useState(() => loadInputMode() === 'detail');
-  const [draftApplied, setDraftApplied] = useState(() => loadInputMode() === 'detail');
+  const [guidedStep, setGuidedStep] = useState<GuidedStep>(() => deriveInitialGuidedStep(loadConsultationText(), loadConsultationDraft()));
+  const [showAdvancedDetail, setShowAdvancedDetail] = useState(false);
+  const [draftApplied, setDraftApplied] = useState(false);
   const [resultPhase, setResultPhase] = useState<'idle' | 'running' | 'done'>('idle');
   const [authSession, setAuthSession] = useState<{ authenticated: boolean; email: string | null }>({
     authenticated: false,
@@ -73,14 +66,13 @@ function App() {
     if (draft) {
       dispatch({ type: 'RESTORE_DRAFT', payload: draft });
     }
-    const restoredMode = loadInputMode();
     const restoredText = loadConsultationText();
     const restoredConsultationDraft = loadConsultationDraft();
     setConsultationText(restoredText);
     setConsultationDraft(restoredConsultationDraft);
-    setShowAdvancedDetail(restoredMode === 'detail');
-    setDraftApplied(restoredMode === 'detail');
-    setGuidedStep(deriveInitialGuidedStep(restoredMode, restoredText, restoredConsultationDraft));
+    setShowAdvancedDetail(false);
+    setDraftApplied(false);
+    setGuidedStep(deriveInitialGuidedStep(restoredText, restoredConsultationDraft));
   }, []);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -103,10 +95,6 @@ function App() {
     saveConsultationDraft(consultationDraft);
   }, [consultationDraft]);
 
-  useEffect(() => {
-    saveInputMode(showAdvancedDetail ? 'detail' : 'consultation');
-  }, [showAdvancedDetail]);
-
   const errors = validationErrors(state);
   const exportable = canExport(state);
   const requiresCookieSession = getGenerationMode() === 'remote' && getRemoteAuthMode() === 'cookie_session';
@@ -116,7 +104,7 @@ function App() {
   const summaryProjectName = state.project.name || consultationDraft?.suggestedState.project.name || '未確定';
   const summaryDescription = state.project.description || consultationDraft?.suggestedState.project.description || '未確定';
   const summaryDomains = state.tech.domains.length > 0 ? state.tech.domains.join(', ') : consultationDraft?.suggestedState.tech.domains.join(', ') || '未確定';
-  const showConsultationSection = guidedStep === 'paste' || guidedStep === 'draft';
+  const showConsultationSection = guidedStep === 'prompt' || guidedStep === 'paste' || guidedStep === 'draft';
   const showOptionsSection = draftApplied && guidedStep === 'options';
   const showReviewSection = draftApplied && guidedStep === 'review';
   const showOutputSection = draftApplied && activeStep === 'result';
@@ -240,14 +228,14 @@ function App() {
               />
             ) : (
               <section className="form-section step-summary">
-                <p className="section-kicker">{consultationDraft ? 'Step 3' : 'Step 2'}</p>
-                <h2>{consultationDraft ? 'ドラフト確認' : 'AIの整理結果を貼る'}</h2>
+                <p className="section-kicker">{consultationDraft ? 'Step 2' : 'Step 1'}</p>
+                <h2>{consultationDraft ? 'ドラフト確認' : '相談準備と貼り付け'}</h2>
                 <p className="consultation-lead">
                   {consultationDraft
                     ? `プロジェクト名候補は「${consultationDraft.suggestedState.project.name || '未確定'}」です。必要ならここを開いて確認できます。`
                     : consultationText.trim()
                       ? '相談結果は入力済みです。必要なら貼り付け欄を開いて編集できます。'
-                      : 'プロンプトをコピーしたら、次は AI の整理結果を貼り付けます。'}
+                      : 'まず相談用プロンプトをコピーし、その後で AI の整理結果を貼り付けます。'}
                 </p>
                 <div className="output-actions">
                   <button
@@ -266,17 +254,17 @@ function App() {
         {!draftApplied && (
           <>
             <section className="form-section step-summary step-summary-locked">
-              <p className="section-kicker">Step 4</p>
+              <p className="section-kicker">Step 3</p>
               <h2>おすすめオプション</h2>
               <p className="consultation-lead">ドラフト確定後に、リポジトリ構成・security・進め方の段階数を確認します。</p>
             </section>
             <section className="form-section step-summary step-summary-locked">
-              <p className="section-kicker">Step 5</p>
+              <p className="section-kicker">Step 4</p>
               <h2>最終確認</h2>
               <p className="consultation-lead">プロジェクト要点と JSON プレビューは、この後の確認ステップでまとめて表示します。</p>
             </section>
             <section className="form-section step-summary step-summary-locked">
-              <p className="section-kicker">Step 6</p>
+              <p className="section-kicker">Step 5</p>
               <h2>ZIP生成と結果</h2>
               <p className="consultation-lead">ZIP 生成、request id、ダウンロード導線は最後にだけ表示します。</p>
             </section>
@@ -285,7 +273,7 @@ function App() {
 
         {draftApplied && showOptionsSection && (
           <section ref={optionsRef} className="form-section options-section">
-            <p className="section-kicker">Step 4</p>
+            <p className="section-kicker">Step 3</p>
             <h2>おすすめオプション</h2>
             <p className="consultation-lead">
               ここでは generator に既にある設定だけに絞って、repo 構成や security を軽く調整します。迷う場合は推奨値のままで進めます。
@@ -378,7 +366,7 @@ function App() {
 
         {draftApplied && !showOptionsSection && (
           <section className="form-section step-summary">
-            <p className="section-kicker">Step 4</p>
+            <p className="section-kicker">Step 3</p>
             <h2>おすすめオプション</h2>
             <p className="consultation-lead">
               リポジトリ構成: {state.structure.repo_type === 'single' ? 'シングル' : 'マルチ'} / security: {state.security.level} / 段階数: {state.workflow.phases_count}
@@ -400,7 +388,7 @@ function App() {
 
         {draftApplied && showReviewSection && (
           <section ref={reviewRef} className="form-section final-review-section">
-            <p className="section-kicker">Step 5</p>
+            <p className="section-kicker">Step 4</p>
             <h2>最終確認</h2>
             <p className="consultation-lead">
               生成前の要点だけを先に確認し、必要になった時だけ詳細調整を開く導線に変えています。
@@ -520,7 +508,7 @@ function App() {
 
         {draftApplied && !showReviewSection && (
           <section className="form-section step-summary">
-            <p className="section-kicker">Step 5</p>
+            <p className="section-kicker">Step 4</p>
             <h2>最終確認</h2>
             <p className="consultation-lead">
               project: {summaryProjectName} / domain: {summaryDomains} / リポジトリ構成: {state.structure.repo_type === 'single' ? 'シングル' : 'マルチ'}
@@ -543,7 +531,7 @@ function App() {
         {showOutputSection && (
           <JsonOutput
             sectionRef={outputRef}
-            title="Step 6. ZIP生成と結果"
+            title="Step 5. ZIP生成と結果"
             lead="JSONプレビューは最後にまとめ、ZIP 生成と request id の確認をこのセクションへ集約します。"
             showFeedback={resultPhase !== 'idle'}
             collapseJsonByDefault
@@ -559,7 +547,7 @@ function App() {
 
         {draftApplied && !showOutputSection && (
           <section className="form-section step-summary">
-            <p className="section-kicker">Step 6</p>
+            <p className="section-kicker">Step 5</p>
             <h2>ZIP生成と結果</h2>
             <p className="consultation-lead">
               {resultPhase === 'done'
