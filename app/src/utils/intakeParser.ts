@@ -587,7 +587,7 @@ export function deriveDraftSuggestions(
       },
       tech: {
         ...currentState.tech,
-        domains: inferredDomains.length > 0 ? inferredDomains : currentState.tech.domains,
+        domains: inferredDomains,
       },
       security: {
         ...currentState.security,
@@ -660,9 +660,9 @@ export function parseConsultationIntake(input: string, currentState: FormState):
     provisional.push('責任者');
   }
 
-  if (suggestions.inferredDomains.length === 0 && currentState.tech.domains.length === 0) {
+  if (suggestions.inferredDomains.length === 0) {
     unresolved.push('技術ドメイン');
-  } else if (currentState.tech.domains.length === 0) {
+  } else {
     provisional.push('技術ドメイン');
   }
 

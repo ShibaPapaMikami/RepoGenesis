@@ -213,8 +213,11 @@ test('parseConsultationIntake should prefer consultation-derived project fields 
 
 test('parseConsultationIntake should avoid false positive domains for calendar and transcription text', () => {
   const input = getConsultationTestTemplate('meeting_transcription_internal_tool');
-  const draft = parseConsultationIntake(input, makeState());
+  const state = makeState();
+  state.tech.domains = ['web', 'cli'];
+  const draft = parseConsultationIntake(input, state);
 
+  assert.deepEqual(draft.suggestedState.tech.domains, []);
   assert.equal(draft.suggestedState.tech.domains.includes('xr'), false);
   assert.equal(draft.suggestedState.tech.domains.includes('cli'), false);
   assert.equal(draft.suggestedState.tech.domains.includes('ai'), false);

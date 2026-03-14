@@ -163,7 +163,7 @@ test('buildProjectSpec should support the named meeting transcription template',
     },
     tech: {
       ...makeState().tech,
-      domains: [],
+      domains: ['web', 'cli'],
     },
   });
   const spec = buildProjectSpec(draft.suggestedState);
