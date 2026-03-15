@@ -89,6 +89,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - production `v0.1.1 (41176d1)` で `repogenesis-test (9).zip` のダウンロード成功を確認した
   - remote ZIP 生成では、選択した Skill artifact を registry から解決して同梱し、`repogenesis.skills.json` も prefilled するようにした
   - Web UI は remote 生成時に「Skill は ZIP 同梱済み」と案内し、非エンジニア向けの追加コマンド導線を主画面から外した
+  - production `v0.1.1 (0b9e110)` で `repogenesis-test (10).zip` のダウンロード成功を確認し、stable release baseline を `v0.1.2` とした
 
 ## What Is Being Done Now
 - いまの主要テーマ:

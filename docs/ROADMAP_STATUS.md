@@ -26,7 +26,8 @@ Phase 6 / Hardening
 - Phase 5 UX scope is complete; remaining work is operational follow-up and later-phase separation.
 - Phase 6 intake contract hardening has started with a provider-independent draft contract refresh.
 - Skill layer now includes provider-aware manifest/registry design, CLI installer commands, Web curated selection UI, remote ZIP auto-bundling for selected skills, and generated output persistence.
-- The latest production retry completed successfully with downloaded artifact `repogenesis-test (9).zip`.
+- The latest production retry completed successfully with downloaded artifact `repogenesis-test (10).zip`.
+- Stable release baseline is `v0.1.2` on `0b9e110` after production success with selected skill bundling.
 
 ## What This Phase Still Needs
 - Fix the provider-independent intake contract against current parser behavior.
