@@ -152,6 +152,14 @@ test('assessIntakeReadiness should separate blocking items from warnings', () =>
   assert.equal(readiness.warnings.includes('外部APIが必要か'), true);
 });
 
+test('assessIntakeReadiness should treat unresolved domains as warnings', () => {
+  const draft = parseConsultationIntake(getConsultationTestTemplate('meeting_transcription_internal_tool'), makeState());
+  const readiness = assessIntakeReadiness(draft);
+
+  assert.equal(readiness.blocking.includes('技術ドメイン'), false);
+  assert.equal(readiness.warnings.includes('技術ドメイン'), true);
+});
+
 test('parseConsultationIntake should infer multi repo when deliverable mentions ui and api parts', () => {
   const input = `## プロジェクト概要
 テスト

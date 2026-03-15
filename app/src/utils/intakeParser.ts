@@ -80,7 +80,6 @@ function normalizeOpenQuestionLines(input: string): string[] {
 function isBlockingUnresolved(item: string): boolean {
   if (item === 'プロジェクト名') return true;
   if (/（未入力）$/.test(item)) return true;
-  if (item === '技術ドメイン') return true;
   return false;
 }
 
