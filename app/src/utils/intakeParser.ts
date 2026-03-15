@@ -2,6 +2,7 @@ import { slugify } from './slugify.ts';
 import { createIntakeEnvelope } from './intakeProvider.ts';
 import type { FormState } from '../state/actions.ts';
 import type { Domain, RepoType, SecurityLevel } from '../constants/enums.ts';
+import { calculateMinSecurityLevel } from './securityCalc.ts';
 
 export interface IntakeReadiness {
   blocking: string[];
@@ -70,6 +71,8 @@ interface ProjectKeywordRule {
   label: string;
 }
 
+const SECURITY_ORDER: SecurityLevel[] = ['low', 'medium', 'high'];
+
 function normalizeOpenQuestionLines(input: string): string[] {
   return input
     .split('\n')
@@ -81,6 +84,17 @@ function isBlockingUnresolved(item: string): boolean {
   if (item === 'プロジェクト名') return true;
   if (/（未入力）$/.test(item)) return true;
   return false;
+}
+
+function resolveSecurityLevel(
+  minimum: SecurityLevel,
+  override: SecurityLevel | null,
+  current: SecurityLevel,
+): SecurityLevel {
+  const minimumIndex = SECURITY_ORDER.indexOf(minimum);
+  const candidate = override ?? current;
+  const candidateIndex = SECURITY_ORDER.indexOf(candidate);
+  return SECURITY_ORDER[Math.max(minimumIndex, candidateIndex)];
 }
 
 export function assessIntakeReadiness(draft: IntakeDraft | null): IntakeReadiness {
@@ -569,6 +583,18 @@ export function deriveDraftSuggestions(
   const inferredRepoType = candidateRepoType ?? inferRepoType(inferenceSource);
   const inferredPhasesCount = inferPhasesCount(inferenceSource, integrations);
   const inferredSecurityLevel = inferSecurityLevelFromCandidateInputs(candidateInputs);
+  const minimumSecurityLevel = calculateMinSecurityLevel({
+    has_api_keys: hasApiKeys,
+    has_user_data: hasUserData,
+    has_payment_data: currentState.security.has_payment_data,
+    has_ip_sensitive: hasIpSensitive,
+    has_credentials: currentState.security.has_credentials,
+  });
+  const resolvedSecurityLevel = resolveSecurityLevel(
+    minimumSecurityLevel,
+    inferredSecurityLevel ?? currentState.securityLevelOverride,
+    currentState.security.level,
+  );
 
   return {
     projectName,
@@ -590,7 +616,7 @@ export function deriveDraftSuggestions(
       },
       security: {
         ...currentState.security,
-        level: inferredSecurityLevel ?? currentState.security.level,
+        level: resolvedSecurityLevel,
         has_user_data: hasUserData,
         has_ip_sensitive: hasIpSensitive,
         has_api_keys: hasApiKeys,
@@ -605,7 +631,7 @@ export function deriveDraftSuggestions(
         phases_count: inferredPhasesCount,
       },
       slugManuallyEdited: currentState.slugManuallyEdited,
-      securityLevelOverride: inferredSecurityLevel ?? currentState.securityLevelOverride,
+      securityLevelOverride: resolvedSecurityLevel,
     },
   };
 }

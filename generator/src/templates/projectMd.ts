@@ -1,5 +1,6 @@
 import type { ProjectBrief } from '../schema';
 import { formatAiTools, hasAiTool } from '../aiTools';
+import { formatDomains, formatOwner } from '../templateDisplay';
 
 interface RepoEntry {
   name: string;
@@ -136,9 +137,9 @@ ${brief.project.name} (workspace: ${brief.project.slug})
 - Name: ${repo.name}
 - Type: ${repo.type}
 - Description: ${repo.description}
-- Owner: ${repo.owner}
+- Owner: ${formatOwner(repo.owner)}
 ${deps}## Tech Stack
-- Domains: ${brief.tech.domains.join(', ')}
+- Domains: ${formatDomains(brief.tech.domains)}
 - Primary Language: ${brief.tech.primary_language}
 ${frameworkLine}- AI Tools: ${formatAiTools(brief.tech)}
 
@@ -181,7 +182,7 @@ ${buildRepoStructure(brief, repo)}
 ${brief.project.description}
 
 ## Tech Stack
-- Domains: ${brief.tech.domains.join(', ')}
+- Domains: ${formatDomains(brief.tech.domains)}
 - Primary Language: ${brief.tech.primary_language}
 ${frameworkLine}- AI Tools: ${formatAiTools(brief.tech)}
 
@@ -220,7 +221,7 @@ ${buildWorkspaceStructure(brief)}
 ${brief.project.description}
 
 ## Tech Stack
-- Domains: ${brief.tech.domains.join(', ')}
+- Domains: ${formatDomains(brief.tech.domains)}
 - Primary Language: ${brief.tech.primary_language}
 ${frameworkLine}- AI Tools: ${formatAiTools(brief.tech)}
 

@@ -1,11 +1,12 @@
 import type { ProjectBrief } from '../schema';
+import { formatOwner } from '../templateDisplay';
 
 export function generateGlobalContext(brief: ProjectBrief): string {
   const { project, structure } = brief;
 
   const repoList = structure.repos.map((r) => {
     const deps = r.depends_on.length > 0 ? ` → depends on: ${r.depends_on.join(', ')}` : '';
-    return `- **${r.name}** (${r.type}): ${r.description} — Owner: ${r.owner}${deps}`;
+    return `- **${r.name}** (${r.type}): ${r.description} — Owner: ${formatOwner(r.owner)}${deps}`;
   }).join('\n');
 
   const depsWithRelations = structure.repos.filter((r) => r.depends_on.length > 0);
@@ -28,7 +29,7 @@ ${lines}
 ${project.name} — ${project.description}
 
 ## Owner
-${project.owner}
+${formatOwner(project.owner)}
 
 ## Repositories
 ${repoList}

@@ -103,11 +103,18 @@ describe('projectBriefSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should fail when tech.domains is empty', () => {
+  it('should allow empty tech.domains for ai-first drafts', () => {
     const brief = validBrief();
     (brief.tech as Record<string, unknown>).domains = [];
     const result = projectBriefSchema.safeParse(brief);
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
+  });
+
+  it('should allow empty project.owner for ai-first drafts', () => {
+    const brief = validBrief();
+    (brief.project as Record<string, unknown>).owner = '';
+    const result = projectBriefSchema.safeParse(brief);
+    expect(result.success).toBe(true);
   });
 
   it('should pass with valid multi-repo brief', () => {

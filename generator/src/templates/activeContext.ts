@@ -1,5 +1,6 @@
 import type { ProjectBrief } from '../schema';
 import { hasAiTool } from '../aiTools';
+import { formatOwner } from '../templateDisplay';
 
 export function generateActiveContext(brief: ProjectBrief): string {
   const { project } = brief;
@@ -32,7 +33,7 @@ Phase 0 — Project Initialization
 
 ## Key Decisions Made
 - Project initialized: ${project.name} (${project.slug})
-- Owner: ${project.owner}
+- Owner: ${formatOwner(project.owner)}
 
 ## Files That Exist
 - ${toolFiles}

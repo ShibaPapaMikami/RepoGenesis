@@ -2,9 +2,21 @@ import { SUPPORTED_SPEC_VERSION } from '../constants/spec.ts';
 import type { FormState } from '../state/actions.ts';
 import type { ProjectSpec } from '../types/projectBrief.ts';
 import { deriveLegacyAiTool, deriveLegacyAiToolDetail, normalizeAiTools } from './aiTools.ts';
+import { calculateMinSecurityLevel } from './securityCalc.ts';
+
+const SECURITY_ORDER = ['low', 'medium', 'high'] as const;
+
+function resolveSecurityLevel(state: FormState): ProjectSpec['security']['level'] {
+  const minimum = calculateMinSecurityLevel(state.security);
+  const candidate = state.securityLevelOverride ?? state.security.level;
+  const minimumIndex = SECURITY_ORDER.indexOf(minimum);
+  const candidateIndex = SECURITY_ORDER.indexOf(candidate);
+  return SECURITY_ORDER[Math.max(minimumIndex, candidateIndex)];
+}
 
 export function buildProjectSpec(state: FormState): ProjectSpec {
   const aiTools = normalizeAiTools(state.tech.ai_tools);
+  const securityLevel = resolveSecurityLevel(state);
   return {
     specVersion: SUPPORTED_SPEC_VERSION,
     project: {
@@ -23,7 +35,7 @@ export function buildProjectSpec(state: FormState): ProjectSpec {
       ai_tool_detail: deriveLegacyAiToolDetail(aiTools, state.tech.ai_tool_detail),
     },
     security: {
-      level: state.security.level,
+      level: securityLevel,
       has_api_keys: state.security.has_api_keys,
       has_user_data: state.security.has_user_data,
       has_payment_data: state.security.has_payment_data,

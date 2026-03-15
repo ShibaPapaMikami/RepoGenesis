@@ -1,4 +1,5 @@
 import type { ProjectBrief } from '../schema';
+import { formatDomains, formatOwner } from '../templateDisplay';
 
 export function generateArchitecture(brief: ProjectBrief): string {
   const { project, tech, structure } = brief;
@@ -14,7 +15,7 @@ Single repository: \`${project.slug}\``;
   } else {
     const repoLines = structure.repos.map((r) => {
       const deps = r.depends_on.length > 0 ? ` (depends on: ${r.depends_on.join(', ')})` : '';
-      return `- **${r.name}** (${r.type}): ${r.description}${deps} — Owner: ${r.owner}`;
+      return `- **${r.name}** (${r.type}): ${r.description}${deps} — Owner: ${formatOwner(r.owner)}`;
     }).join('\n');
 
     structureSection = `## Repository Structure
@@ -30,7 +31,7 @@ ${repoLines}`;
 ${project.name} — ${project.description}
 
 ## Tech Stack
-- Domains: ${tech.domains.join(', ')}
+- Domains: ${formatDomains(tech.domains)}
 - Primary Language: ${tech.primary_language}
 ${frameworkLine}
 ${structureSection}

@@ -35,6 +35,25 @@ const VALID_SPEC = {
   },
 };
 
+const AI_FIRST_SPEC = {
+  ...VALID_SPEC,
+  project: {
+    ...VALID_SPEC.project,
+    owner: '',
+  },
+  tech: {
+    ...VALID_SPEC.tech,
+    domains: [],
+  },
+  security: {
+    ...VALID_SPEC.security,
+    level: 'medium',
+    has_api_keys: false,
+    has_user_data: false,
+    has_ip_sensitive: true,
+  },
+};
+
 describe('orchestration api', () => {
   afterEach(() => {
     delete process.env.GENERATE_REQUIRE_AUTH;
@@ -101,5 +120,14 @@ describe('orchestration api', () => {
       expect(res.body.zipBuffer.length).toBeGreaterThan(0);
       expect(res.body.zipBuffer.readUInt32LE(0)).toBe(0x04034b50);
     }
+  });
+
+  it('accepts ai-first specs with empty owner and domains when security level is consistent', async () => {
+    const res = await handleGenerateApiRequest('Bearer dev-token', undefined, {
+      spec: AI_FIRST_SPEC,
+      output: { format: 'zip' },
+      meta: { requestId: 'req-ai-first' },
+    });
+    expect(res.status).toBe(200);
   });
 });

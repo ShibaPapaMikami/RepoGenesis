@@ -183,5 +183,16 @@ test('buildProjectSpec should support the named meeting transcription template',
   assert.equal(spec.structure.repo_type, 'single');
   assert.equal(spec.workflow.phases_count, 4);
   assert.equal(spec.security.has_ip_sensitive, true);
+  assert.equal(spec.security.level, 'medium');
   assert.deepEqual(spec.tech.domains, []);
+});
+
+test('buildProjectSpec should raise security level to the minimum required by flags', () => {
+  const state = makeState();
+  state.security.level = 'low';
+  state.security.has_ip_sensitive = true;
+  state.securityLevelOverride = null;
+
+  const spec = buildProjectSpec(state);
+  assert.equal(spec.security.level, 'medium');
 });

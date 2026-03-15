@@ -25,6 +25,7 @@ import { generateSkillInstallRunbook } from './templates/skillInstallRunbook';
 import { generateSkillsReadme } from './templates/skillsReadme';
 import type { SkillProvider } from './skillsManifest';
 import { generateInstallSelectedSkillsScript } from './templates/installSelectedSkillsScript';
+import { formatOwner } from './templateDisplay';
 
 type RepoEntry = ProjectBrief['structure']['repos'][number];
 const DEFAULT_SPEC_VERSION: SpecVersion = '1.0';
@@ -164,7 +165,7 @@ function repoArchitecture(brief: ProjectBrief, repo: RepoEntry): string {
 - **Name**: ${repo.name}
 - **Type**: ${repo.type}
 - **Description**: ${repo.description}
-- **Owner**: ${repo.owner}
+- **Owner**: ${formatOwner(repo.owner)}
 
 ## Part of
 ${brief.project.name} (workspace: ${brief.project.slug})

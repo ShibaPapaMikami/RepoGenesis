@@ -15,7 +15,7 @@ const projectSchema = z.object({
   name: z.string().min(1, 'プロジェクト名は必須です'),
   slug: z.string().regex(slugRegex, 'スラッグは英小文字・数字・ハイフンのみ（先頭は英数字）'),
   description: z.string().min(10, '概要は10文字以上で入力してください'),
-  owner: z.string().min(1, '責任者は必須です'),
+  owner: z.string().default(''),
   created_at: z.string(),
 });
 
@@ -29,7 +29,7 @@ type NormalizedTech = {
 };
 
 const techSchema = z.object({
-  domains: z.array(domainEnum).min(1, '技術ドメインを1つ以上選択してください'),
+  domains: z.array(domainEnum).default([]),
   primary_language: primaryLanguageEnum,
   frameworks: z.array(z.string()).default([]),
   ai_tools: z.array(aiToolEnum).default([]),
