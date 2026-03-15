@@ -18,6 +18,12 @@ export {
   loadSkillRegistry,
 } from './skillRegistryLoader';
 export {
+  installSkill,
+  loadProjectSkillsManifest,
+  removeSkill,
+  saveProjectSkillsManifest,
+} from './skillInstaller';
+export {
   applySkillInstallPlanToManifest,
   applySkillRemovalToManifest,
   planSkillInstall,

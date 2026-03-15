@@ -78,6 +78,8 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - installer contract を `docs/SKILL_INSTALLER_CONTRACT.md` として分離した
   - `add` 向けの dry-run installer plan primitive を generator 側に追加した
   - manifest write/remove の dry-run primitive を generator 側に追加した
+  - provider-aware skill installer (`list/add/remove`) を generator CLI に追加した
+  - registry sample から project へ artifact copy と manifest 更新が通る test を追加した
 
 ## What Is Being Done Now
 - いまの主要テーマ:
@@ -165,4 +167,4 @@ Immediate next:
 - Phase 6 に向けて intake contract の境界を整理する
 - feedback の永続保存先を決める
 - AI tool 非依存化と optional skill layer を別差分で整理する
-- provider-aware installer の dry-run primitive を追加する
+- provider-aware installer の provider 自動解決と Web selection 前提を整理する

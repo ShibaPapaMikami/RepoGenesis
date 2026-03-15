@@ -40,17 +40,17 @@ function defaultProvidersFromProject(project: ProjectBrief): SkillProvider[] {
   return providers;
 }
 
-function targetPathForArtifact(provider: SkillProvider, sourcePath: string): string {
+function targetPathForArtifact(provider: SkillProvider, skillId: string, sourcePath: string): string {
   const relativePath = sourcePath.replace(/^[^/]+\//, '');
   switch (provider) {
     case 'codex':
-      return `skills/installed/${relativePath}`;
+      return `skills/installed/${skillId}/${relativePath}`;
     case 'claude_code':
-      return `.claude/skills/${relativePath}`;
+      return `.claude/skills/${skillId}/${relativePath}`;
     case 'gemini_cli':
       return `.gemini/${relativePath}`;
     case 'tool_agnostic':
-      return `skills/installed/${relativePath}`;
+      return `skills/installed/${skillId}/${relativePath}`;
   }
 }
 
@@ -81,7 +81,7 @@ export function planSkillInstall(options: {
       provider: artifact.provider,
       artifactKind: artifact.artifactKind,
       sourcePath: artifact.entryPath,
-      targetPath: targetPathForArtifact(artifact.provider, artifact.entryPath),
+      targetPath: targetPathForArtifact(artifact.provider, options.registryItem.id, artifact.entryPath),
     }));
 
   if (artifacts.length === 0) {

@@ -76,7 +76,7 @@ describe('skill installer plan', () => {
         provider: 'claude_code',
         artifactKind: 'skill',
         sourcePath: 'claude/SKILL.md',
-        targetPath: '.claude/skills/SKILL.md',
+        targetPath: '.claude/skills/repo-readiness-review/SKILL.md',
       },
       {
         provider: 'gemini_cli',
@@ -103,7 +103,7 @@ describe('skill installer plan', () => {
               {
                 provider: 'claude_code',
                 artifactKind: 'skill',
-                path: '.claude/skills/SKILL.md',
+                path: '.claude/skills/repo-readiness-review/SKILL.md',
               },
             ],
           },
@@ -139,7 +139,7 @@ describe('skill installer plan', () => {
           {
             provider: 'claude_code',
             artifactKind: 'skill',
-            path: '.claude/skills/SKILL.md',
+            path: '.claude/skills/repo-readiness-review/SKILL.md',
           },
           {
             provider: 'gemini_cli',
@@ -166,7 +166,7 @@ describe('skill installer plan', () => {
             {
               provider: 'claude_code' as const,
               artifactKind: 'skill' as const,
-              path: '.claude/skills/SKILL.md',
+              path: '.claude/skills/repo-readiness-review/SKILL.md',
             },
           ],
         },
@@ -182,7 +182,7 @@ describe('skill installer plan', () => {
       {
         provider: 'claude_code',
         artifactKind: 'skill',
-        path: '.claude/skills/SKILL.md',
+        path: '.claude/skills/repo-readiness-review/SKILL.md',
       },
     ]);
 

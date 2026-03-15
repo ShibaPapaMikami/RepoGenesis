@@ -127,4 +127,5 @@ installer 完了後に最低限保証するもの:
 - stable-only selectable list: implemented
 - `add` dry-run plan primitive: implemented
 - manifest write/remove dry-run primitive: implemented
-- actual file copy / manifest write to disk: not implemented yet
+- actual file copy / manifest write to disk: implemented
+- CLI `skills list/add/remove`: implemented
