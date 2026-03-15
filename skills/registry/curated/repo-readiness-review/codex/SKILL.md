@@ -1,0 +1,14 @@
+# Repo Readiness Review
+
+Review the current repository or draft before implementation starts.
+
+Focus on:
+- unclear scope
+- unresolved assumptions still treated as facts
+- missing security, release, or runbook requirements
+- repository structure mismatches
+
+Return:
+1. blocking issues
+2. warnings
+3. concrete next edits

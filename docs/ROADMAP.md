@@ -118,13 +118,15 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 **Goal:** Let projects adopt curated operational knowledge without polluting generator core.
 - Reference: `docs/SKILL_LAYER_ROADMAP.md`, `docs/SKILL_LAYER_CONTRACT.md`
 - [ ] Define central skill registry metadata schema
-- [ ] Define `repogenesis.skills.json` project manifest schema
+- [ ] Define provider-aware `repogenesis.skills.json` project manifest schema
+- [ ] Define provider adapter contract for Codex / Claude Code / Gemini CLI
 - [ ] Generate empty `skills/README.md` and manifest on project bootstrap
 - [ ] Keep install mode as `copy + pin`
 - [ ] Add manual install runbook before any installer code
 - [ ] Add CLI installer only after registry/manifest contracts are fixed
 - [ ] Add Web UI for curated skill selection after CLI flow stabilizes
 - [ ] Keep hooks/editor settings/project scripts out of core scope
+- [ ] Track `official` / `curated` / `internal` source metadata and URLs
 
 ## Immediate Priorities (Next 3 Milestones)
 ### Milestone A: Production Hardening
@@ -148,7 +150,8 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 
 ### Milestone D: Skill Layer Planning
 - [ ] skill registry item schema を定義
-- [ ] project manifest (`repogenesis.skills.json`) を定義
+- [ ] project manifest (`repogenesis.skills.json`) を provider-aware に定義
+- [ ] provider adapter (`codex` / `claude_code` / `gemini_cli`) を定義
 - [ ] `copy + pin` を前提に install/update/remove 契約を定義
 - [ ] `skills` は optional layer、generator core とは分離する
 

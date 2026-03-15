@@ -14,12 +14,16 @@ Instead, curated skills can be added here when the project explicitly opts in.
 - Record every installed skill and its pinned version in \`repogenesis.skills.json\`.
 - Do not auto-update skills without project review.
 - Prefer \`copy + pin\` so the installed files remain reviewable in this repository.
+- Use provider-specific artifacts when needed:
+  - Codex / Claude Code: skill instructions
+  - Gemini CLI: commands, context files, or extensions
+- Keep the source type (\`official\`, \`curated\`, \`internal\`) traceable in the manifest.
 
 ## Expected Future Flow
 1. A curated registry lists approved skills.
-2. This project opts into specific skills.
-3. Installed skill files are copied into this directory.
-4. \`repogenesis.skills.json\` is updated with the installed versions.
+2. This project opts into specific skills and providers.
+3. Installed provider-specific artifacts are copied into this repository.
+4. \`repogenesis.skills.json\` is updated with the installed versions and artifact paths.
 
 ## Current State
 No skills are installed by default.

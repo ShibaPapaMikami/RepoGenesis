@@ -6,20 +6,45 @@ skill layer を導入する前提として、
 
 目的は、generator、installer、Web UI が同じ skill モデルを共有できるようにすることにある。
 
+加えて、Codex / Claude Code / Gemini CLI のように provider ごとに skill の実体形式が異なる場合でも、
+project 側では一貫した install 履歴と pin 情報を追えるようにする。
+
 ## Core Separation
 skill layer では、次の 3 つを分離する。
 
 1. registry metadata
-2. installed skill files
-3. project manifest
+2. provider-specific artifacts
+3. installed project files
+4. project manifest
 
 この契約では、skill 本文そのものではなく、
 project に何が導入されているかを追跡するための metadata/manifest を定義する。
+
+## Provider Model
+RepoGenesis では、tool ごとの用語差を次のように扱う。
+
+- `codex`: OpenAI Codex の `skills`
+- `claude_code`: Claude Code の `skills`
+- `gemini_cli`: Gemini CLI の `custom commands` / `GEMINI.md` / `extensions`
+- `tool_agnostic`: AI tool 固有ではない共通 runbook / review 手順 / docs
+
+Gemini CLI は `skill` という名前で統一しない。
+代わりに registry 側で `artifactKind` を明示し、
+project へは provider ごとの実体を copy + pin で導入する。
 
 ## Registry Item Model
 registry 側では少なくとも次を持つ。
 
 ```ts
+type SkillProvider = 'codex' | 'claude_code' | 'gemini_cli' | 'tool_agnostic';
+
+type SkillArtifact = {
+  provider: SkillProvider;
+  artifactKind: 'skill' | 'command' | 'context' | 'extension' | 'doc';
+  entryPath: string;
+  readmePath?: string;
+};
+
 type SkillRegistryItem = {
   id: string;
   name: string;
@@ -28,11 +53,12 @@ type SkillRegistryItem = {
   version: string;
   status: 'stable' | 'experimental' | 'deprecated';
   riskLevel: 'low' | 'medium' | 'high';
-  compatibleTools: Array<'claude_code' | 'gemini_cli' | 'tool_agnostic'>;
+  sourceType: 'official' | 'curated' | 'internal';
+  sourceUrl?: string;
   tags: string[];
   installMode: 'copy';
-  entryPath: string;
-  readmePath?: string;
+  providers: SkillProvider[];
+  artifacts: SkillArtifact[];
   reviewRequired: boolean;
 };
 ```
@@ -40,9 +66,12 @@ type SkillRegistryItem = {
 ### Rules
 - `id` は registry 内で一意
 - `version` は skill 本体の version
-- `compatibleTools` は UI/installer の絞り込みに使う
+- `sourceType` は「公式由来か」「社内 curated か」を UI/運用で見分けるために使う
+- `providers` は UI/installer の絞り込みに使う
+- `artifacts` は provider ごとの実体配置を定義する
 - `installMode` は初期実装では `copy` 固定
 - `reviewRequired` は high-risk skill の追加確認に使う
+- `sourceUrl` は公式 doc / registry 元ページへの参照として使う
 
 ## Project Manifest Model
 project repository には `repogenesis.skills.json` を置く。
@@ -56,8 +85,12 @@ type ProjectSkillManifest = {
     version: string;
     installedAt: string;
     installedBy?: string;
-    compatibleTool?: 'claude_code' | 'gemini_cli' | 'tool_agnostic';
-    path: string;
+    sourceType?: 'official' | 'curated' | 'internal';
+    artifacts: Array<{
+      provider: 'codex' | 'claude_code' | 'gemini_cli' | 'tool_agnostic';
+      artifactKind: 'skill' | 'command' | 'context' | 'extension' | 'doc';
+      path: string;
+    }>;
     notes?: string;
   }>;
 };
@@ -66,8 +99,9 @@ type ProjectSkillManifest = {
 ### Rules
 - `version` は manifest schema version
 - `installed[].version` は registry item version を pin する
-- `path` は project 内に copy された skill 実体の配置先
+- `artifacts[]` は project 内に copy された provider ごとの実体配置を保持する
 - `installedBy` は任意。後から audit 用に使う
+- `sourceType` は install 時点の分類を残す。後から registry が変わっても監査履歴を崩さない
 
 ## Initial Repository Surface
 skill layer を有効にする初回出力では、少なくとも次を置く。
@@ -77,6 +111,32 @@ skills/
   README.md
 repogenesis.skills.json
 ```
+
+provider 固有の実体を初回から自動同梱する必要はない。
+初期 bootstrap では manifest と `skills/README.md` のみでよい。
+
+## Registry Package Layout
+中央 registry の skill package は、少なくとも次のような構造を取れるようにする。
+
+```text
+registry/<skill-id>/
+  skill.json
+  common/
+    README.md
+  codex/
+    SKILL.md
+  claude/
+    SKILL.md
+  gemini/
+    GEMINI.md
+    commands/
+    extensions/
+```
+
+Rules:
+- `common/` は provider 非依存 docs や補足説明に使う
+- provider 配下のファイルは registry 側の原本
+- project へ導入する際は、必要な artifact だけを copy する
 
 ### `skills/README.md` responsibilities
 - skill の目的
@@ -96,6 +156,7 @@ repogenesis.skills.json
 - project repo 内に skill 実体が残る
 - code review できる
 - registry 側変更で既存 project が暗黙に変わらない
+- Claude / Codex / Gemini の違いを project 内 artifact として監査できる
 
 ### Non-Goals
 - symlink install
@@ -128,6 +189,11 @@ update は registry 最新を自動反映しない。
 - runbook templates
 - AI tool helper instructions
 
+公式由来の curated candidate として扱いやすいもの:
+- Codex / Claude の skill instructions
+- Gemini CLI の custom commands / context files
+- provider 固有だが runtime を変えない補助手順
+
 初期段階で導入対象にしないもの:
 - hooks
 - editor settings
@@ -139,6 +205,8 @@ update は registry 最新を自動反映しない。
 - `experimental` は管理者または明示許可時のみ表示する
 - `deprecated` は新規導入不可、既存 project には migration 案内のみ出す
 - `high` risk skill は reviewRequired=true を必須にする
+- `official` source でも project への自動同梱はしない。必ず opt-in と review を通す
+- Gemini 用 artifact は `skill` ではなく `command` / `context` / `extension` として保持できるようにする
 
 ## Compatibility With Generator Philosophy
 この契約は `Generator enforces structure, not knowledge.` を維持するためのものである。
@@ -150,7 +218,8 @@ update は registry 最新を自動反映しない。
 ## Immediate Implementation Target
 最初の実装では次だけを満たせばよい。
 
-1. `repogenesis.skills.json` schema を定義する
+1. `repogenesis.skills.json` schema を provider-aware に定義する
 2. `skills/README.md` を generator が出せるようにする
-3. registry item metadata の JSON 仕様を決める
-4. installer 実装はまだ入れない
+3. registry item metadata の JSON 仕様を `sourceType` / `artifacts[]` 付きで決める
+4. Codex を compatible provider に追加する
+5. installer 実装はまだ入れない

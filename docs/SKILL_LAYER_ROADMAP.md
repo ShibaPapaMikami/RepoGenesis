@@ -14,6 +14,8 @@ RepoGenesis に skill レイヤーを導入する目的は、generator 本体へ
 - skill の更新は自動反映しない。project ごとに opt-in で更新する。
 - tool 固有 skill と AI 非依存 docs を混ぜない。
 - 最初は `copy + pin` を採用し、中央 registry の変更で既存 project が暗黙に変わらないようにする。
+- Codex / Claude Code / Gemini CLI の差は generator core ではなく provider adapter で吸収する。
+- `official` / `curated` / `internal` source を明示して、何を trust して導入したかを残す。
 
 ## Problem Statement
 現状の RepoGenesis には skill injection が無く、チームで繰り返し使う運用知識を project へ導入しにくい。
@@ -44,11 +46,30 @@ project repository
 - stable / experimental の区分
 - owner / risk / compatible tools の明示
 - install 対象ファイルの提供
+- provider ごとの artifact 形式差 (`skill`, `command`, `context`, `extension`) の管理
+- 公式 source URL の保持
 
 ### Project Responsibilities
 - どの skill を導入したかを manifest に残す
 - install 時の version を pin する
 - project 固有に調整した skill は repo 内で管理する
+- provider ごとに何をどこへ copy したかを artifact 単位で追跡する
+
+## Provider-Aware Shape
+初期対象 provider は次とする。
+
+- `codex`
+- `claude_code`
+- `gemini_cli`
+- `tool_agnostic`
+
+扱い方:
+- Codex / Claude Code は `skill` artifact を基本にする
+- Gemini CLI は `command` / `context` / `extension` artifact を基本にする
+- provider に依存しない runbook や review checklist は `tool_agnostic` として扱う
+
+最初から provider ごとの install path を manifest で持つことで、
+「同じ skill を Claude と Gemini へ別形式で導入した」状態も追跡できるようにする。
 
 ## Phase A: Registry Metadata
 **Goal:** skill の「選択可能な単位」を定義する。
@@ -57,12 +78,14 @@ project repository
 - registry item schema を定義
 - stable / experimental / deprecated の lifecycle を定義
 - risk level と reviewer の持ち方を定義
-- compatible tools の表現を定義
+- compatible tools / artifacts の表現を定義
+- `official` / `curated` / `internal` source の表現を定義
 
 ### Acceptance Criteria
 - skill を metadata だけで一覧表示できる
 - project が install 前に description / owner / risk を判断できる
 - tool 固有 skill と共通知識 skill を区別できる
+- provider ごとの artifact 差を metadata だけで判断できる
 
 ## Phase B: Project Manifest
 **Goal:** project 側に skill 導入履歴を残せるようにする。
@@ -71,11 +94,13 @@ project repository
 - `repogenesis.skills.json` schema を定義
 - `skills/README.md` を生成対象に追加
 - generator は初回生成時に empty manifest を作成できるようにする
+- manifest に provider ごとの installed artifact を残せるようにする
 
 ### Acceptance Criteria
 - project repo に導入済み skill 一覧と pin version が残る
 - chat や外部メモに頼らず repo だけで現状を追える
 - skill 未導入 project でも manifest 形式が揃う
+- Codex / Claude / Gemini のどれ向け artifact が入っているか repo だけで追える
 
 ## Phase C: Manual Install Flow
 **Goal:** 最初は最小の導入フローで運用を始める。
@@ -84,11 +109,13 @@ project repository
 - 管理者が curated skill を registry に登録
 - 利用者は manifest に基づいて skill を手動導入できる
 - install mode は `copy + pin`
+- provider に応じて install path を変える
 
 ### Acceptance Criteria
 - registry 変更だけでは既存 project が変わらない
 - install 後のファイルが repo に存在し、レビュー可能
 - manifest と実ファイルの対応が明確
+- 同じ skill を複数 provider 向けに導入しても install 履歴が衝突しない
 
 ## Phase D: CLI Installer
 **Goal:** manifest と install 操作を deterministic にする。
@@ -97,11 +124,13 @@ project repository
 - generator package とは別の installer コマンドを定義
 - `add`, `remove`, `update`, `list` の最小操作を決める
 - manifest と installed files の同期を取る
+- provider 別 artifact の install/remove/update を deterministic にする
 
 ### Acceptance Criteria
 - skill 導入手順が手作業でぶれない
 - version pin が更新される
 - remove 時に project 側の未追跡変更を検知できる
+- Gemini の command/context/install も Claude/Codex と同じ install contract で扱える
 
 ## Phase E: Web Selection
 **Goal:** 非エンジニアでも curated skill を選びやすくする。
@@ -110,11 +139,14 @@ project repository
 - app に `推奨 skill` / `選択 skill` UI を追加
 - skill の説明、risk、owner を表示
 - 初回生成時は manifest だけ作るか、初期導入までやるかを選べるようにする
+- provider ごとの対応状況と install 先を表示する
+- 公式 source URL を参照できるようにする
 
 ### Acceptance Criteria
 - 非エンジニアでも「どれを入れるか」が説明付きで判断できる
 - 誤って high-risk skill を入れにくい
 - generator core の入力 UX を壊さない
+- Claude / Codex / Gemini の違いを UI が隠しすぎず、必要十分に説明できる
 
 ## Phase F: Update Governance
 **Goal:** skill の更新を安全に扱う。
@@ -155,10 +187,11 @@ project repository
 ## Recommended Implementation Order
 1. registry metadata schema
 2. project manifest schema
-3. empty manifest / README の generator 出力
-4. manual install runbook
-5. CLI installer
-6. Web UI での curated selection
+3. provider adapter contract
+4. empty manifest / README の generator 出力
+5. manual install runbook
+6. CLI installer
+7. Web UI での curated selection
 
 ## Immediate Next Step
 最初に着手すべきなのは installer ではなく、
@@ -169,3 +202,4 @@ project repository
 - 何を registry の責務にし、何を project 側に残すかを先に固定しないと installer がぶれる
 - manifest 契約が無いまま UI を作ると、後で導入履歴が追えなくなる
 - `copy + pin` か `reference` かの判断を project contract 上で先に固める必要がある
+- provider ごとの artifact 差を先に固定しないと、Claude / Codex / Gemini 混在運用で manifest が破綻する

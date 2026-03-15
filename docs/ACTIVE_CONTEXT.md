@@ -1,7 +1,7 @@
 # ACTIVE_CONTEXT.md — Current Project State
 
 ## Last Updated
-2026-03-13
+2026-03-15
 
 ## Current Phase
 Phase 6 — AI-Assisted Spec Authoring (Hardening)
@@ -66,6 +66,14 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
     - timeout 後の再試行成功 (`commit: b4cacf5` deploy 上): PASS
       - 同日中の再試行で ZIP 生成成功
       - timeout は常時再現ではなく、Render 側の一時的な遅延の可能性あり
+  - Phase 6 hardening 継続:
+  - AI-first guided flow を整理し、production 上で `v0.1.1 (5e344e8)` の ZIP 生成成功を確認
+  - consultation parser は heading の型ゆれを吸収し、stale domain を保持しないように修正
+  - `責任者` と `技術ドメイン` は AI-first flow では blocking validation から外した
+  - `技術ドメイン` 未確定は warning 扱いで ZIP を止めないようにした
+  - skill layer contract を provider-aware に更新し、Codex / Claude Code / Gemini CLI を並列で扱う設計に整理した
+  - generator 側に provider-aware skill manifest / registry schema を追加した
+  - `skills/registry/` に curated sample (`repo-readiness-review`) を追加し、schema で検証する test を追加した
 
 ## What Is Being Done Now
 - いまの主要テーマ:
@@ -73,6 +81,10 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
     - provider 非依存 intake contract の更新
     - parser 実装とのズレ整理
     - deterministic `draft -> spec` 境界の固定
+  - provider-aware skill layer planning
+    - `official` / `curated` / `internal` source を含む registry contract
+    - Codex / Claude Code / Gemini CLI の artifact 差を manifest で追跡
+    - installer / Web UI より先に schema と adapter 契約を固定
   - Phase 5 完了後の運用フォロー
     - timeout 時の運用切り分けを runbook 化済み
     - remote ZIP timeout の再発監視
@@ -92,7 +104,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - feedback 保存がローカルファイルで永続性に欠ける
   - remote ZIP timeout は request id で追える状態。再試行成功済みのため、当面は Render 側の再発監視を継続
   - AI tool 非依存化 (`PROJECT.md + CLAUDE.md + GEMINI.md`) は未反映
-  - skill layer は planning 済みだが、manifest / installer は未反映
+  - skill layer は provider-aware contract と manifest/schema まで反映。installer / UI / curated registry 実体は未反映
   - 現在の大きい未コミット差分を concern ごとに分離する必要がある
 
 ## Key Decisions Made
@@ -118,7 +130,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 - dry-runなし（実行前プレビュー未対応）
 - interactive CLIなし（対話的プロンプト未対応）
 - skill injectionなし（テンプレートの外部差し込み未対応）
-- skill registry / manifest / installer なし
+- curated skill registry 実体 / installer / selection UI なし
 - template versioningなし（テンプレートのバージョン管理未対応）
 - AI tool 非依存の `PROJECT.md` / `GEMINI.md` 分離が未反映
 - feedback 保存先が Render ローカルファイル
@@ -149,3 +161,4 @@ Immediate next:
 - Phase 6 に向けて intake contract の境界を整理する
 - feedback の永続保存先を決める
 - AI tool 非依存化と optional skill layer を別差分で整理する
+- provider-aware installer contract と registry loading rule を追加する
