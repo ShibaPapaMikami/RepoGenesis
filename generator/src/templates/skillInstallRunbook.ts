@@ -5,11 +5,23 @@ import { buildSelectedSkillInstallCommands } from '../selectedSkillCommands';
 export function generateSkillInstallRunbook(
   brief: ProjectBrief,
   selectedSkills: SelectedSkillRecommendation[] = [],
+  options?: { bundledAtGeneration?: boolean },
 ): string {
+  const bundledAtGeneration = options?.bundledAtGeneration ?? false;
   const commandBlock = selectedSkills.length > 0
     ? buildSelectedSkillInstallCommands(brief, selectedSkills, '"$PROJECT_ROOT"', '"$REGISTRY_ROOT"').join('\n')
     : '';
-  const recommendedSection = selectedSkills.length > 0
+  const recommendedSection = selectedSkills.length > 0 && bundledAtGeneration
+    ? `
+## Bundled In This Repository
+${selectedSkills.map((skill) => `- ${skill.name} (\`${skill.id}\`, ${skill.sourceType}, ${skill.version})`).join('\n')}
+
+## Current State
+- The selected curated skills were copied into this repository during generation.
+- \`repogenesis.skills.json\` already records the bundled artifact paths.
+- Additional install commands are not required for the initial setup.
+`
+    : selectedSkills.length > 0
     ? `
 ## Recommended For This Project
 ${selectedSkills.map((skill) => `- ${skill.name} (\`${skill.id}\`, ${skill.sourceType}, ${skill.version})`).join('\n')}

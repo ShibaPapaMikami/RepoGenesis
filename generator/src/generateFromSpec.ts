@@ -23,7 +23,7 @@ import { createEmptySkillsManifest } from './skillsManifest';
 import { generateRunbookReadme } from './templates/runbookReadme';
 import { generateSkillInstallRunbook } from './templates/skillInstallRunbook';
 import { generateSkillsReadme } from './templates/skillsReadme';
-import type { SkillProvider } from './skillsManifest';
+import type { ProjectSkillsManifest, SkillProvider } from './skillsManifest';
 import { generateInstallSelectedSkillsScript } from './templates/installSelectedSkillsScript';
 import { formatOwner } from './templateDisplay';
 
@@ -36,6 +36,9 @@ export interface GenerateFromSpecOptions {
   generatedAt?: string;
   source?: 'projectSpec' | 'legacyBrief';
   selectedSkills?: SelectedSkillRecommendation[];
+  selectedSkillsBundled?: boolean;
+  selectedSkillsManifest?: ProjectSkillsManifest;
+  selectedSkillFiles?: Array<[string, string]>;
 }
 
 interface RepoGenesisManifest {
@@ -185,6 +188,9 @@ ${deps}
 function buildSingleRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions): Map<string, string> {
   const files = new Map<string, string>();
   const selectedSkills = options?.selectedSkills ?? [];
+  const selectedSkillsBundled = options?.selectedSkillsBundled ?? false;
+  const selectedSkillsManifest = options?.selectedSkillsManifest ?? createEmptySkillsManifest();
+  const selectedSkillFiles = options?.selectedSkillFiles ?? [];
 
   const entries: [string, string][] = [
     ['PROJECT.md', generateProjectMd(brief, { scope: 'single' })],
@@ -196,14 +202,14 @@ function buildSingleRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions)
     ['docs/VERSIONING_STANDARD.md', generateVersioningStandard(brief)],
     ['docs/ADR/0000-template.md', generateAdrTemplate(brief)],
     ['docs/runbooks/README.md', generateRunbookReadme(brief)],
-    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief, selectedSkills)],
+    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief, selectedSkills, { bundledAtGeneration: selectedSkillsBundled })],
     ['plans/template.md', generatePlansTemplate(brief)],
     ['prompts/restart.md', generateRestart(brief)],
     ['SECURITY.md', generateSecurity(brief)],
     ['.env.example', generateEnvExample(brief)],
     ['.gitignore', generateGitignore(brief)],
-    ['skills/README.md', generateSkillsReadme(brief, selectedSkills)],
-    ['repogenesis.skills.json', `${JSON.stringify(createEmptySkillsManifest(), null, 2)}\n`],
+    ['skills/README.md', generateSkillsReadme(brief, selectedSkills, { bundledAtGeneration: selectedSkillsBundled })],
+    ['repogenesis.skills.json', `${JSON.stringify(selectedSkillsManifest, null, 2)}\n`],
     ['CONTRIBUTING.md', generateContributing(brief)],
     ['.github/PULL_REQUEST_TEMPLATE.md', generatePrTemplate(brief)],
     ['.github/ISSUE_TEMPLATE/bug_report.md', generateIssueBugReport(brief)],
@@ -214,8 +220,12 @@ function buildSingleRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions)
     files.set(path, content);
   }
 
-  if (selectedSkills.length > 0) {
+  if (selectedSkills.length > 0 && !selectedSkillsBundled) {
     files.set('scripts/install-selected-skills.sh', generateInstallSelectedSkillsScript(brief, selectedSkills));
+  }
+
+  for (const [relativePath, content] of selectedSkillFiles) {
+    files.set(relativePath, content);
   }
 
   return files;
@@ -224,6 +234,9 @@ function buildSingleRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions)
 function buildMultiRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions): Map<string, string> {
   const files = new Map<string, string>();
   const selectedSkills = options?.selectedSkills ?? [];
+  const selectedSkillsBundled = options?.selectedSkillsBundled ?? false;
+  const selectedSkillsManifest = options?.selectedSkillsManifest ?? createEmptySkillsManifest();
+  const selectedSkillFiles = options?.selectedSkillFiles ?? [];
 
   const workspaceEntries: [string, string][] = [
     ['PROJECT.md', generateProjectMd(brief, { scope: 'workspace' })],
@@ -233,10 +246,10 @@ function buildMultiRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions):
     ['SECURITY.md', generateSecurity(brief)],
     ['VERSIONING_STANDARD.md', generateVersioningStandard(brief)],
     ['docs/runbooks/README.md', generateRunbookReadme(brief)],
-    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief, selectedSkills)],
+    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief, selectedSkills, { bundledAtGeneration: selectedSkillsBundled })],
     ['.gitignore', generateGitignore(brief)],
-    ['skills/README.md', generateSkillsReadme(brief, selectedSkills)],
-    ['repogenesis.skills.json', `${JSON.stringify(createEmptySkillsManifest(), null, 2)}\n`],
+    ['skills/README.md', generateSkillsReadme(brief, selectedSkills, { bundledAtGeneration: selectedSkillsBundled })],
+    ['repogenesis.skills.json', `${JSON.stringify(selectedSkillsManifest, null, 2)}\n`],
     ['CONTRIBUTING.md', generateContributing(brief)],
     ['.github/PULL_REQUEST_TEMPLATE.md', generatePrTemplate(brief)],
     ['.github/ISSUE_TEMPLATE/bug_report.md', generateIssueBugReport(brief)],
@@ -247,8 +260,12 @@ function buildMultiRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions):
     files.set(path, content);
   }
 
-  if (selectedSkills.length > 0) {
+  if (selectedSkills.length > 0 && !selectedSkillsBundled) {
     files.set('scripts/install-selected-skills.sh', generateInstallSelectedSkillsScript(brief, selectedSkills));
+  }
+
+  for (const [relativePath, content] of selectedSkillFiles) {
+    files.set(relativePath, content);
   }
 
   for (const repo of brief.structure.repos) {

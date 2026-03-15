@@ -25,17 +25,17 @@ Phase 6 / Hardening
 - `multi` draft reflection now seeds repos automatically and no longer trips the initial validation error.
 - Phase 5 UX scope is complete; remaining work is operational follow-up and later-phase separation.
 - Phase 6 intake contract hardening has started with a provider-independent draft contract refresh.
-- Skill layer now includes provider-aware manifest/registry design, CLI installer commands, Web curated selection UI, installer handoff, and generated output persistence for selected skills.
+- Skill layer now includes provider-aware manifest/registry design, CLI installer commands, Web curated selection UI, remote ZIP auto-bundling for selected skills, and generated output persistence.
 - The latest production retry completed successfully with downloaded artifact `repogenesis-test (9).zip`.
 
 ## What This Phase Still Needs
 - Fix the provider-independent intake contract against current parser behavior.
 - Add deterministic `draft -> spec` mapping rules and tests.
 - Keep AI provider integration behind the normalized intake boundary.
-- Keep optional skill layer separate from the intake/generator core while hardening generated install artifacts and provider-specific guidance.
+- Keep optional skill layer separate from the intake/generator core while hardening local export behavior and provider-specific guidance.
 
 ## Next Three Tasks
-1. Add richer provider-specific guidance and optional automation around generated skill install scripts.
+1. Decide whether local ZIP export should also auto-bundle selected skills or stay in installer-script mode.
 2. Decide persistent storage for feedback and generation support data.
 3. Split pending large changes into separate tracks:
    - AI tool independence (`PROJECT.md` / `CLAUDE.md` / `GEMINI.md`)

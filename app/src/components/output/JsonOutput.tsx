@@ -277,25 +277,33 @@ export function JsonOutput({
               </li>
             ))}
           </ul>
-          <p className="generation-readiness-note">
-            生成される ZIP にはまだ自動同梱されません。project 作成後に installer で追加する前提です。
-          </p>
-          <div className="installer-handoff">
-            <p><strong>追加コマンド例</strong></p>
+          {generationMode === 'remote' ? (
             <p className="generation-readiness-note">
-              ZIP 展開後に、RepoGenesis の `generator/` ディレクトリから実行してください。
+              選択した Skill は生成 ZIP に同梱されます。初回セットアップで追加コマンドを実行する必要はありません。
             </p>
-            <pre>{installerHandoffText}</pre>
-            <div className="output-actions">
-              <button
-                type="button"
-                onClick={handleCopyInstallerHandoff}
-                className="btn-secondary"
-              >
-                {installerCopied ? 'コピー済み' : '追加コマンドをコピー'}
-              </button>
-            </div>
-          </div>
+          ) : (
+            <>
+              <p className="generation-readiness-note">
+                ローカル ZIP ではまだ自動同梱されません。必要な場合は ZIP 展開後に install script を使って追加してください。
+              </p>
+              <div className="installer-handoff">
+                <p><strong>追加コマンド例</strong></p>
+                <p className="generation-readiness-note">
+                  ZIP 展開後に、RepoGenesis の `generator/` ディレクトリから実行してください。
+                </p>
+                <pre>{installerHandoffText}</pre>
+                <div className="output-actions">
+                  <button
+                    type="button"
+                    onClick={handleCopyInstallerHandoff}
+                    className="btn-secondary"
+                  >
+                    {installerCopied ? 'コピー済み' : '追加コマンドをコピー'}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 

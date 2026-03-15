@@ -4,10 +4,15 @@ import type { SelectedSkillRecommendation } from '../generateFromSpec';
 export function generateSkillsReadme(
   brief: ProjectBrief,
   selectedSkills: SelectedSkillRecommendation[] = [],
+  options?: { bundledAtGeneration?: boolean },
 ): string {
+  const bundledAtGeneration = options?.bundledAtGeneration ?? false;
   const recommendationLine = selectedSkills.length > 0
     ? `Recommended at generation time: ${selectedSkills.map((skill) => `${skill.name} (${skill.id})`).join(', ')}.`
     : 'No curated skills were pre-selected at generation time.';
+  const currentState = bundledAtGeneration
+    ? 'The selected curated skills are already bundled in this repository and recorded in `repogenesis.skills.json`.'
+    : 'No skills are installed by default.';
 
   return `# skills/README.md
 
@@ -34,9 +39,9 @@ Instead, curated skills can be added here when the project explicitly opts in.
 4. \`repogenesis.skills.json\` is updated with the installed versions and artifact paths.
 
 ## Current State
-No skills are installed by default.
+${currentState}
 ${recommendationLine}
 
-${selectedSkills.length > 0 ? 'Use `scripts/install-selected-skills.sh` after ZIP extraction to install the selected curated skills.' : ''}
+${selectedSkills.length > 0 && !bundledAtGeneration ? 'Use `scripts/install-selected-skills.sh` after ZIP extraction to install the selected curated skills.' : ''}
 `;
 }

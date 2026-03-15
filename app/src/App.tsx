@@ -113,7 +113,8 @@ function App() {
 
   const errors = validationErrors(state);
   const exportable = canExport(state);
-  const requiresCookieSession = getGenerationMode() === 'remote' && getRemoteAuthMode() === 'cookie_session';
+  const generationMode = getGenerationMode();
+  const requiresCookieSession = generationMode === 'remote' && getRemoteAuthMode() === 'cookie_session';
   const activeStep = guidedStep === 'result' || resultPhase !== 'idle' ? 'result' : guidedStep;
   const suggestedRepoType = consultationDraft?.suggestedState.structure.repo_type ?? state.structure.repo_type;
   const suggestedSecurity = consultationDraft?.suggestedState.securityLevelOverride ?? state.security.level;
@@ -384,7 +385,9 @@ function App() {
             <div className="consultation-summary skill-selection">
               <p><strong>推奨 Skill</strong></p>
               <p className="consultation-lead">
-                このプロジェクトに後から追加しやすい curated skill を選びます。いまは生成 ZIP へ自動同梱せず、project 作成後に installer で追加する前提です。
+                {generationMode === 'remote'
+                  ? 'このプロジェクトに合う curated skill を選びます。選んだ Skill は生成 ZIP に同梱されるため、ダウンロード後すぐ確認できます。'
+                  : 'このプロジェクトに後から追加しやすい curated skill を選びます。ローカル ZIP では install script も一緒に出力します。'}
               </p>
               <div className="skill-grid">
                 {recommendedSkills.length > 0 ? recommendedSkills.map((skill) => {

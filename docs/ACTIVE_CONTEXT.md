@@ -87,6 +87,8 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - 選択 Skill がある場合は `scripts/install-selected-skills.sh` を生成するようにした
   - AI-first remote validation を app / generator 間で整合させ、`owner` 空・`domains` 空・security 自動補正のまま production ZIP 生成を再度成功させた
   - production `v0.1.1 (41176d1)` で `repogenesis-test (9).zip` のダウンロード成功を確認した
+  - remote ZIP 生成では、選択した Skill artifact を registry から解決して同梱し、`repogenesis.skills.json` も prefilled するようにした
+  - Web UI は remote 生成時に「Skill は ZIP 同梱済み」と案内し、非エンジニア向けの追加コマンド導線を主画面から外した
 
 ## What Is Being Done Now
 - いまの主要テーマ:
@@ -117,7 +119,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - feedback 保存がローカルファイルで永続性に欠ける
   - remote ZIP timeout は request id で追える状態。再試行成功済みのため、当面は Render 側の再発監視を継続
   - AI tool 非依存化 (`PROJECT.md + CLAUDE.md + GEMINI.md`) は未反映
-  - skill layer は provider-aware contract / installer / Web selection / generated handoff まで反映。自動インストールや skill 実体の ZIP 同梱は未反映
+  - skill layer は provider-aware contract / installer / Web selection / remote ZIP 同梱まで反映。自動インストールと local ZIP 同梱は未反映
   - 現在の大きい未コミット差分を concern ごとに分離する必要がある
 
 ## Key Decisions Made
@@ -143,7 +145,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 - dry-runなし（実行前プレビュー未対応）
 - interactive CLIなし（対話的プロンプト未対応）
 - skill injectionなし（テンプレートの外部差し込み未対応）
-- 選択 Skill の自動インストールなし（推奨・handoff・script 生成まで）
+- 選択 Skill の自動インストールなし（remote ZIP では同梱されるが、実行時セットアップは自動化していない）
 - template versioningなし（テンプレートのバージョン管理未対応）
 - AI tool 非依存の `PROJECT.md` / `GEMINI.md` 分離が未反映
 - feedback 保存先が Render ローカルファイル

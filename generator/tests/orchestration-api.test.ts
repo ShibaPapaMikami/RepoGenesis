@@ -122,6 +122,32 @@ describe('orchestration api', () => {
     }
   });
 
+  it('bundles selected skill artifacts into the remote zip output', async () => {
+    const res = await handleGenerateApiDownloadRequest('Bearer dev-token', undefined, {
+      spec: VALID_SPEC,
+      output: { format: 'zip' },
+      meta: {
+        requestId: 'req-skill-bundle',
+        selectedSkills: [
+          {
+            id: 'repo-readiness-review',
+            name: 'Repo Readiness Review',
+            version: '0.1.0',
+            sourceType: 'curated',
+            providers: ['claude_code'],
+          },
+        ],
+      },
+    });
+
+    expect(res.status).toBe(200);
+    if (res.status === 200) {
+      expect(res.body.fileCount).toBeGreaterThan(22);
+      expect(res.body.zipBuffer.toString('utf8')).toContain('.claude/skills/repo-readiness-review/SKILL.md');
+      expect(res.body.zipBuffer.toString('utf8')).not.toContain('scripts/install-selected-skills.sh');
+    }
+  });
+
   it('accepts ai-first specs with empty owner and domains when security level is consistent', async () => {
     const res = await handleGenerateApiRequest('Bearer dev-token', undefined, {
       spec: AI_FIRST_SPEC,

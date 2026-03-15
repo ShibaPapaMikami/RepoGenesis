@@ -424,4 +424,56 @@ describe('generateFromSpec — pure function', () => {
     expect(script).toContain('repo-readiness-review');
   });
 
+  it('should include pre-bundled selected skills when provided by the caller', () => {
+    const brief = parseBrief(SINGLE_BRIEF);
+    const files = generateFromSpec(brief, {
+      selectedSkills: [
+        {
+          id: 'repo-readiness-review',
+          name: 'Repo Readiness Review',
+          version: '0.1.0',
+          sourceType: 'curated',
+          providers: ['claude_code'],
+        },
+      ],
+      selectedSkillsBundled: true,
+      selectedSkillsManifest: {
+        version: 1,
+        source: 'repogenesis',
+        installed: [
+          {
+            id: 'repo-readiness-review',
+            version: '0.1.0',
+            installedAt: '2026-03-15T00:00:00.000Z',
+            installedBy: 'test',
+            sourceType: 'curated',
+            artifacts: [
+              {
+                provider: 'claude_code',
+                artifactKind: 'skill',
+                path: '.claude/skills/repo-readiness-review/SKILL.md',
+              },
+            ],
+          },
+        ],
+      },
+      selectedSkillFiles: [
+        ['.claude/skills/repo-readiness-review/SKILL.md', '# Repo Readiness Review\n'],
+      ],
+    });
+
+    expect(files.has('.claude/skills/repo-readiness-review/SKILL.md')).toBe(true);
+    expect(files.has('scripts/install-selected-skills.sh')).toBe(false);
+
+    const skillManifest = JSON.parse(files.get('repogenesis.skills.json') as string);
+    expect(skillManifest.installed).toHaveLength(1);
+
+    const runbook = files.get('docs/runbooks/skill-install.md') as string;
+    expect(runbook).toContain('Bundled In This Repository');
+    expect(runbook).not.toContain('scripts/install-selected-skills.sh');
+
+    const skillsReadme = files.get('skills/README.md') as string;
+    expect(skillsReadme).toContain('already bundled');
+  });
+
 });

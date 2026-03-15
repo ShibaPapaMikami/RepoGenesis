@@ -4,6 +4,7 @@ import { projectSpecSchema } from '../schema';
 import { authorizeRequestAsync, hasGeneratePermission } from './auth';
 import { createZipBuffer } from './zip';
 import type { SkillProvider } from '../skillsManifest';
+import { bundleSelectedSkillsFromRegistry } from '../selectedSkillBundle';
 
 export interface GenerateApiRequest {
   spec: unknown;
@@ -70,6 +71,41 @@ type SelectedSkillMeta = {
   sourceType: 'official' | 'curated' | 'internal';
   providers: SkillProvider[];
 };
+
+function buildGenerateFileMap(
+  spec: ReturnType<typeof projectSpecSchema.parse>,
+  selectedSkills: SelectedSkillMeta[],
+  requestId: string,
+) {
+  if (selectedSkills.length === 0) {
+    return generateFromSpec(spec, {
+      source: 'projectSpec',
+      specVersion: spec.specVersion,
+      generatorVersion: packageJson.version,
+      selectedSkills,
+    });
+  }
+
+  const bundledSkills = bundleSelectedSkillsFromRegistry({
+    project: spec,
+    selectedSkills,
+    installedBy: `repogenesis:${requestId}`,
+  });
+
+  if (bundledSkills.warnings.length > 0) {
+    console.warn('[repogenesis] selected skill bundling warnings:', bundledSkills.warnings);
+  }
+
+  return generateFromSpec(spec, {
+    source: 'projectSpec',
+    specVersion: spec.specVersion,
+    generatorVersion: packageJson.version,
+    selectedSkills,
+    selectedSkillsBundled: bundledSkills.manifest.installed.length > 0,
+    selectedSkillsManifest: bundledSkills.manifest,
+    selectedSkillFiles: bundledSkills.files,
+  });
+}
 
 function sanitizeSelectedSkills(input: RawSelectedSkill[] | undefined): SelectedSkillMeta[] {
   if (!Array.isArray(input)) return [];
@@ -160,12 +196,7 @@ export async function handleGenerateApiRequest(
   }
 
   const { requestId, spec, selectedSkills } = prepared.body as PreparedGenerateRequest;
-  const fileMap = generateFromSpec(spec, {
-    source: 'projectSpec',
-    specVersion: spec.specVersion,
-    generatorVersion: packageJson.version,
-    selectedSkills,
-  });
+  const fileMap = buildGenerateFileMap(spec, selectedSkills, requestId);
 
   return {
     status: 200,
@@ -193,12 +224,7 @@ export async function handleGenerateApiDownloadRequest(
   }
 
   const { requestId, userId, spec, selectedSkills } = prepared.body as PreparedGenerateRequest;
-  const fileMap = generateFromSpec(spec, {
-    source: 'projectSpec',
-    specVersion: spec.specVersion,
-    generatorVersion: packageJson.version,
-    selectedSkills,
-  });
+  const fileMap = buildGenerateFileMap(spec, selectedSkills, requestId);
 
   const zipEntries = Array.from(fileMap.entries()).map(([relativePath, content]) => ({
     path: `${spec.project.slug}/${relativePath}`,
