@@ -23,6 +23,7 @@ import { createEmptySkillsManifest } from './skillsManifest';
 import { generateRunbookReadme } from './templates/runbookReadme';
 import { generateSkillInstallRunbook } from './templates/skillInstallRunbook';
 import { generateSkillsReadme } from './templates/skillsReadme';
+import type { SkillProvider } from './skillsManifest';
 
 type RepoEntry = ProjectBrief['structure']['repos'][number];
 const DEFAULT_SPEC_VERSION: SpecVersion = '1.0';
@@ -32,6 +33,7 @@ export interface GenerateFromSpecOptions {
   generatorVersion?: string;
   generatedAt?: string;
   source?: 'projectSpec' | 'legacyBrief';
+  selectedSkills?: SelectedSkillRecommendation[];
 }
 
 interface RepoGenesisManifest {
@@ -42,6 +44,15 @@ interface RepoGenesisManifest {
   projectSlug: string;
   repoType: ProjectBrief['structure']['repo_type'];
   fileCount: number;
+  selectedSkills: SelectedSkillRecommendation[];
+}
+
+export interface SelectedSkillRecommendation {
+  id: string;
+  name: string;
+  version: string;
+  sourceType: 'official' | 'curated' | 'internal';
+  providers: SkillProvider[];
 }
 
 function resolveSpecVersion(input: ProjectBrief | ProjectSpec, options?: GenerateFromSpecOptions): SpecVersion {
@@ -74,6 +85,7 @@ function buildManifest(
     projectSlug: brief.project.slug,
     repoType: brief.structure.repo_type,
     fileCount,
+    selectedSkills: options?.selectedSkills ?? [],
   };
 }
 
@@ -168,7 +180,7 @@ ${deps}
 `;
 }
 
-function buildSingleRepo(brief: ProjectBrief): Map<string, string> {
+function buildSingleRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions): Map<string, string> {
   const files = new Map<string, string>();
 
   const entries: [string, string][] = [
@@ -181,13 +193,13 @@ function buildSingleRepo(brief: ProjectBrief): Map<string, string> {
     ['docs/VERSIONING_STANDARD.md', generateVersioningStandard(brief)],
     ['docs/ADR/0000-template.md', generateAdrTemplate(brief)],
     ['docs/runbooks/README.md', generateRunbookReadme(brief)],
-    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief)],
+    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief, options?.selectedSkills ?? [])],
     ['plans/template.md', generatePlansTemplate(brief)],
     ['prompts/restart.md', generateRestart(brief)],
     ['SECURITY.md', generateSecurity(brief)],
     ['.env.example', generateEnvExample(brief)],
     ['.gitignore', generateGitignore(brief)],
-    ['skills/README.md', generateSkillsReadme(brief)],
+    ['skills/README.md', generateSkillsReadme(brief, options?.selectedSkills ?? [])],
     ['repogenesis.skills.json', `${JSON.stringify(createEmptySkillsManifest(), null, 2)}\n`],
     ['CONTRIBUTING.md', generateContributing(brief)],
     ['.github/PULL_REQUEST_TEMPLATE.md', generatePrTemplate(brief)],
@@ -202,7 +214,7 @@ function buildSingleRepo(brief: ProjectBrief): Map<string, string> {
   return files;
 }
 
-function buildMultiRepo(brief: ProjectBrief): Map<string, string> {
+function buildMultiRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions): Map<string, string> {
   const files = new Map<string, string>();
 
   const workspaceEntries: [string, string][] = [
@@ -213,9 +225,9 @@ function buildMultiRepo(brief: ProjectBrief): Map<string, string> {
     ['SECURITY.md', generateSecurity(brief)],
     ['VERSIONING_STANDARD.md', generateVersioningStandard(brief)],
     ['docs/runbooks/README.md', generateRunbookReadme(brief)],
-    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief)],
+    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief, options?.selectedSkills ?? [])],
     ['.gitignore', generateGitignore(brief)],
-    ['skills/README.md', generateSkillsReadme(brief)],
+    ['skills/README.md', generateSkillsReadme(brief, options?.selectedSkills ?? [])],
     ['repogenesis.skills.json', `${JSON.stringify(createEmptySkillsManifest(), null, 2)}\n`],
     ['CONTRIBUTING.md', generateContributing(brief)],
     ['.github/PULL_REQUEST_TEMPLATE.md', generatePrTemplate(brief)],
@@ -264,8 +276,8 @@ export function generateFromSpec(
   const brief = normalizeBrief(input);
 
   const files = brief.structure.repo_type === 'multi'
-    ? buildMultiRepo(brief)
-    : buildSingleRepo(brief);
+    ? buildMultiRepo(brief, options)
+    : buildSingleRepo(brief, options);
 
   const manifest = buildManifest(brief, files.size + 1, options, specVersion, source);
   files.set('.repogenesis/manifest.json', `${JSON.stringify(manifest, null, 2)}\n`);

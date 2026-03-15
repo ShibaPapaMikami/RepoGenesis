@@ -118,7 +118,7 @@ export function JsonOutput({
       if (generationMode === 'remote' && remoteAuthMode === 'manual_bearer' && manualBearerUiAvailable) {
         localStorage.setItem('repogenesis_api_token', authToken);
       }
-      const result = await generateRepository(state, authToken);
+      const result = await generateRepository(state, authToken, selectedSkills);
       setGeneratedZip({ blob: result.blob, filename: result.filename });
       const fileInfo = result.fileCount ? `${result.fileCount}ファイル` : 'ZIP';
       setLastGenerateRequestId(result.requestId ?? null);

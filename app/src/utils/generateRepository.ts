@@ -1,6 +1,7 @@
 import type { FormState } from '../state/actions.ts';
 import { buildProjectSpec } from './buildProjectSpec.ts';
 import { generateRepositoryZip } from './generateRepositoryZip.ts';
+import type { SkillCatalogItem } from '../data/skillCatalog.ts';
 
 export interface GenerateRepositoryResult {
   blob: Blob;
@@ -93,7 +94,21 @@ function getRemoteGenerateErrorMessage(
   return error ? `リモート生成に失敗しました (${status}): ${error}` : `リモート生成に失敗しました (${status})`;
 }
 
-async function generateRepositoryRemote(state: FormState, authToken: string): Promise<GenerateRepositoryResult> {
+function toSelectedSkillMeta(skills: SkillCatalogItem[]) {
+  return skills.map((skill) => ({
+    id: skill.id,
+    name: skill.name,
+    version: skill.version,
+    sourceType: skill.sourceType,
+    providers: skill.providers,
+  }));
+}
+
+async function generateRepositoryRemote(
+  state: FormState,
+  authToken: string,
+  selectedSkills: SkillCatalogItem[],
+): Promise<GenerateRepositoryResult> {
   const authMode = getRemoteAuthMode();
   const apiBase = resolveApiBase(authMode);
   if (!apiBase) {
@@ -120,6 +135,9 @@ async function generateRepositoryRemote(state: FormState, authToken: string): Pr
       body: JSON.stringify({
         spec,
         output: { format: 'zip' },
+        meta: {
+          selectedSkills: toSelectedSkillMeta(selectedSkills),
+        },
       }),
       signal: AbortSignal.timeout(REMOTE_GENERATE_TIMEOUT_MS),
     });
@@ -173,12 +191,13 @@ async function generateRepositoryRemote(state: FormState, authToken: string): Pr
 export async function generateRepository(
   state: FormState,
   authToken?: string,
+  selectedSkills: SkillCatalogItem[] = [],
 ): Promise<GenerateRepositoryResult> {
   if (getGenerationMode() === 'remote') {
-    return generateRepositoryRemote(state, authToken ?? '');
+    return generateRepositoryRemote(state, authToken ?? '', selectedSkills);
   }
 
-  const local = generateRepositoryZip(state);
+  const local = generateRepositoryZip(state, selectedSkills);
   return {
     blob: local.blob,
     filename: local.filename,

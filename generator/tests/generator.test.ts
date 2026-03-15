@@ -390,6 +390,33 @@ describe('generateFromSpec — pure function', () => {
     expect(manifest.repoType).toBe('single');
     expect(manifest.fileCount).toBe(22);
     expect(manifest.source).toBe('legacyBrief');
+    expect(manifest.selectedSkills).toEqual([]);
+  });
+
+  it('should record selected skills in manifest and runbooks', () => {
+    const brief = parseBrief(SINGLE_BRIEF);
+    const files = generateFromSpec(brief, {
+      selectedSkills: [
+        {
+          id: 'repo-readiness-review',
+          name: 'Repo Readiness Review',
+          version: '0.1.0',
+          sourceType: 'curated',
+          providers: ['codex'],
+        },
+      ],
+    });
+
+    const manifest = JSON.parse(files.get('.repogenesis/manifest.json') as string);
+    expect(manifest.selectedSkills).toHaveLength(1);
+    expect(manifest.selectedSkills[0].id).toBe('repo-readiness-review');
+
+    const runbook = files.get('docs/runbooks/skill-install.md') as string;
+    expect(runbook).toContain('Recommended For This Project');
+    expect(runbook).toContain('repo-readiness-review');
+
+    const skillsReadme = files.get('skills/README.md') as string;
+    expect(skillsReadme).toContain('Recommended at generation time');
   });
 
 });

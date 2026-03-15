@@ -1,6 +1,14 @@
 import type { ProjectBrief } from '../schema';
+import type { SelectedSkillRecommendation } from '../generateFromSpec';
 
-export function generateSkillsReadme(brief: ProjectBrief): string {
+export function generateSkillsReadme(
+  brief: ProjectBrief,
+  selectedSkills: SelectedSkillRecommendation[] = [],
+): string {
+  const recommendationLine = selectedSkills.length > 0
+    ? `Recommended at generation time: ${selectedSkills.map((skill) => `${skill.name} (${skill.id})`).join(', ')}.`
+    : 'No curated skills were pre-selected at generation time.';
+
   return `# skills/README.md
 
 ## Purpose
@@ -27,5 +35,6 @@ Instead, curated skills can be added here when the project explicitly opts in.
 
 ## Current State
 No skills are installed by default.
+${recommendationLine}
 `;
 }

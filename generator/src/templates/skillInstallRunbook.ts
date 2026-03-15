@@ -1,6 +1,20 @@
 import type { ProjectBrief } from '../schema';
+import type { SelectedSkillRecommendation } from '../generateFromSpec';
 
-export function generateSkillInstallRunbook(brief: ProjectBrief): string {
+export function generateSkillInstallRunbook(
+  brief: ProjectBrief,
+  selectedSkills: SelectedSkillRecommendation[] = [],
+): string {
+  const recommendedSection = selectedSkills.length > 0
+    ? `
+## Recommended For This Project
+${selectedSkills.map((skill) => `- ${skill.name} (\`${skill.id}\`, ${skill.sourceType}, ${skill.version})`).join('\n')}
+
+## Suggested Next Step
+Use the generated selection as the initial install shortlist. Review provider-specific artifacts before installing.
+`
+    : '';
+
   return `# skill-install.md
 
 ## Purpose
@@ -37,5 +51,6 @@ This runbook explains how to add optional curated skills to ${brief.project.name
 - High-risk skills should require an explicit review before install.
 - Project-specific scripts, hooks, and editor settings should not be treated as curated skills by default.
 - Gemini CLI artifacts may be commands, context files, or extensions instead of a single \`SKILL.md\`.
+${recommendedSection}
 `;
 }

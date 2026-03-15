@@ -3,6 +3,7 @@ import { generateFromSpec } from '../generateFromSpec';
 import { projectSpecSchema } from '../schema';
 import { authorizeRequestAsync, hasGeneratePermission } from './auth';
 import { createZipBuffer } from './zip';
+import type { SkillProvider } from '../skillsManifest';
 
 export interface GenerateApiRequest {
   spec: unknown;
@@ -11,8 +12,23 @@ export interface GenerateApiRequest {
   };
   meta?: {
     requestId?: string;
+    selectedSkills?: Array<{
+      id?: unknown;
+      name?: unknown;
+      version?: unknown;
+      sourceType?: unknown;
+      providers?: unknown;
+    }>;
   };
 }
+
+type RawSelectedSkill = {
+  id?: unknown;
+  name?: unknown;
+  version?: unknown;
+  sourceType?: unknown;
+  providers?: unknown;
+};
 
 export interface GenerateApiSuccess {
   requestId: string;
@@ -44,6 +60,33 @@ interface PreparedGenerateRequest {
   requestId: string;
   userId: string;
   spec: ReturnType<typeof projectSpecSchema.parse>;
+  selectedSkills: SelectedSkillMeta[];
+}
+
+type SelectedSkillMeta = {
+  id: string;
+  name: string;
+  version: string;
+  sourceType: 'official' | 'curated' | 'internal';
+  providers: SkillProvider[];
+};
+
+function sanitizeSelectedSkills(input: RawSelectedSkill[] | undefined): SelectedSkillMeta[] {
+  if (!Array.isArray(input)) return [];
+
+  return input.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const raw = item as Record<string, unknown>;
+    const { id, name, version, sourceType, providers } = raw;
+    if (typeof id !== 'string' || typeof name !== 'string' || typeof version !== 'string') return [];
+    if (sourceType !== 'official' && sourceType !== 'curated' && sourceType !== 'internal') return [];
+    const normalizedSourceType: SelectedSkillMeta['sourceType'] = sourceType;
+    const parsedProviders = Array.isArray(providers)
+      ? providers.filter((provider): provider is SkillProvider =>
+        provider === 'codex' || provider === 'claude_code' || provider === 'gemini_cli' || provider === 'tool_agnostic')
+      : [];
+    return [{ id, name, version, sourceType: normalizedSourceType, providers: parsedProviders }];
+  });
 }
 
 function requiresGenerateAuth(): boolean {
@@ -101,6 +144,7 @@ async function prepareGenerateRequest(
       requestId,
       userId: auth.ok && auth.context ? auth.context.userId : 'anonymous',
       spec: parsed.data,
+      selectedSkills: sanitizeSelectedSkills(req.meta?.selectedSkills),
     },
   };
 }
@@ -115,11 +159,12 @@ export async function handleGenerateApiRequest(
     return { status: prepared.status, body: prepared.body as GenerateApiError };
   }
 
-  const { requestId, spec } = prepared.body as PreparedGenerateRequest;
+  const { requestId, spec, selectedSkills } = prepared.body as PreparedGenerateRequest;
   const fileMap = generateFromSpec(spec, {
     source: 'projectSpec',
     specVersion: spec.specVersion,
     generatorVersion: packageJson.version,
+    selectedSkills,
   });
 
   return {
@@ -147,11 +192,12 @@ export async function handleGenerateApiDownloadRequest(
     return { status: prepared.status, body: prepared.body as GenerateApiError };
   }
 
-  const { requestId, userId, spec } = prepared.body as PreparedGenerateRequest;
+  const { requestId, userId, spec, selectedSkills } = prepared.body as PreparedGenerateRequest;
   const fileMap = generateFromSpec(spec, {
     source: 'projectSpec',
     specVersion: spec.specVersion,
     generatorVersion: packageJson.version,
+    selectedSkills,
   });
 
   const zipEntries = Array.from(fileMap.entries()).map(([relativePath, content]) => ({
