@@ -12,6 +12,7 @@ import {
 import { downloadErrorReport, submitFeedback, type FeedbackType, type ErrorReportPayload } from '../../utils/feedback';
 import { assessIntakeReadiness, getConsultationReviewHints, type ConsultationPromptVariant, type IntakeDraft } from '../../utils/intakeParser';
 import type { SkillCatalogItem } from '../../data/skillCatalog.ts';
+import { buildSkillInstallHandoffText } from '../../utils/skillInstallHandoff.ts';
 
 interface JsonOutputProps {
   sectionRef?: RefObject<HTMLElement | null>;
@@ -61,6 +62,7 @@ export function JsonOutput({
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [jsonPreviewOpen, setJsonPreviewOpen] = useState(!collapseJsonByDefault);
+  const [installerCopied, setInstallerCopied] = useState(false);
   const generationMode = getGenerationMode();
   const remoteAuthMode = getRemoteAuthMode();
   const requiresCookieSessionLogin = generationMode === 'remote' && remoteAuthMode === 'cookie_session';
@@ -97,6 +99,12 @@ export function JsonOutput({
     await navigator.clipboard.writeText(stringifyProjectSpec(state));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleCopyInstallerHandoff() {
+    await navigator.clipboard.writeText(installerHandoffText);
+    setInstallerCopied(true);
+    setTimeout(() => setInstallerCopied(false), 2000);
   }
 
   async function handleGenerateRepository() {
@@ -197,6 +205,7 @@ export function JsonOutput({
       : generatedZip
         ? 'success'
         : 'info';
+  const installerHandoffText = buildSkillInstallHandoffText(state.project.slug, state.tech.ai_tools, selectedSkills);
 
   return (
     <section ref={sectionRef} className="form-section output-section">
@@ -271,6 +280,22 @@ export function JsonOutput({
           <p className="generation-readiness-note">
             生成される ZIP にはまだ自動同梱されません。project 作成後に installer で追加する前提です。
           </p>
+          <div className="installer-handoff">
+            <p><strong>追加コマンド例</strong></p>
+            <p className="generation-readiness-note">
+              ZIP 展開後に、RepoGenesis の `generator/` ディレクトリから実行してください。
+            </p>
+            <pre>{installerHandoffText}</pre>
+            <div className="output-actions">
+              <button
+                type="button"
+                onClick={handleCopyInstallerHandoff}
+                className="btn-secondary"
+              >
+                {installerCopied ? 'コピー済み' : '追加コマンドをコピー'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
