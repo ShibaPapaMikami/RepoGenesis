@@ -1,10 +1,14 @@
 import type { ProjectBrief } from '../schema';
 import type { SelectedSkillRecommendation } from '../generateFromSpec';
+import { buildSelectedSkillInstallCommands } from '../selectedSkillCommands';
 
 export function generateSkillInstallRunbook(
   brief: ProjectBrief,
   selectedSkills: SelectedSkillRecommendation[] = [],
 ): string {
+  const commandBlock = selectedSkills.length > 0
+    ? buildSelectedSkillInstallCommands(brief, selectedSkills, '"$PROJECT_ROOT"', '"$REGISTRY_ROOT"').join('\n')
+    : '';
   const recommendedSection = selectedSkills.length > 0
     ? `
 ## Recommended For This Project
@@ -12,6 +16,19 @@ ${selectedSkills.map((skill) => `- ${skill.name} (\`${skill.id}\`, ${skill.sourc
 
 ## Suggested Next Step
 Use the generated selection as the initial install shortlist. Review provider-specific artifacts before installing.
+
+## Generated Install Script
+- Script: \`scripts/install-selected-skills.sh\`
+- Before running, set \`REPOGENESIS_ROOT\` to your local RepoGenesis checkout.
+
+## Equivalent Commands
+\`\`\`bash
+PROJECT_ROOT="/path/to/generated-project"
+REGISTRY_ROOT="/path/to/RepoGenesis/skills/registry"
+cd /path/to/RepoGenesis/generator
+npm run build
+${commandBlock}
+\`\`\`
 `
     : '';
 

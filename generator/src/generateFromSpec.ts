@@ -24,6 +24,7 @@ import { generateRunbookReadme } from './templates/runbookReadme';
 import { generateSkillInstallRunbook } from './templates/skillInstallRunbook';
 import { generateSkillsReadme } from './templates/skillsReadme';
 import type { SkillProvider } from './skillsManifest';
+import { generateInstallSelectedSkillsScript } from './templates/installSelectedSkillsScript';
 
 type RepoEntry = ProjectBrief['structure']['repos'][number];
 const DEFAULT_SPEC_VERSION: SpecVersion = '1.0';
@@ -182,6 +183,7 @@ ${deps}
 
 function buildSingleRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions): Map<string, string> {
   const files = new Map<string, string>();
+  const selectedSkills = options?.selectedSkills ?? [];
 
   const entries: [string, string][] = [
     ['PROJECT.md', generateProjectMd(brief, { scope: 'single' })],
@@ -193,13 +195,13 @@ function buildSingleRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions)
     ['docs/VERSIONING_STANDARD.md', generateVersioningStandard(brief)],
     ['docs/ADR/0000-template.md', generateAdrTemplate(brief)],
     ['docs/runbooks/README.md', generateRunbookReadme(brief)],
-    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief, options?.selectedSkills ?? [])],
+    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief, selectedSkills)],
     ['plans/template.md', generatePlansTemplate(brief)],
     ['prompts/restart.md', generateRestart(brief)],
     ['SECURITY.md', generateSecurity(brief)],
     ['.env.example', generateEnvExample(brief)],
     ['.gitignore', generateGitignore(brief)],
-    ['skills/README.md', generateSkillsReadme(brief, options?.selectedSkills ?? [])],
+    ['skills/README.md', generateSkillsReadme(brief, selectedSkills)],
     ['repogenesis.skills.json', `${JSON.stringify(createEmptySkillsManifest(), null, 2)}\n`],
     ['CONTRIBUTING.md', generateContributing(brief)],
     ['.github/PULL_REQUEST_TEMPLATE.md', generatePrTemplate(brief)],
@@ -211,11 +213,16 @@ function buildSingleRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions)
     files.set(path, content);
   }
 
+  if (selectedSkills.length > 0) {
+    files.set('scripts/install-selected-skills.sh', generateInstallSelectedSkillsScript(brief, selectedSkills));
+  }
+
   return files;
 }
 
 function buildMultiRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions): Map<string, string> {
   const files = new Map<string, string>();
+  const selectedSkills = options?.selectedSkills ?? [];
 
   const workspaceEntries: [string, string][] = [
     ['PROJECT.md', generateProjectMd(brief, { scope: 'workspace' })],
@@ -225,9 +232,9 @@ function buildMultiRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions):
     ['SECURITY.md', generateSecurity(brief)],
     ['VERSIONING_STANDARD.md', generateVersioningStandard(brief)],
     ['docs/runbooks/README.md', generateRunbookReadme(brief)],
-    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief, options?.selectedSkills ?? [])],
+    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief, selectedSkills)],
     ['.gitignore', generateGitignore(brief)],
-    ['skills/README.md', generateSkillsReadme(brief, options?.selectedSkills ?? [])],
+    ['skills/README.md', generateSkillsReadme(brief, selectedSkills)],
     ['repogenesis.skills.json', `${JSON.stringify(createEmptySkillsManifest(), null, 2)}\n`],
     ['CONTRIBUTING.md', generateContributing(brief)],
     ['.github/PULL_REQUEST_TEMPLATE.md', generatePrTemplate(brief)],
@@ -237,6 +244,10 @@ function buildMultiRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions):
 
   for (const [path, content] of workspaceEntries) {
     files.set(path, content);
+  }
+
+  if (selectedSkills.length > 0) {
+    files.set('scripts/install-selected-skills.sh', generateInstallSelectedSkillsScript(brief, selectedSkills));
   }
 
   for (const repo of brief.structure.repos) {

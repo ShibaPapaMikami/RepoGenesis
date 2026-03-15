@@ -414,9 +414,14 @@ describe('generateFromSpec — pure function', () => {
     const runbook = files.get('docs/runbooks/skill-install.md') as string;
     expect(runbook).toContain('Recommended For This Project');
     expect(runbook).toContain('repo-readiness-review');
+    expect(runbook).toContain('scripts/install-selected-skills.sh');
 
     const skillsReadme = files.get('skills/README.md') as string;
     expect(skillsReadme).toContain('Recommended at generation time');
+
+    const script = files.get('scripts/install-selected-skills.sh') as string;
+    expect(script).toContain('REPOGENESIS_ROOT');
+    expect(script).toContain('repo-readiness-review');
   });
 
 });

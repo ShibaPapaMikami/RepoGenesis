@@ -36,5 +36,7 @@ Instead, curated skills can be added here when the project explicitly opts in.
 ## Current State
 No skills are installed by default.
 ${recommendationLine}
+
+${selectedSkills.length > 0 ? 'Use `scripts/install-selected-skills.sh` after ZIP extraction to install the selected curated skills.' : ''}
 `;
 }

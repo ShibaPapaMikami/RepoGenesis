@@ -117,17 +117,17 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 ## Phase 9: Optional Skill Layer
 **Goal:** Let projects adopt curated operational knowledge without polluting generator core.
 - Reference: `docs/SKILL_LAYER_ROADMAP.md`, `docs/SKILL_LAYER_CONTRACT.md`
-- [ ] Define central skill registry metadata schema
-- [ ] Define provider-aware `repogenesis.skills.json` project manifest schema
-- [ ] Define provider adapter contract for Codex / Claude Code / Gemini CLI
-- [ ] Define registry loading rules and selectable status filters
-- [ ] Generate empty `skills/README.md` and manifest on project bootstrap
-- [ ] Keep install mode as `copy + pin`
-- [ ] Add manual install runbook before any installer code
-- [ ] Add CLI installer only after registry/manifest contracts are fixed
-- [ ] Add Web UI for curated skill selection after CLI flow stabilizes
-- [ ] Keep hooks/editor settings/project scripts out of core scope
-- [ ] Track `official` / `curated` / `internal` source metadata and URLs
+- [x] Define central skill registry metadata schema
+- [x] Define provider-aware `repogenesis.skills.json` project manifest schema
+- [x] Define provider adapter contract for Codex / Claude Code / Gemini CLI
+- [x] Define registry loading rules and selectable status filters
+- [x] Generate empty `skills/README.md` and manifest on project bootstrap
+- [x] Keep install mode as `copy + pin`
+- [x] Add manual install runbook before any installer code
+- [x] Add CLI installer only after registry/manifest contracts are fixed
+- [x] Add Web UI for curated skill selection after CLI flow stabilizes
+- [x] Keep hooks/editor settings/project scripts out of core scope
+- [x] Track `official` / `curated` / `internal` source metadata and URLs
 
 ## Immediate Priorities (Next 3 Milestones)
 ### Milestone A: Production Hardening

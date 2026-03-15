@@ -24,20 +24,20 @@ Phase 6 / Hardening
 - `multi` draft reflection now seeds repos automatically and no longer trips the initial validation error.
 - Phase 5 UX scope is complete; remaining work is operational follow-up and later-phase separation.
 - Phase 6 intake contract hardening has started with a provider-independent draft contract refresh.
-- Skill layer planning now includes provider-aware manifest/registry design for Codex / Claude Code / Gemini CLI, plus a sample curated registry entry.
+- Skill layer now includes provider-aware manifest/registry design, CLI installer commands, Web curated selection UI, installer handoff, and generated output persistence for selected skills.
 
 ## What This Phase Still Needs
 - Fix the provider-independent intake contract against current parser behavior.
 - Add deterministic `draft -> spec` mapping rules and tests.
 - Keep AI provider integration behind the normalized intake boundary.
-- Keep optional skill layer separate from the intake/generator core and define provider adapters before any installer UI.
+- Keep optional skill layer separate from the intake/generator core while hardening generated install artifacts and provider-specific guidance.
 
 ## Next Three Tasks
-1. Prepare Web selection UI and provider recommendation rules on top of the current installer commands.
+1. Add richer provider-specific guidance and optional automation around generated skill install scripts.
 2. Decide persistent storage for feedback and generation support data.
 3. Split pending large changes into separate tracks:
    - AI tool independence (`PROJECT.md` / `CLAUDE.md` / `GEMINI.md`)
-   - skill layer installer / UI
+   - skill layer deeper automation
    - CI / docs
 
 ## After Phase 5
