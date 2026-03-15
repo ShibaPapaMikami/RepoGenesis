@@ -85,6 +85,8 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - 最終確認と ZIP 生成段で installer handoff command を表示・コピーできるようにした
   - 選択した Skill を local/remote 生成に流し、`.repogenesis/manifest.json` / `docs/runbooks/skill-install.md` / `skills/README.md` に残すようにした
   - 選択 Skill がある場合は `scripts/install-selected-skills.sh` を生成するようにした
+  - AI-first remote validation を app / generator 間で整合させ、`owner` 空・`domains` 空・security 自動補正のまま production ZIP 生成を再度成功させた
+  - production `v0.1.1 (41176d1)` で `repogenesis-test (9).zip` のダウンロード成功を確認した
 
 ## What Is Being Done Now
 - いまの主要テーマ:

@@ -16,6 +16,7 @@ Phase 6 / Hardening
 - After the timeout observation, a same-day retry on production succeeded again.
 - `相談結果を反映` flow is implemented and production-tested.
 - AI-first flow now restores from Step 1 correctly and production ZIP generation succeeded again on `v0.1.1 (5e344e8)`.
+- AI-first flow with curated skill selection, generated skill handoff, and relaxed remote validation succeeded on production `v0.1.1 (41176d1)`.
 - `かんたん入力` flow is implemented.
 - `facts / assumptions / open questions` review is implemented.
 - `open questions` can be edited in the UI.
@@ -25,6 +26,7 @@ Phase 6 / Hardening
 - Phase 5 UX scope is complete; remaining work is operational follow-up and later-phase separation.
 - Phase 6 intake contract hardening has started with a provider-independent draft contract refresh.
 - Skill layer now includes provider-aware manifest/registry design, CLI installer commands, Web curated selection UI, installer handoff, and generated output persistence for selected skills.
+- The latest production retry completed successfully with downloaded artifact `repogenesis-test (9).zip`.
 
 ## What This Phase Still Needs
 - Fix the provider-independent intake contract against current parser behavior.

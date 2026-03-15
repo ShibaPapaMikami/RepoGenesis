@@ -150,11 +150,11 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] `facts / assumptions / open questions` の 3 区分を導入
 
 ### Milestone D: Skill Layer Planning
-- [ ] skill registry item schema を定義
-- [ ] project manifest (`repogenesis.skills.json`) を provider-aware に定義
-- [ ] provider adapter (`codex` / `claude_code` / `gemini_cli`) を定義
-- [ ] `copy + pin` を前提に install/update/remove 契約を定義
-- [ ] `skills` は optional layer、generator core とは分離する
+- [x] skill registry item schema を定義
+- [x] project manifest (`repogenesis.skills.json`) を provider-aware に定義
+- [x] provider adapter (`codex` / `claude_code` / `gemini_cli`) を定義
+- [x] `copy + pin` を前提に install/update/remove 契約を定義
+- [x] `skills` は optional layer、generator core とは分離する
 
 ## Explicit Non-Goals (For Now)
 - [ ] Generator の知識注入機能を先に増やすこと
