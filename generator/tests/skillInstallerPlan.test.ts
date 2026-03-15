@@ -87,6 +87,36 @@ describe('skill installer plan', () => {
     ]);
   });
 
+  it('includes codex artifacts when codex is enabled on the project', () => {
+    const plan = planSkillInstall({
+      project: {
+        ...PROJECT,
+        tech: {
+          ...PROJECT.tech,
+          ai_tools: ['codex', 'claude_code'],
+        },
+      },
+      registryItem: REGISTRY_ITEM,
+      manifest: createEmptySkillsManifest(),
+    });
+
+    expect(plan.providers).toEqual(['codex', 'claude_code']);
+    expect(plan.artifacts).toEqual([
+      {
+        provider: 'codex',
+        artifactKind: 'skill',
+        sourcePath: 'codex/SKILL.md',
+        targetPath: 'skills/installed/repo-readiness-review/SKILL.md',
+      },
+      {
+        provider: 'claude_code',
+        artifactKind: 'skill',
+        sourcePath: 'claude/SKILL.md',
+        targetPath: '.claude/skills/repo-readiness-review/SKILL.md',
+      },
+    ]);
+  });
+
   it('warns when a skill is already in the manifest', () => {
     const plan = planSkillInstall({
       project: PROJECT,

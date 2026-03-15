@@ -47,6 +47,22 @@ describe('projectBriefSchema', () => {
     }
   });
 
+  it('should accept codex in ai_tools', () => {
+    const result = projectBriefSchema.safeParse(validBrief({
+      tech: {
+        ...validBrief().tech,
+        ai_tools: ['codex', 'claude_code'],
+        ai_tool: 'claude_cli',
+      },
+    }));
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.tech.ai_tools).toEqual(['codex', 'claude_code']);
+      expect(result.data.tech.ai_tool).toBe('claude_cli');
+      expect(result.data.tech.ai_tool_detail).toContain('Codex');
+    }
+  });
+
   it('should pass with legacy ai_tool only and normalize to ai_tools', () => {
     const brief = validBrief();
     delete (brief.tech as Record<string, unknown>).ai_tools;

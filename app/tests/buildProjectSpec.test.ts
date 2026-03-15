@@ -59,6 +59,16 @@ test('buildProjectSpec should map form state to ProjectSpec shape', () => {
   assert.equal(spec.tech.ai_tool, 'claude_cli');
 });
 
+test('buildProjectSpec should preserve codex in ai_tools', () => {
+  const state = makeState();
+  state.tech.ai_tools = ['codex', 'claude_code'];
+  const spec = buildProjectSpec(state);
+
+  assert.deepEqual(spec.tech.ai_tools, ['codex', 'claude_code']);
+  assert.equal(spec.tech.ai_tool, 'claude_cli');
+  assert.equal(spec.tech.ai_tool_detail.includes('Codex'), true);
+});
+
 test('buildProjectSpec should set ISO created_at timestamp', () => {
   const spec = buildProjectSpec(makeState());
   assert.ok(spec.project.created_at);

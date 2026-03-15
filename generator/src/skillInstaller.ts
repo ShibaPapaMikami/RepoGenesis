@@ -47,6 +47,7 @@ function manifestPath(projectRoot: string): string {
 
 function buildInstallerProject(selectedProviders?: SkillProvider[]): ProjectBrief {
   const ai_tools = Array.from(new Set([
+    ...(selectedProviders?.includes('codex') ? ['codex' as const] : []),
     ...(selectedProviders?.includes('claude_code') ? ['claude_code' as const] : []),
     ...(selectedProviders?.includes('gemini_cli') ? ['gemini_cli' as const] : []),
   ]));

@@ -3,7 +3,7 @@ import { deriveLegacyAiTool, deriveLegacyAiToolDetail, type AiTool, type LegacyA
 
 const domainEnum = z.enum(['web', 'mobile', 'unity', 'xr', 'ai', 'infra', 'cli', 'iot']);
 const primaryLanguageEnum = z.enum(['typescript', 'python', 'csharp', 'swift', 'go', 'rust', 'kotlin', 'other']);
-const aiToolEnum = z.enum(['claude_code', 'gemini_cli', 'other']);
+const aiToolEnum = z.enum(['codex', 'claude_code', 'gemini_cli', 'other']);
 const legacyAiToolEnum = z.enum(['claude_cli', 'other']);
 const securityLevelEnum = z.enum(['low', 'medium', 'high']);
 const repoTypeEnum = z.enum(['single', 'multi']);

@@ -80,6 +80,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - manifest write/remove の dry-run primitive を generator 側に追加した
   - provider-aware skill installer (`list/add/remove`) を generator CLI に追加した
   - registry sample から project へ artifact copy と manifest 更新が通る test を追加した
+  - `ai_tools[]` に `codex` を追加し、app export / generator schema / installer provider resolution を通るようにした
 
 ## What Is Being Done Now
 - いまの主要テーマ:
@@ -167,4 +168,4 @@ Immediate next:
 - Phase 6 に向けて intake contract の境界を整理する
 - feedback の永続保存先を決める
 - AI tool 非依存化と optional skill layer を別差分で整理する
-- provider-aware installer の provider 自動解決と Web selection 前提を整理する
+- Web selection 前提と provider 推奨ロジックを整理する

@@ -31,6 +31,9 @@ export interface SkillRemovalPlan {
 
 function defaultProvidersFromProject(project: ProjectBrief): SkillProvider[] {
   const providers: SkillProvider[] = ['tool_agnostic'];
+  if (project.tech.ai_tools.includes('codex')) {
+    providers.push('codex');
+  }
   if (project.tech.ai_tools.includes('claude_code')) {
     providers.push('claude_code');
   }

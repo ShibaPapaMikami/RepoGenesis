@@ -1,4 +1,4 @@
-export const AI_TOOLS = ['claude_code', 'gemini_cli', 'other'] as const;
+export const AI_TOOLS = ['codex', 'claude_code', 'gemini_cli', 'other'] as const;
 export type AiTool = typeof AI_TOOLS[number];
 
 export const LEGACY_AI_TOOLS = ['claude_cli', 'other'] as const;
@@ -11,6 +11,7 @@ interface TechLike {
 }
 
 const AI_TOOL_LABELS: Record<Exclude<AiTool, 'other'>, string> = {
+  codex: 'Codex',
   claude_code: 'Claude Code',
   gemini_cli: 'Gemini CLI',
 };

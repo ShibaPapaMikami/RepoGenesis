@@ -26,10 +26,11 @@ export const LANGUAGE_LABELS: Record<PrimaryLanguage, string> = {
   other: 'その他',
 };
 
-export const AI_TOOLS = ['claude_code', 'gemini_cli', 'other'] as const;
+export const AI_TOOLS = ['codex', 'claude_code', 'gemini_cli', 'other'] as const;
 export type AiTool = typeof AI_TOOLS[number];
 
 export const AI_TOOL_LABELS: Record<AiTool, string> = {
+  codex: 'Codex',
   claude_code: 'Claude Code',
   gemini_cli: 'Gemini CLI',
   other: 'その他',

@@ -33,7 +33,7 @@ Phase 6 / Hardening
 - Keep optional skill layer separate from the intake/generator core and define provider adapters before any installer UI.
 
 ## Next Three Tasks
-1. Improve provider auto-resolution and prepare Web selection UI on top of the current installer commands.
+1. Prepare Web selection UI and provider recommendation rules on top of the current installer commands.
 2. Decide persistent storage for feedback and generation support data.
 3. Split pending large changes into separate tracks:
    - AI tool independence (`PROJECT.md` / `CLAUDE.md` / `GEMINI.md`)
