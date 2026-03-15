@@ -74,6 +74,10 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - skill layer contract を provider-aware に更新し、Codex / Claude Code / Gemini CLI を並列で扱う設計に整理した
   - generator 側に provider-aware skill manifest / registry schema を追加した
   - `skills/registry/` に curated sample (`repo-readiness-review`) を追加し、schema で検証する test を追加した
+  - registry filesystem loader と stable-only selectable list を generator 側に追加した
+  - installer contract を `docs/SKILL_INSTALLER_CONTRACT.md` として分離した
+  - `add` 向けの dry-run installer plan primitive を generator 側に追加した
+  - manifest write/remove の dry-run primitive を generator 側に追加した
 
 ## What Is Being Done Now
 - いまの主要テーマ:
@@ -161,4 +165,4 @@ Immediate next:
 - Phase 6 に向けて intake contract の境界を整理する
 - feedback の永続保存先を決める
 - AI tool 非依存化と optional skill layer を別差分で整理する
-- provider-aware installer contract と registry loading rule を追加する
+- provider-aware installer の dry-run primitive を追加する

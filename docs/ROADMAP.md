@@ -120,6 +120,7 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [ ] Define central skill registry metadata schema
 - [ ] Define provider-aware `repogenesis.skills.json` project manifest schema
 - [ ] Define provider adapter contract for Codex / Claude Code / Gemini CLI
+- [ ] Define registry loading rules and selectable status filters
 - [ ] Generate empty `skills/README.md` and manifest on project bootstrap
 - [ ] Keep install mode as `copy + pin`
 - [ ] Add manual install runbook before any installer code

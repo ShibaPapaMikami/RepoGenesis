@@ -13,6 +13,16 @@ export {
 export {
   skillRegistryItemSchema,
 } from './skillRegistrySchema';
+export {
+  listSelectableSkillRegistryItems,
+  loadSkillRegistry,
+} from './skillRegistryLoader';
+export {
+  applySkillInstallPlanToManifest,
+  applySkillRemovalToManifest,
+  planSkillInstall,
+  planSkillRemoval,
+} from './skillInstallerPlan';
 export type {
   ProjectBrief,
   ProjectSpec,

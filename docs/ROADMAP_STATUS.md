@@ -33,7 +33,7 @@ Phase 6 / Hardening
 - Keep optional skill layer separate from the intake/generator core and define provider adapters before any installer UI.
 
 ## Next Three Tasks
-1. Add installer contract and curated registry loading rules on top of the provider-aware schema.
+1. Add actual file-copy and manifest-write installer commands on top of the dry-run primitives.
 2. Decide persistent storage for feedback and generation support data.
 3. Split pending large changes into separate tracks:
    - AI tool independence (`PROJECT.md` / `CLAUDE.md` / `GEMINI.md`)

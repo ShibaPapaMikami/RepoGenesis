@@ -188,10 +188,11 @@ project repository
 1. registry metadata schema
 2. project manifest schema
 3. provider adapter contract
-4. empty manifest / README の generator 出力
-5. manual install runbook
-6. CLI installer
-7. Web UI での curated selection
+4. registry loading rule
+5. empty manifest / README の generator 出力
+6. manual install runbook
+7. CLI installer
+8. Web UI での curated selection
 
 ## Immediate Next Step
 最初に着手すべきなのは installer ではなく、
