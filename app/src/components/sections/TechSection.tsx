@@ -24,8 +24,8 @@ export function TechSection({ state, dispatch, errors }: TechSectionProps) {
       <h2>技術情報</h2>
 
       <div className="form-row">
-        <label>技術ドメイン *（1つ以上選択）</label>
-        <p className="hint">プロダクトの中心に近い領域を選んでください。迷う場合は利用者に見える機能寄りで選ぶと十分です。</p>
+        <label>技術ドメイン（任意・複数選択可）</label>
+        <p className="hint">プロダクトの中心に近い領域を選んでください。未確定なら空のまま進めて、後で見直せます。</p>
         <div className="checkbox-group">
           {DOMAINS.map((domain) => (
             <label key={domain} className="checkbox-label">

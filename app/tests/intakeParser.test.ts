@@ -12,6 +12,7 @@ import {
 import { createIntakeEnvelope } from '../src/utils/intakeProvider.ts';
 import type { FormState } from '../src/state/actions.ts';
 import { getConsultationTestTemplate } from './fixtures/consultationTemplates.ts';
+import { validate } from '../src/utils/validation.ts';
 
 function makeState(): FormState {
   return {
@@ -224,6 +225,14 @@ test('parseConsultationIntake should avoid false positive domains for calendar a
   assert.equal(draft.suggestedState.project.name.includes('文字起こし'), true);
   assert.equal(draft.extracted.integrations.includes('Google Calendar（会議と議事録の紐付け）'), true);
   assert.equal(draft.review.openQuestions.some((item) => item.includes('ツールのUI形式')), true);
+});
+
+test('validate should allow missing owner and domains for consultation-driven drafts', () => {
+  const draft = parseConsultationIntake(getConsultationTestTemplate('meeting_transcription_internal_tool'), makeState());
+  const errors = validate(draft.suggestedState);
+
+  assert.equal(errors['project.owner'], undefined);
+  assert.equal(errors['tech.domains'], undefined);
 });
 
 test('parseConsultationIntake should apply candidate inputs for domain security and repo hints', () => {

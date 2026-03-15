@@ -1,5 +1,5 @@
 import type { FormState } from '../state/actions';
-import { isValidSlug } from './slugify';
+import { isValidSlug } from './slugify.ts';
 
 /**
  * 全フィールドのバリデーション。エラーを Record<string, string> で返す。
@@ -23,14 +23,7 @@ export function validate(state: FormState): Record<string, string> {
   } else if (state.project.description.trim().length < 10) {
     errors['project.description'] = '概要は10文字以上で入力してください';
   }
-  if (!state.project.owner.trim()) {
-    errors['project.owner'] = '責任者は必須です';
-  }
-
   // Tech
-  if (state.tech.domains.length === 0) {
-    errors['tech.domains'] = '技術ドメインを1つ以上選択してください';
-  }
   if (state.tech.ai_tools.length === 0) {
     errors['tech.ai_tools'] = 'AI開発ツールを1つ以上選択してください';
   }

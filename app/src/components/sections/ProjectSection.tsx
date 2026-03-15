@@ -62,8 +62,8 @@ export function ProjectSection({ state, dispatch, errors }: ProjectSectionProps)
       </div>
 
       <div className="form-row">
-        <label htmlFor="project-owner">責任者 *</label>
-        <p className="hint">最終判断や要件確認を持つ人を書いてください。個人名でも部署名でも構いません。</p>
+        <label htmlFor="project-owner">責任者（任意）</label>
+        <p className="hint">最終判断や要件確認を持つ人を書いてください。未確定なら空でも進められます。</p>
         <p className="hint">記入例: Gugenka 営業企画チーム</p>
         <input
           id="project-owner"
