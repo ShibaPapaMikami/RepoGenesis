@@ -10,6 +10,8 @@ import {
   saveConsultationDraft,
   loadConsultationDraft,
   clearConsultationState,
+  loadSelectedSkills,
+  saveSelectedSkills,
 } from './utils/storage';
 import { ProjectSection } from './components/sections/ProjectSection';
 import { TechSection } from './components/sections/TechSection';
@@ -27,6 +29,7 @@ import {
   type ConsultationPromptVariant,
   type IntakeDraft,
 } from './utils/intakeParser';
+import { getRecommendedSkills, SKILL_CATALOG } from './data/skillCatalog.ts';
 import './App.css';
 
 declare const __APP_RELEASE__: string;
@@ -46,6 +49,7 @@ function App() {
   const [consultationDraft, setConsultationDraft] = useState<IntakeDraft | null>(loadConsultationDraft());
   const [consultationPromptVariant, setConsultationPromptVariant] = useState<ConsultationPromptVariant>('internal_tool');
   const [consultationMessage, setConsultationMessage] = useState<string | null>(null);
+  const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>(loadSelectedSkills());
   const [promptCopied, setPromptCopied] = useState(false);
   const [guidedStep, setGuidedStep] = useState<GuidedStep>(() => deriveInitialGuidedStep(loadConsultationText(), loadConsultationDraft()));
   const [showAdvancedDetail, setShowAdvancedDetail] = useState(false);
@@ -97,6 +101,10 @@ function App() {
     saveConsultationDraft(consultationDraft);
   }, [consultationDraft]);
 
+  useEffect(() => {
+    saveSelectedSkills(selectedSkillIds);
+  }, [selectedSkillIds]);
+
   useEffect(() => () => {
     if (promptCopyTimerRef.current) {
       clearTimeout(promptCopyTimerRef.current);
@@ -116,6 +124,8 @@ function App() {
   const showOptionsSection = draftApplied && guidedStep === 'options';
   const showReviewSection = draftApplied && guidedStep === 'review';
   const showOutputSection = draftApplied && activeStep === 'result';
+  const recommendedSkills = getRecommendedSkills(state.tech.ai_tools);
+  const selectedSkills = SKILL_CATALOG.filter((item) => selectedSkillIds.includes(item.id));
 
   const recommendationNotes = [
     suggestedRepoType === 'multi'
@@ -130,6 +140,14 @@ function App() {
       ? `外部連携候補: ${consultationDraft.extracted.integrations.join(', ')}`
       : '外部連携は未確定です。生成後に別タスクとして切り出しても進められます。',
   ];
+
+  function toggleSkillSelection(skillId: string) {
+    setSelectedSkillIds((current) =>
+      current.includes(skillId)
+        ? current.filter((id) => id !== skillId)
+        : [...current, skillId],
+    );
+  }
 
   function scrollToSection(ref: { current: HTMLElement | null }) {
     requestAnimationFrame(() => {
@@ -363,6 +381,38 @@ function App() {
               </ul>
             </div>
 
+            <div className="consultation-summary skill-selection">
+              <p><strong>推奨 Skill</strong></p>
+              <p className="consultation-lead">
+                このプロジェクトに後から追加しやすい curated skill を選びます。いまは生成 ZIP へ自動同梱せず、project 作成後に installer で追加する前提です。
+              </p>
+              <div className="skill-grid">
+                {recommendedSkills.length > 0 ? recommendedSkills.map((skill) => {
+                  const selected = selectedSkillIds.includes(skill.id);
+                  return (
+                    <label key={skill.id} className={`skill-card${selected ? ' skill-card-selected' : ''}`}>
+                      <div className="skill-card-header">
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => toggleSkillSelection(skill.id)}
+                        />
+                        <div>
+                          <strong>{skill.name}</strong>
+                          <p>{skill.description}</p>
+                        </div>
+                      </div>
+                      <p className="skill-meta">
+                        source: {skill.sourceType} / risk: {skill.riskLevel} / providers: {skill.providers.join(', ')}
+                      </p>
+                    </label>
+                  );
+                }) : (
+                  <p className="consultation-lead">現在の AI tool 設定に一致する curated skill はまだありません。</p>
+                )}
+              </div>
+            </div>
+
             <div className="output-actions">
               <button
                 type="button"
@@ -431,6 +481,10 @@ function App() {
 
             <div className="consultation-summary">
               <p><strong>説明候補:</strong> {summaryDescription}</p>
+            </div>
+
+            <div className="consultation-summary">
+              <p><strong>選択した Skill:</strong> {selectedSkills.length > 0 ? selectedSkills.map((skill) => skill.name).join(', ') : 'なし'}</p>
             </div>
 
             {!showAdvancedDetail && (
@@ -556,6 +610,7 @@ function App() {
             authSession={authSession}
             consultationDraft={consultationDraft}
             consultationPromptVariant={consultationPromptVariant}
+            selectedSkills={selectedSkills}
           />
         )}
 

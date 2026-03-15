@@ -11,6 +11,7 @@ import {
 } from '../../utils/generateRepository';
 import { downloadErrorReport, submitFeedback, type FeedbackType, type ErrorReportPayload } from '../../utils/feedback';
 import { assessIntakeReadiness, getConsultationReviewHints, type ConsultationPromptVariant, type IntakeDraft } from '../../utils/intakeParser';
+import type { SkillCatalogItem } from '../../data/skillCatalog.ts';
 
 interface JsonOutputProps {
   sectionRef?: RefObject<HTMLElement | null>;
@@ -28,6 +29,7 @@ interface JsonOutputProps {
   };
   consultationDraft: IntakeDraft | null;
   consultationPromptVariant: ConsultationPromptVariant;
+  selectedSkills?: SkillCatalogItem[];
 }
 
 export function JsonOutput({
@@ -43,6 +45,7 @@ export function JsonOutput({
   authSession,
   consultationDraft,
   consultationPromptVariant,
+  selectedSkills = [],
 }: JsonOutputProps) {
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -252,6 +255,22 @@ export function JsonOutput({
               </ul>
             </div>
           )}
+        </div>
+      )}
+
+      {selectedSkills.length > 0 && (
+        <div className="generation-readiness generation-readiness-info">
+          <h3>選択した Skill</h3>
+          <ul>
+            {selectedSkills.map((skill) => (
+              <li key={skill.id}>
+                <strong>{skill.name}</strong> ({skill.sourceType}, {skill.version}) - {skill.providers.join(', ')}
+              </li>
+            ))}
+          </ul>
+          <p className="generation-readiness-note">
+            生成される ZIP にはまだ自動同梱されません。project 作成後に installer で追加する前提です。
+          </p>
         </div>
       )}
 

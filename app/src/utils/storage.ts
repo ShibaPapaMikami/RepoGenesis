@@ -8,6 +8,7 @@ const CONSULTATION_TEXT_KEY = 'consultation_input_text';
 const CONSULTATION_DRAFT_KEY = 'consultation_input_draft';
 const SIMPLE_INPUT_KEY = 'simple_input_state';
 const INPUT_MODE_KEY = 'consultation_input_mode';
+const SELECTED_SKILLS_KEY = 'selected_skill_ids';
 
 export function saveDraft(state: FormState): void {
   try {
@@ -118,8 +119,28 @@ export function clearConsultationState(): void {
     localStorage.removeItem(CONSULTATION_DRAFT_KEY);
     localStorage.removeItem(SIMPLE_INPUT_KEY);
     localStorage.removeItem(INPUT_MODE_KEY);
+    localStorage.removeItem(SELECTED_SKILLS_KEY);
   } catch {
     // silently ignore
+  }
+}
+
+export function saveSelectedSkills(skillIds: string[]): void {
+  try {
+    localStorage.setItem(SELECTED_SKILLS_KEY, JSON.stringify(skillIds));
+  } catch {
+    // silently ignore
+  }
+}
+
+export function loadSelectedSkills(): string[] {
+  try {
+    const raw = localStorage.getItem(SELECTED_SKILLS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+  } catch {
+    return [];
   }
 }
 
