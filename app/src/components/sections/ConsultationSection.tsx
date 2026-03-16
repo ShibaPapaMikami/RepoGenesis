@@ -4,10 +4,14 @@ import {
   type ConsultationPromptVariant,
   type IntakeDraft,
 } from '../../utils/intakeParser';
+import { CONSULTATION_TEST_TEMPLATES } from '../../data/consultationTestTemplates.ts';
 
 interface ConsultationSectionProps {
   promptVariant: ConsultationPromptVariant;
   onChangePromptVariant: (value: ConsultationPromptVariant) => void;
+  selectedTestTemplateId: string;
+  onChangeTestTemplateId: (value: string) => void;
+  onApplyTestTemplate: () => void;
   intakeText: string;
   onChangeText: (value: string) => void;
   onCopyPrompt: () => void;
@@ -22,6 +26,9 @@ interface ConsultationSectionProps {
 export function ConsultationSection({
   promptVariant,
   onChangePromptVariant,
+  selectedTestTemplateId,
+  onChangeTestTemplateId,
+  onApplyTestTemplate,
   intakeText,
   onChangeText,
   onCopyPrompt,
@@ -59,6 +66,34 @@ export function ConsultationSection({
           <p className="hint consultation-variant-hint">
             {CONSULTATION_PROMPT_OPTIONS.find((option) => option.id === promptVariant)?.description}
           </p>
+        </div>
+        <div className="form-row">
+          <label htmlFor="consultationTestTemplate">固定テスト文章</label>
+          <select
+            id="consultationTestTemplate"
+            value={selectedTestTemplateId}
+            onChange={(e) => onChangeTestTemplateId(e.target.value)}
+          >
+            <option value="">選択してください</option>
+            {CONSULTATION_TEST_TEMPLATES.map((template) => (
+              <option key={template.id} value={template.id}>
+                {template.label}
+              </option>
+            ))}
+          </select>
+          <p className="hint consultation-variant-hint">
+            Antigravity や本番確認で同じ入力を再利用したい時に使います。
+          </p>
+          <div className="output-actions">
+            <button
+              type="button"
+              onClick={onApplyTestTemplate}
+              className="btn-secondary"
+              disabled={!selectedTestTemplateId}
+            >
+              テスト文章を貼り付け欄に反映
+            </button>
+          </div>
         </div>
       </div>
 

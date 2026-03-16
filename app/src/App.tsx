@@ -30,6 +30,7 @@ import {
   type IntakeDraft,
 } from './utils/intakeParser';
 import { getRecommendedSkills, SKILL_CATALOG } from './data/skillCatalog.ts';
+import { CONSULTATION_TEST_TEMPLATES } from './data/consultationTestTemplates.ts';
 import './App.css';
 
 declare const __APP_RELEASE__: string;
@@ -48,6 +49,7 @@ function App() {
   const [consultationText, setConsultationText] = useState(loadConsultationText());
   const [consultationDraft, setConsultationDraft] = useState<IntakeDraft | null>(loadConsultationDraft());
   const [consultationPromptVariant, setConsultationPromptVariant] = useState<ConsultationPromptVariant>('internal_tool');
+  const [selectedTestTemplateId, setSelectedTestTemplateId] = useState('');
   const [consultationMessage, setConsultationMessage] = useState<string | null>(null);
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>(loadSelectedSkills());
   const [promptCopied, setPromptCopied] = useState(false);
@@ -198,6 +200,18 @@ function App() {
     setResultPhase('idle');
   }
 
+  function handleApplyConsultationTestTemplate() {
+    const template = CONSULTATION_TEST_TEMPLATES.find((item) => item.id === selectedTestTemplateId);
+    if (!template) return;
+    setConsultationPromptVariant(template.variant);
+    setConsultationText(template.content);
+    setConsultationDraft(null);
+    setConsultationMessage(`固定テスト文章「${template.label}」を貼り付け欄に反映しました。`);
+    setGuidedStep('paste');
+    setDraftApplied(false);
+    setShowAdvancedDetail(false);
+  }
+
   function applyConsultationDraft(nextStep: 'options' | 'review', openAdvancedDetail = false) {
     if (!consultationDraft) return;
     dispatch({ type: 'RESTORE_DRAFT', payload: consultationDraft.suggestedState });
@@ -249,6 +263,9 @@ function App() {
               <ConsultationSection
                 promptVariant={consultationPromptVariant}
                 onChangePromptVariant={setConsultationPromptVariant}
+                selectedTestTemplateId={selectedTestTemplateId}
+                onChangeTestTemplateId={setSelectedTestTemplateId}
+                onApplyTestTemplate={handleApplyConsultationTestTemplate}
                 intakeText={consultationText}
                 onChangeText={setConsultationText}
                 onCopyPrompt={handleCopyConsultationPrompt}
