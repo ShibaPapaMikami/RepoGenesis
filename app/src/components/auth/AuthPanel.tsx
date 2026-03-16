@@ -217,10 +217,29 @@ export function AuthPanel({ enabled, onSessionChange, compact = false }: AuthPan
       setMessage('認証 UI がまだ読み込まれていません');
       return;
     }
+    if (status === 'authenticated' && email) {
+      setMessage('ログイン済みです。ZIP 生成を実行できます。');
+      return;
+    }
     setIsBusy(true);
     setMessage('Google ログインを開始します...');
     try {
       await window.GugenkaAuth.loginWithGoogle();
+      try {
+        const session = await fetchSessionState();
+        syncedEmailRef.current = session.email;
+        setEmail(session.email);
+        onSessionChange(session);
+        if (session.authenticated) {
+          setStatus('authenticated');
+          setMessage('ログイン済みです。ZIP 生成を実行できます。');
+        } else {
+          setStatus('ready');
+          setMessage('ログインすると ZIP 生成が有効になります。');
+        }
+      } catch {
+        setMessage('Google ログインを開始しました。認証状態を確認しています...');
+      }
     } catch (error) {
       setStatus('error');
       setMessage('Google ログインに失敗しました。もう一度お試しください。');
@@ -274,7 +293,7 @@ export function AuthPanel({ enabled, onSessionChange, compact = false }: AuthPan
                 <button
                   type="button"
                   onClick={handleLogin}
-                  disabled={isBusy}
+                  disabled={isBusy || status === 'authenticated'}
                   className="btn-primary"
                 >
                   {isBusy ? '処理中...' : 'Google でログイン'}
@@ -318,7 +337,7 @@ export function AuthPanel({ enabled, onSessionChange, compact = false }: AuthPan
             <button
               type="button"
               onClick={handleLogin}
-              disabled={isBusy}
+              disabled={isBusy || status === 'authenticated'}
               className="btn-primary"
             >
               {isBusy ? '処理中...' : 'Google でログイン'}

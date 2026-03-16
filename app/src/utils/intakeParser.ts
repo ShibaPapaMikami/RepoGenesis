@@ -343,6 +343,20 @@ const PROJECT_KEYWORD_RULES: ProjectKeywordRule[] = [
   { pattern: /音声|録音/i, label: '音声' },
   { pattern: /文字起こし/i, label: '文字起こし' },
   { pattern: /議事録/i, label: '議事録' },
+  { pattern: /契約書|契約/i, label: '契約書' },
+  { pattern: /レビュー/i, label: 'レビュー' },
+  { pattern: /依頼/i, label: '依頼' },
+  { pattern: /法務/i, label: '法務' },
+  { pattern: /来場者/i, label: '来場者' },
+  { pattern: /収集/i, label: '収集' },
+  { pattern: /工場/i, label: '工場' },
+  { pattern: /設備/i, label: '設備' },
+  { pattern: /メンテナンス|保守|点検/i, label: 'メンテ' },
+  { pattern: /記録/i, label: '記録' },
+  { pattern: /大学/i, label: '大学' },
+  { pattern: /授業/i, label: '授業' },
+  { pattern: /質問/i, label: '質問' },
+  { pattern: /ボット/i, label: 'ボット' },
   { pattern: /案件/i, label: '案件' },
   { pattern: /相談/i, label: '相談' },
   { pattern: /進行/i, label: '進行' },
@@ -379,7 +393,29 @@ function normalizeProjectTitleSentence(text: string): string {
     .trim();
 }
 
+function looksLikeProjectTitle(candidate: string): boolean {
+  if (/(ツール|システム|アプリ|サービス|ボット|ダッシュボード|管理画面)$/u.test(candidate)) {
+    return true;
+  }
+  const keywordMatches = PROJECT_KEYWORD_RULES.filter((rule) => rule.pattern.test(candidate));
+  return keywordMatches.length >= 2;
+}
+
+function extractQuotedProjectName(text: string): string | null {
+  const matches = text.matchAll(/[「『"]([^「」『』"]{2,40})[」』"]/gu);
+  for (const match of matches) {
+    const normalized = normalizeProjectTitleSentence(match[1]);
+    if (normalized && looksLikeProjectTitle(normalized)) {
+      return normalized;
+    }
+  }
+  return null;
+}
+
 function compactProjectName(source: string, context: string): string {
+  const quotedName = extractQuotedProjectName(source) || extractQuotedProjectName(context);
+  if (quotedName) return quotedName;
+
   const normalized = normalizeProjectTitleSentence(source);
   if (normalized.length <= 24) return normalized;
 

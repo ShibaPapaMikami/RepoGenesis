@@ -13,6 +13,7 @@ import { createIntakeEnvelope } from '../src/utils/intakeProvider.ts';
 import type { FormState } from '../src/state/actions.ts';
 import { getConsultationTestTemplate } from './fixtures/consultationTemplates.ts';
 import { validate } from '../src/utils/validation.ts';
+import { CONSULTATION_TEST_TEMPLATES } from '../src/data/consultationTestTemplates.ts';
 
 function makeState(): FormState {
   return {
@@ -215,9 +216,19 @@ test('parseConsultationIntake should prefer consultation-derived project fields 
   assert.equal(draft.suggestedState.project.name.includes('文字起こし'), true);
   assert.equal(draft.suggestedState.project.name.length <= 24, true);
   assert.notEqual(draft.suggestedState.project.name, 'Old Test Project');
-  assert.equal(draft.suggestedState.project.slug, 'project-draft');
+  assert.equal(draft.suggestedState.project.slug, 'internal-meeting-audio-transcription-tool');
   assert.equal(draft.suggestedState.project.description, '議事録作成に時間がかかる');
   assert.equal(draft.suggestedState.project.owner, '');
+});
+
+test('parseConsultationIntake should prefer quoted project titles from fixed templates', () => {
+  const contractReview = CONSULTATION_TEST_TEMPLATES.find((template) => template.id === 'test_contract_review');
+  assert.ok(contractReview);
+
+  const draft = parseConsultationIntake(contractReview.content, makeState());
+
+  assert.equal(draft.suggestedState.project.name, '契約書レビュー依頼管理システム');
+  assert.equal(draft.suggestedState.project.slug, 'contract-review-request-management-system');
 });
 
 test('parseConsultationIntake should avoid false positive domains for calendar and transcription text', () => {
