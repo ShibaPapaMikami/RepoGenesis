@@ -12,7 +12,9 @@ import {
 import { downloadErrorReport, submitFeedback, type FeedbackType, type ErrorReportPayload } from '../../utils/feedback';
 import { assessIntakeReadiness, getConsultationReviewHints, type ConsultationPromptVariant, type IntakeDraft } from '../../utils/intakeParser';
 import {
-  formatProviderSupportLabel,
+  formatSkillProviderNames,
+  formatSkillProviderSupportSummary,
+  SKILL_RISK_LABELS,
   type SkillCatalogItem,
 } from '../../data/skillCatalog.ts';
 import { buildSkillInstallHandoffText } from '../../utils/skillInstallHandoff.ts';
@@ -272,32 +274,26 @@ export function JsonOutput({
 
       {selectedSkills.length > 0 && (
         <div className="generation-readiness generation-readiness-info">
-          <h3>選択した Skill</h3>
+          <h3>選択した AI ガイド</h3>
           <ul>
             {selectedSkills.map((skill) => (
               <li key={skill.id}>
                 <strong>{skill.name}</strong> ({skill.sourceLabel}, {skill.version})
-                <div className="skill-support-badges">
-                  {skill.providerSupport.map((entry) => (
-                    <span
-                      key={`${skill.id}-${entry.provider}`}
-                      className={`skill-support-pill skill-support-${entry.supportType}`}
-                    >
-                      {formatProviderSupportLabel(entry)}
-                    </span>
-                  ))}
+                <div className="skill-provider-line"><strong>使えるAI:</strong> {formatSkillProviderNames(skill)}</div>
+                <div className="generation-readiness-note">
+                  提供形態: {formatSkillProviderSupportSummary(skill)} / risk: {SKILL_RISK_LABELS[skill.riskLevel]}
                 </div>
               </li>
             ))}
           </ul>
           {generationMode === 'remote' ? (
             <p className="generation-readiness-note">
-              選択した Skill は生成 ZIP に同梱されます。初回セットアップで追加コマンドを実行する必要はありません。
+              選んだ AI ガイドのファイルは ZIP に入っています。これは自動機能ではなく、解凍後に対応する AI ツールでこの project を開いた時に参照するためのものです。何もしなくても勝手に動くわけではありません。
             </p>
           ) : (
             <>
               <p className="generation-readiness-note">
-                ローカル ZIP ではまだ自動同梱されません。必要な場合は ZIP 展開後に install script を使って追加してください。
+                このモードではまだ ZIP へ自動同梱されません。必要な場合だけ、ZIP 展開後に追加してください。
               </p>
               <div className="installer-handoff">
                 <p><strong>追加コマンド例</strong></p>

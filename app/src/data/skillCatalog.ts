@@ -4,6 +4,7 @@ export type SkillProvider = 'codex' | 'claude_code' | 'gemini_cli' | 'tool_agnos
 export type SkillSourceType = 'official' | 'curated' | 'internal';
 export type SkillRiskLevel = 'low' | 'medium' | 'high';
 export type SkillProviderSupportType = 'official' | 'curated';
+export type SkillSelectionStage = 'first' | 'later';
 
 export interface SkillProviderSupport {
   provider: SkillProvider;
@@ -14,12 +15,14 @@ export interface SkillCatalogItem {
   id: string;
   name: string;
   description: string;
+  whenToUse: string;
   owner: string;
   version: string;
   sourceType: SkillSourceType;
   sourceLabel: string;
   sourceUrl?: string;
   riskLevel: SkillRiskLevel;
+  selectionStage: SkillSelectionStage;
   providers: SkillProvider[];
   providerSupport: SkillProviderSupport[];
   tags: string[];
@@ -34,7 +37,13 @@ export const SKILL_PROVIDER_LABELS: Record<SkillProvider, string> = {
 
 export const SKILL_PROVIDER_SUPPORT_LABELS: Record<SkillProviderSupportType, string> = {
   official: '公式',
-  curated: 'RepoGenesis対応',
+  curated: 'RepoGenesis整備',
+};
+
+export const SKILL_RISK_LABELS: Record<SkillRiskLevel, string> = {
+  low: '低',
+  medium: '中',
+  high: '高',
 };
 
 export const SKILL_CATALOG: SkillCatalogItem[] = [
@@ -42,11 +51,13 @@ export const SKILL_CATALOG: SkillCatalogItem[] = [
     id: 'repo-readiness-review',
     name: 'Repo Readiness Review',
     description: '生成前後に、構成の抜け・仮置き・運用ギャップをレビューする skill です。',
+    whenToUse: 'まず最初に、要件や構成の抜け漏れを確認したい時',
     owner: 'repogenesis',
     version: '0.1.0',
     sourceType: 'curated',
-    sourceLabel: 'RepoGenesis curated',
+    sourceLabel: 'RepoGenesis整備',
     riskLevel: 'low',
+    selectionStage: 'first',
     providers: ['codex', 'claude_code', 'gemini_cli'],
     providerSupport: [
       { provider: 'codex', supportType: 'curated' },
@@ -59,12 +70,14 @@ export const SKILL_CATALOG: SkillCatalogItem[] = [
     id: 'gh-fix-ci',
     name: 'GH Fix CI',
     description: 'GitHub Actions の失敗ジョブを切り分けて、最小修正へ進める skill です。',
+    whenToUse: 'CI や GitHub Actions が失敗した時',
     owner: 'openai',
     version: '0.1.0',
     sourceType: 'official',
-    sourceLabel: 'OpenAI official skills',
+    sourceLabel: 'OpenAI公式',
     sourceUrl: 'https://github.com/openai/skills/tree/main/skills/.curated/gh-fix-ci',
     riskLevel: 'low',
+    selectionStage: 'later',
     providers: ['codex', 'claude_code', 'gemini_cli'],
     providerSupport: [
       { provider: 'codex', supportType: 'official' },
@@ -77,12 +90,14 @@ export const SKILL_CATALOG: SkillCatalogItem[] = [
     id: 'playwright',
     name: 'Playwright Browser QA',
     description: 'ブラウザ操作と画面確認をまとめて進める UI QA 向け skill です。',
+    whenToUse: '画面の動きや表示を AI と一緒に確認したい時',
     owner: 'openai',
     version: '0.1.0',
     sourceType: 'official',
-    sourceLabel: 'OpenAI official skills',
+    sourceLabel: 'OpenAI公式',
     sourceUrl: 'https://github.com/openai/skills/tree/main/skills/.curated/playwright',
     riskLevel: 'low',
+    selectionStage: 'later',
     providers: ['codex', 'claude_code', 'gemini_cli'],
     providerSupport: [
       { provider: 'codex', supportType: 'official' },
@@ -95,12 +110,14 @@ export const SKILL_CATALOG: SkillCatalogItem[] = [
     id: 'vercel-deploy',
     name: 'Vercel Deploy Check',
     description: 'Vercel 向けの build / env / production deploy 確認を進める skill です。',
+    whenToUse: 'Vercel 公開前後の状態を確認したい時',
     owner: 'openai',
     version: '0.1.0',
     sourceType: 'official',
-    sourceLabel: 'OpenAI official skills',
+    sourceLabel: 'OpenAI公式',
     sourceUrl: 'https://github.com/openai/skills/tree/main/skills/.curated/vercel-deploy',
     riskLevel: 'medium',
+    selectionStage: 'later',
     providers: ['codex', 'claude_code', 'gemini_cli'],
     providerSupport: [
       { provider: 'codex', supportType: 'official' },
@@ -113,12 +130,14 @@ export const SKILL_CATALOG: SkillCatalogItem[] = [
     id: 'render-deploy',
     name: 'Render Deploy Check',
     description: 'Render 向けの service 設定・healthcheck・deploy 確認を進める skill です。',
+    whenToUse: 'Render の API や backend の公開状態を確認したい時',
     owner: 'openai',
     version: '0.1.0',
     sourceType: 'official',
-    sourceLabel: 'OpenAI official skills',
+    sourceLabel: 'OpenAI公式',
     sourceUrl: 'https://github.com/openai/skills/tree/main/skills/.curated/render-deploy',
     riskLevel: 'medium',
+    selectionStage: 'later',
     providers: ['codex', 'claude_code', 'gemini_cli'],
     providerSupport: [
       { provider: 'codex', supportType: 'official' },
@@ -142,8 +161,14 @@ export function mapAiToolToSkillProvider(tool: AiTool): SkillProvider | null {
   }
 }
 
-export function formatProviderSupportLabel(entry: SkillProviderSupport): string {
-  return `${SKILL_PROVIDER_LABELS[entry.provider]}: ${SKILL_PROVIDER_SUPPORT_LABELS[entry.supportType]}`;
+export function formatSkillProviderNames(skill: SkillCatalogItem): string {
+  return skill.providerSupport.map((entry) => SKILL_PROVIDER_LABELS[entry.provider]).join(' / ');
+}
+
+export function formatSkillProviderSupportSummary(skill: SkillCatalogItem): string {
+  return skill.providerSupport
+    .map((entry) => `${SKILL_PROVIDER_LABELS[entry.provider]}は${SKILL_PROVIDER_SUPPORT_LABELS[entry.supportType]}`)
+    .join('、');
 }
 
 export function getRecommendedSkills(aiTools: AiTool[]): SkillCatalogItem[] {

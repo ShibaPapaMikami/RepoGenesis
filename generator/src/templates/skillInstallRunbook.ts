@@ -17,9 +17,10 @@ export function generateSkillInstallRunbook(
 ${selectedSkills.map((skill) => `- ${skill.name} (\`${skill.id}\`, ${skill.sourceType}, ${skill.version})`).join('\n')}
 
 ## Current State
-- The selected curated skills were copied into this repository during generation.
+- The selected AI work guides were copied into this repository during generation.
 - \`repogenesis.skills.json\` already records the bundled artifact paths.
 - Additional install commands are not required for the initial setup.
+- These guides do not run automatically. Use them when working with this repository in the supported AI tool.
 `
     : selectedSkills.length > 0
     ? `
@@ -47,13 +48,13 @@ ${commandBlock}
   return `# skill-install.md
 
 ## Purpose
-This runbook explains how to add optional curated skills to ${brief.project.name}.
+This runbook explains how to add optional AI work guides to ${brief.project.name}.
 
 ## Current Policy
-- Skills are optional. They are not part of the core repository structure.
-- Installed skills must be recorded in \`repogenesis.skills.json\`.
+- AI work guides are optional. They are not part of the core repository structure.
+- Installed guides must be recorded in \`repogenesis.skills.json\`.
 - Initial install mode is \`copy + pin\`.
-- Skills must not auto-update without project review.
+- Guides must not auto-update without project review.
 - Provider-specific artifacts are allowed when required by Codex, Claude Code, or Gemini CLI.
 
 ## Manual Install Flow

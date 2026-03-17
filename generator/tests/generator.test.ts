@@ -437,7 +437,7 @@ describe('generateFromSpec — pure function', () => {
     expect(runbook).toContain('scripts/install-selected-skills.sh');
 
     const skillsReadme = files.get('skills/README.md') as string;
-    expect(skillsReadme).toContain('Recommended at generation time');
+    expect(skillsReadme).toContain('Selected AI work guides at generation time');
 
     const script = files.get('scripts/install-selected-skills.sh') as string;
     expect(script).toContain('REPOGENESIS_ROOT');

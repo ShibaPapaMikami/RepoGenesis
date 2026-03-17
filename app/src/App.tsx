@@ -30,8 +30,10 @@ import {
   type IntakeDraft,
 } from './utils/intakeParser';
 import {
-  formatProviderSupportLabel,
+  formatSkillProviderNames,
+  formatSkillProviderSupportSummary,
   getRecommendedSkills,
+  SKILL_RISK_LABELS,
   SKILL_CATALOG,
   type SkillCatalogItem,
 } from './data/skillCatalog.ts';
@@ -133,6 +135,8 @@ function App() {
   const showReviewSection = draftApplied && guidedStep === 'review';
   const showOutputSection = draftApplied && activeStep === 'result';
   const recommendedSkills = getRecommendedSkills(state.tech.ai_tools);
+  const starterSkills = recommendedSkills.filter((skill) => skill.selectionStage === 'first');
+  const laterSkills = recommendedSkills.filter((skill) => skill.selectionStage === 'later');
   const selectedSkills = SKILL_CATALOG.filter((item) => selectedSkillIds.includes(item.id));
 
   const recommendationNotes = [
@@ -157,18 +161,35 @@ function App() {
     );
   }
 
-  function renderSkillSupportBadges(skill: SkillCatalogItem) {
+  function renderSkillCard(skill: SkillCatalogItem) {
+    const selected = selectedSkillIds.includes(skill.id);
     return (
-      <div className="skill-support-badges">
-        {skill.providerSupport.map((entry) => (
-          <span
-            key={`${skill.id}-${entry.provider}`}
-            className={`skill-support-pill skill-support-${entry.supportType}`}
-          >
-            {formatProviderSupportLabel(entry)}
-          </span>
-        ))}
-      </div>
+      <label key={skill.id} className={`skill-card${selected ? ' skill-card-selected' : ''}`}>
+        <div className="skill-card-header">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={() => toggleSkillSelection(skill.id)}
+          />
+          <div>
+            <strong>{skill.name}</strong>
+            <p className="skill-when-to-use">向いている場面: {skill.whenToUse}</p>
+            <p>{skill.description}</p>
+          </div>
+        </div>
+        <p className="skill-provider-line"><strong>使えるAI:</strong> {formatSkillProviderNames(skill)}</p>
+        <p className="skill-meta">
+          提供形態: {formatSkillProviderSupportSummary(skill)} / 提供元: {skill.sourceLabel} / risk: {SKILL_RISK_LABELS[skill.riskLevel]}
+          {skill.sourceUrl ? (
+            <>
+              {' / '}
+              <a href={skill.sourceUrl} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>
+                公式ソース
+              </a>
+            </>
+          ) : null}
+        </p>
+      </label>
     );
   }
 
@@ -420,46 +441,42 @@ function App() {
             </div>
 
             <div className="consultation-summary skill-selection">
-              <p><strong>推奨 Skill</strong></p>
+              <p><strong>AIに追加するガイド（必要なら選ぶ）</strong></p>
               <p className="consultation-lead">
                 {generationMode === 'remote'
-                  ? 'このプロジェクトに合う curated skill を選びます。選んだ Skill は生成 ZIP に同梱されるため、ダウンロード後すぐ確認できます。'
-                  : 'このプロジェクトに後から追加しやすい curated skill を選びます。ローカル ZIP では install script も一緒に出力します。'}
+                  ? 'ここで選ぶのはアプリ機能ではなく、生成後に Codex / Claude Code / Gemini CLI へ「この repo をどう進めるか」を頼む時の補助ガイドです。選んだガイドのファイルは ZIP に一緒に入りますが、自動では動きません。'
+                  : 'ここで選ぶのは、生成後に AI と一緒に作業する時の補助ガイドです。このモードでは ZIP への自動同梱はまだないため、必要になった時だけ後から追加します。'}
               </p>
-              <div className="skill-grid">
-                {recommendedSkills.length > 0 ? recommendedSkills.map((skill) => {
-                  const selected = selectedSkillIds.includes(skill.id);
-                  return (
-                    <label key={skill.id} className={`skill-card${selected ? ' skill-card-selected' : ''}`}>
-                      <div className="skill-card-header">
-                        <input
-                          type="checkbox"
-                          checked={selected}
-                          onChange={() => toggleSkillSelection(skill.id)}
-                        />
-                        <div>
-                          <strong>{skill.name}</strong>
-                          <p>{skill.description}</p>
-                        </div>
+              <ul className="skill-selection-notes">
+                <li>ZIP に入るのは「ガイドのファイルが一緒に入る」という意味です。</li>
+                <li>解凍後に対応する AI でその project を開くと、そのガイドを参照しながら作業できます。</li>
+                <li>勝手に何かが実行されるわけではなく、必要な場面で AI に頼む時の補助になります。</li>
+                <li>迷う場合は、まず `Repo Readiness Review` だけ選べば十分です。</li>
+              </ul>
+              {recommendedSkills.length > 0 ? (
+                <>
+                  {starterSkills.length > 0 && (
+                    <div className="skill-group">
+                      <p><strong>最初に入れておくとよい候補</strong></p>
+                      <div className="skill-grid">
+                        {starterSkills.map(renderSkillCard)}
                       </div>
-                      {renderSkillSupportBadges(skill)}
-                      <p className="skill-meta">
-                        出典: {skill.sourceLabel} / risk: {skill.riskLevel}
-                        {skill.sourceUrl ? (
-                          <>
-                            {' / '}
-                            <a href={skill.sourceUrl} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>
-                              公式ソース
-                            </a>
-                          </>
-                        ) : null}
-                      </p>
-                    </label>
-                  );
-                }) : (
+                    </div>
+                  )}
+                  {laterSkills.length > 0 && (
+                    <div className="skill-group">
+                      <p><strong>困った時に追加する候補</strong></p>
+                      <div className="skill-grid">
+                        {laterSkills.map(renderSkillCard)}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="skill-grid">
                   <p className="consultation-lead">現在の AI tool 設定に一致する curated skill はまだありません。</p>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             <div className="output-actions">
@@ -533,7 +550,10 @@ function App() {
             </div>
 
             <div className="consultation-summary">
-              <p><strong>選択した Skill:</strong> {selectedSkills.length > 0 ? selectedSkills.map((skill) => skill.name).join(', ') : 'なし'}</p>
+              <p><strong>選択した AI ガイド:</strong> {selectedSkills.length > 0 ? selectedSkills.map((skill) => skill.name).join(', ') : 'なし'}</p>
+              {selectedSkills.length > 0 && (
+                <p className="consultation-lead">選んだガイドは ZIP に一緒に入りますが、自動実行はされません。解凍後に対応する AI でこの project を開いた時に使います。</p>
+              )}
             </div>
 
             {!showAdvancedDetail && (
