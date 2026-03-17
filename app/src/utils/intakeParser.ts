@@ -333,6 +333,24 @@ function cleanFieldValue(value: string | null | undefined): string {
   return value?.trim() ?? '';
 }
 
+function normalizeDescriptionText(value: string | null | undefined): string {
+  const lines = (value ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length === 0) return '';
+
+  const normalizedLines = lines.map((line) => line.replace(/^[-*]\s*/, '').replace(/^\d+[.)]\s*/, '').trim());
+  const isListLike = lines.every((line) => /^[-*]\s*/.test(line) || /^\d+[.)]\s*/.test(line));
+
+  if (isListLike) {
+    return normalizedLines.join(' / ');
+  }
+
+  return normalizedLines.join(' ');
+}
+
 function formatRepoTypeLabel(repoType: RepoType): string {
   return repoType === 'single' ? 'シングル' : 'マルチ';
 }
@@ -605,7 +623,9 @@ export function deriveDraftSuggestions(
   const projectName = cleanFieldValue(summary) || cleanFieldValue(firstDeliverable)
     ? guessProjectName(summary, firstDeliverable, problem)
     : currentState.project.name;
-  const projectDescription = cleanFieldValue(problem) || cleanFieldValue(summary) || currentState.project.description;
+  const projectDescription = normalizeDescriptionText(summary)
+    || normalizeDescriptionText(problem)
+    || normalizeDescriptionText(currentState.project.description);
   const owner = currentState.project.owner;
   const generatedSlug = slugify(projectName);
   const shouldPreserveManualSlug = currentState.slugManuallyEdited

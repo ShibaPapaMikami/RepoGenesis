@@ -1,6 +1,6 @@
 import type { ProjectBrief } from '../schema';
 import { formatAiTools, hasAiTool } from '../aiTools';
-import { formatDomains, formatOwner } from '../templateDisplay';
+import { formatDomains, formatOwner, formatProjectDescription } from '../templateDisplay';
 
 interface RepoEntry {
   name: string;
@@ -179,7 +179,7 @@ ${buildRepoStructure(brief, repo)}
     return `# ${brief.project.name} — Workspace Constitution
 
 ## What is this workspace?
-${brief.project.description}
+${formatProjectDescription(brief.project.description)}
 
 ## Tech Stack
 - Domains: ${formatDomains(brief.tech.domains)}
@@ -218,7 +218,7 @@ ${buildWorkspaceStructure(brief)}
   return `# ${brief.project.name} — Project Constitution
 
 ## What is this project?
-${brief.project.description}
+${formatProjectDescription(brief.project.description)}
 
 ## Tech Stack
 - Domains: ${formatDomains(brief.tech.domains)}

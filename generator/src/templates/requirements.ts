@@ -1,6 +1,6 @@
 import type { ProjectBrief } from '../schema';
 import { formatAiTools } from '../aiTools';
-import { formatDomains, formatOwner } from '../templateDisplay';
+import { formatDomains, formatOwner, formatProjectDescription } from '../templateDisplay';
 
 export function generateRequirements(brief: ProjectBrief): string {
   const { project, tech } = brief;
@@ -17,7 +17,7 @@ Define what ${project.name} must do. This is the single source of truth for func
 ## Project Overview
 - **Name**: ${project.name}
 - **Slug**: ${project.slug}
-- **Description**: ${project.description}
+- **Description**: ${formatProjectDescription(project.description)}
 - **Owner**: ${formatOwner(project.owner)}
 
 ## Technical Context

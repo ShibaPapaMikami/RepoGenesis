@@ -217,7 +217,7 @@ test('parseConsultationIntake should prefer consultation-derived project fields 
   assert.equal(draft.suggestedState.project.name.length <= 24, true);
   assert.notEqual(draft.suggestedState.project.name, 'Old Test Project');
   assert.equal(draft.suggestedState.project.slug, 'internal-meeting-audio-transcription-tool');
-  assert.equal(draft.suggestedState.project.description, '議事録作成に時間がかかる');
+  assert.equal(draft.suggestedState.project.description, '社内ミーティングの音声を文字起こしして保存する社内ツール');
   assert.equal(draft.suggestedState.project.owner, '');
 });
 
@@ -309,7 +309,7 @@ test('deriveDraftSuggestions should build provider-independent suggested state',
   });
 
   assert.equal(suggestions.suggestedState.project.name, '社内の案件相談を整理するツール');
-  assert.equal(suggestions.suggestedState.project.description, 'Slack とスプレッドシートに情報が散らばっている');
+  assert.equal(suggestions.suggestedState.project.description, '社内の案件相談を整理するツール');
   assert.deepEqual(suggestions.suggestedState.tech.domains, ['web', 'ai']);
   assert.equal(suggestions.suggestedState.security.level, 'medium');
   assert.equal(suggestions.suggestedState.structure.repo_type, 'single');

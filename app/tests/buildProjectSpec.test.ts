@@ -126,7 +126,7 @@ test('buildProjectSpec should deterministically map consultation draft state int
   const spec = buildProjectSpec(draft.suggestedState);
 
   assert.equal(spec.project.name, '社内の案件相談と進行管理をまとめるAI活用ツール');
-  assert.equal(spec.project.description, '相談履歴と判断ログが Slack とスプレッドシートに分散している');
+  assert.equal(spec.project.description, '社内の案件相談と進行管理をまとめるAI活用ツール');
   assert.equal(spec.project.owner, 'Gugenka BizOps');
   assert.deepEqual(spec.tech.domains, ['web', 'ai']);
   assert.equal(spec.security.level, 'medium');

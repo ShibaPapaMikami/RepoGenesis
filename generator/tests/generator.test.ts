@@ -149,6 +149,26 @@ describe('generator — single-repo', () => {
     expect(result.success).toBe(true);
     expect(result.filesCreated.length).toBe(22);
   });
+
+  it('should render normalized project descriptions in generated docs', () => {
+    const brief = {
+      ...SINGLE_BRIEF,
+      project: {
+        ...SINGLE_BRIEF.project,
+        name: 'Visitor Data Collection App',
+        slug: 'visitor-data-collection-app',
+        description: '- Collect visitor registrations\n- Capture staff notes\n- Export follow-up lists',
+      },
+    };
+    const inputPath = writeInputFile(brief);
+    const result = generate({ inputPath, outputPath: tmpDir, force: true });
+
+    const projectMd = fs.readFileSync(path.join(result.outputDir, 'PROJECT.md'), 'utf-8');
+    const requirements = fs.readFileSync(path.join(result.outputDir, 'docs/REQUIREMENTS.md'), 'utf-8');
+
+    expect(projectMd).toContain('Collect visitor registrations / Capture staff notes / Export follow-up lists');
+    expect(requirements).toContain('**Description**: Collect visitor registrations / Capture staff notes / Export follow-up lists');
+  });
 });
 
 describe('generator — multi-repo', () => {
