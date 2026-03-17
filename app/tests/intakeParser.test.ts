@@ -231,6 +231,21 @@ test('parseConsultationIntake should prefer quoted project titles from fixed tem
   assert.equal(draft.suggestedState.project.slug, 'contract-review-request-management-system');
 });
 
+test('parseConsultationIntake should drop stale manual slug when the pasted project changes', () => {
+  const contractReview = CONSULTATION_TEST_TEMPLATES.find((template) => template.id === 'test_contract_review');
+  assert.ok(contractReview);
+
+  const state = makeState();
+  state.project.name = 'AI議事録整理ツール';
+  state.project.slug = 'g-minutes';
+  state.slugManuallyEdited = true;
+
+  const draft = parseConsultationIntake(contractReview.content, state);
+
+  assert.equal(draft.suggestedState.project.name, '契約書レビュー依頼管理システム');
+  assert.equal(draft.suggestedState.project.slug, 'contract-review-request-management-system');
+});
+
 test('parseConsultationIntake should avoid false positive domains for calendar and transcription text', () => {
   const input = getConsultationTestTemplate('meeting_transcription_internal_tool');
   const state = makeState();

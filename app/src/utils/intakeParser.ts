@@ -608,7 +608,10 @@ export function deriveDraftSuggestions(
   const projectDescription = cleanFieldValue(problem) || cleanFieldValue(summary) || currentState.project.description;
   const owner = currentState.project.owner;
   const generatedSlug = slugify(projectName);
-  const slug = currentState.slugManuallyEdited && currentState.project.slug
+  const shouldPreserveManualSlug = currentState.slugManuallyEdited
+    && currentState.project.slug
+    && slugify(currentState.project.name) === generatedSlug;
+  const slug = shouldPreserveManualSlug
     ? currentState.project.slug
     : (generatedSlug || 'project-draft');
   const hasUserData = detectHasUserData(combinedText);
