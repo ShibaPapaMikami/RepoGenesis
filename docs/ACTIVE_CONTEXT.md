@@ -1,7 +1,7 @@
 # ACTIVE_CONTEXT.md — Current Project State
 
 ## Last Updated
-2026-03-15
+2026-03-17
 
 ## Current Phase
 Phase 6 — AI-Assisted Spec Authoring (Hardening)
@@ -90,6 +90,11 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - remote ZIP 生成では、選択した Skill artifact を registry から解決して同梱し、`repogenesis.skills.json` も prefilled するようにした
   - Web UI は remote 生成時に「Skill は ZIP 同梱済み」と案内し、非エンジニア向けの追加コマンド導線を主画面から外した
   - production `v0.1.1 (0b9e110)` で `repogenesis-test (10).zip` のダウンロード成功を確認し、stable release baseline を `v0.1.2` とした
+  - Skill catalog を 5 件へ拡張し、`GH Fix CI` / `Playwright Browser QA` / `Vercel Deploy Check` / `Render Deploy Check` を追加した
+  - Skill UI で `Codex / Claude Code / Gemini CLI` ごとの対応状況を badge で表示するようにした
+  - skill registry schema に provider ごとの support type (`official` / `curated`) を追加した
+  - `skills/registry/official/` を追加し、OpenAI 公式 curated skills を参照元にした provider-aware wrappers を追加した
+  - `repo-readiness-review` には Gemini CLI command artifact 実体を追加し、metadata と bundling 実体を一致させた
 
 ## What Is Being Done Now
 - いまの主要テーマ:
@@ -121,6 +126,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - remote ZIP timeout は request id で追える状態。再試行成功済みのため、当面は Render 側の再発監視を継続
   - AI tool 非依存化 (`PROJECT.md + CLAUDE.md + GEMINI.md`) は未反映
   - skill layer は provider-aware contract / installer / Web selection / remote ZIP 同梱まで反映。自動インストールと local ZIP 同梱は未反映
+  - production での multi-skill catalog / provider badge 実地確認はこれから
   - 現在の大きい未コミット差分を concern ごとに分離する必要がある
 
 ## Key Decisions Made
@@ -178,3 +184,4 @@ Immediate next:
 - feedback の永続保存先を決める
 - AI tool 非依存化と optional skill layer を別差分で整理する
 - generated install script と provider-specific guidance の運用を整える
+- production で `v0.1.1 (c4b2c8a)` の skill catalog 表示と選択動作を再確認する

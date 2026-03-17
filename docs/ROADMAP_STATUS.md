@@ -1,7 +1,7 @@
 # ROADMAP_STATUS.md — Current Position
 
 ## Last Updated
-2026-03-15
+2026-03-17
 
 ## Roadmap Position
 Phase 6 / Hardening
@@ -28,6 +28,9 @@ Phase 6 / Hardening
 - Skill layer now includes provider-aware manifest/registry design, CLI installer commands, Web curated selection UI, remote ZIP auto-bundling for selected skills, and generated output persistence.
 - The latest production retry completed successfully with downloaded artifact `repogenesis-test (10).zip`.
 - Stable release baseline is `v0.1.2` on `0b9e110` after production success with selected skill bundling.
+- Skill catalog now surfaces provider-specific support in the UI (`Codex: 公式`, `Claude Code: RepoGenesis対応`, `Gemini CLI: RepoGenesis対応`).
+- Official-style skill registry entries now exist for `gh-fix-ci`, `playwright`, `vercel-deploy`, and `render-deploy`, in addition to the existing `repo-readiness-review`.
+- The existing `repo-readiness-review` entry now includes a concrete Gemini CLI command artifact instead of metadata-only support.
 
 ## What This Phase Still Needs
 - Fix the provider-independent intake contract against current parser behavior.
@@ -36,7 +39,7 @@ Phase 6 / Hardening
 - Keep optional skill layer separate from the intake/generator core while hardening local export behavior and provider-specific guidance.
 
 ## Next Three Tasks
-1. Decide whether local ZIP export should also auto-bundle selected skills or stay in installer-script mode.
+1. Verify production `v0.1.1 (c4b2c8a)` and confirm the new multi-skill catalog / provider badges behave correctly in the browser.
 2. Decide persistent storage for feedback and generation support data.
 3. Split pending large changes into separate tracks:
    - AI tool independence (`PROJECT.md` / `CLAUDE.md` / `GEMINI.md`)

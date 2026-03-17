@@ -16,6 +16,7 @@ RepoGenesis に skill レイヤーを導入する目的は、generator 本体へ
 - 最初は `copy + pin` を採用し、中央 registry の変更で既存 project が暗黙に変わらないようにする。
 - Codex / Claude Code / Gemini CLI の差は generator core ではなく provider adapter で吸収する。
 - `official` / `curated` / `internal` source を明示して、何を trust して導入したかを残す。
+- provider ごとに `official` / `curated` の support type を持ち、UI で「その AI に対して何が公式で何が wrapper か」を説明できるようにする。
 
 ## Problem Statement
 現状の RepoGenesis には skill injection が無く、チームで繰り返し使う運用知識を project へ導入しにくい。
@@ -141,12 +142,14 @@ project repository
 - 初回生成時は manifest だけ作るか、初期導入までやるかを選べるようにする
 - provider ごとの対応状況と install 先を表示する
 - 公式 source URL を参照できるようにする
+- provider support badge (`Codex: 公式` など) を表示する
 
 ### Acceptance Criteria
 - 非エンジニアでも「どれを入れるか」が説明付きで判断できる
 - 誤って high-risk skill を入れにくい
 - generator core の入力 UX を壊さない
 - Claude / Codex / Gemini の違いを UI が隠しすぎず、必要十分に説明できる
+- 「skill は 1 個しかない」という状態を解消し、少なくとも review / browser QA / Vercel / Render の基本カテゴリを選択肢として持つ
 
 ## Phase F: Update Governance
 **Goal:** skill の更新を安全に扱う。

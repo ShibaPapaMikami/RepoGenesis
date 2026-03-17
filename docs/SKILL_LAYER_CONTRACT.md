@@ -37,6 +37,10 @@ registry 側では少なくとも次を持つ。
 
 ```ts
 type SkillProvider = 'codex' | 'claude_code' | 'gemini_cli' | 'tool_agnostic';
+type SkillProviderSupport = {
+  provider: SkillProvider;
+  supportType: 'official' | 'curated';
+};
 
 type SkillArtifact = {
   provider: SkillProvider;
@@ -54,10 +58,12 @@ type SkillRegistryItem = {
   status: 'stable' | 'experimental' | 'deprecated';
   riskLevel: 'low' | 'medium' | 'high';
   sourceType: 'official' | 'curated' | 'internal';
+  sourceLabel: string;
   sourceUrl?: string;
   tags: string[];
   installMode: 'copy';
   providers: SkillProvider[];
+  providerSupport: SkillProviderSupport[];
   artifacts: SkillArtifact[];
   reviewRequired: boolean;
 };
@@ -67,7 +73,9 @@ type SkillRegistryItem = {
 - `id` は registry 内で一意
 - `version` は skill 本体の version
 - `sourceType` は「公式由来か」「社内 curated か」を UI/運用で見分けるために使う
+- `sourceLabel` は UI で人が読む出典ラベルとして使う (`OpenAI official skills`, `RepoGenesis curated` など)
 - `providers` は UI/installer の絞り込みに使う
+- `providerSupport` は provider ごとに `official` / `curated` を明示する
 - `artifacts` は provider ごとの実体配置を定義する
 - `installMode` は初期実装では `copy` 固定
 - `reviewRequired` は high-risk skill の追加確認に使う
