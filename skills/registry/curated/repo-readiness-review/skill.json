@@ -7,6 +7,7 @@
   "status": "stable",
   "riskLevel": "low",
   "sourceType": "curated",
+  "sourceLabel": "RepoGenesis curated",
   "sourceUrl": "https://openai.com/index/introducing-the-codex-app/",
   "tags": [
     "review",
@@ -18,6 +19,20 @@
     "codex",
     "claude_code",
     "gemini_cli"
+  ],
+  "providerSupport": [
+    {
+      "provider": "codex",
+      "supportType": "curated"
+    },
+    {
+      "provider": "claude_code",
+      "supportType": "curated"
+    },
+    {
+      "provider": "gemini_cli",
+      "supportType": "curated"
+    }
   ],
   "artifacts": [
     {

@@ -1,0 +1,13 @@
+name = "gh-fix-ci"
+description = "Inspect a failing GitHub Actions run and propose the smallest safe fix."
+
+prompt = """
+Use this command when CI is red.
+
+Workflow:
+1. Identify the failing job and annotation.
+2. Separate flaky infrastructure issues from real regressions.
+3. Reproduce the failing check locally when possible.
+4. Prefer the narrowest fix that restores the intended contract.
+5. Summarize root cause, fix, and follow-up.
+"""

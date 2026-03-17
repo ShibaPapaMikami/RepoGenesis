@@ -1,15 +1,17 @@
-description = "Review a RepoGenesis draft or repository for readiness gaps"
-prompt = """
-Review the current repository or draft before implementation starts.
+name = "repo-readiness-review"
+description = "Review a generated repository for scope gaps, missing requirements, and operational risk."
 
-Focus on:
-- unclear scope
-- unresolved assumptions still treated as facts
-- missing security, release, or runbook requirements
+prompt = """
+Use this command when a generated repository or draft needs a readiness review before implementation.
+
+Check:
+- missing scope decisions
+- assumptions presented as facts
+- security, release, or runbook gaps
 - repository structure mismatches
 
 Return:
-1. blocking issues
+1. blockers
 2. warnings
 3. concrete next edits
 """

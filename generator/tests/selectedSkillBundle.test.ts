@@ -68,4 +68,28 @@ describe('selected skill bundle', () => {
       },
     ]);
   });
+
+  it('bundles official skills for the active provider', () => {
+    const bundled = bundleSelectedSkillsFromRegistry({
+      project: BRIEF,
+      selectedSkills: [
+        {
+          id: 'gh-fix-ci',
+          name: 'GH Fix CI',
+          version: '0.1.0',
+          sourceType: 'official',
+          providers: ['codex', 'claude_code', 'gemini_cli'],
+        },
+      ],
+      installedAt: '2026-03-15T00:00:00.000Z',
+      installedBy: 'test',
+    });
+
+    expect(bundled.warnings).toEqual([]);
+    expect(bundled.files).toContainEqual([
+      'skills/installed/gh-fix-ci/SKILL.md',
+      expect.stringContaining('# GH Fix CI'),
+    ]);
+    expect(bundled.manifest.installed[0].sourceType).toBe('official');
+  });
 });

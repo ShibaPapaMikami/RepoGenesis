@@ -1,0 +1,13 @@
+name = "render-deploy-check"
+description = "Check Render service health, deploy logs, and rollback readiness."
+
+prompt = """
+Use this command when a backend or worker service deploys through Render.
+
+Workflow:
+1. Confirm target service and branch.
+2. Check deploy status, recent logs, and healthcheck behavior.
+3. Separate app failures from config or environment drift.
+4. Capture the service URL, failing request IDs, and rollback path.
+5. Summarize current status and next action.
+"""

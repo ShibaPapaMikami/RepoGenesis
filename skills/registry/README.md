@@ -15,6 +15,11 @@ Instead, we keep:
 - `curated`: RepoGenesis-managed wrappers that follow an official provider mechanism
 - `internal`: team-local skills that are not intended for general distribution
 
+Provider support is tracked separately for each AI so the UI can show:
+
+- `official`: the workflow or skill exists as an upstream official provider offering
+- `curated`: RepoGenesis ships a compatible wrapper for that provider
+
 Current entries are primarily `curated`.
 They align to official provider formats for:
 

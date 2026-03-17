@@ -29,7 +29,12 @@ import {
   type ConsultationPromptVariant,
   type IntakeDraft,
 } from './utils/intakeParser';
-import { getRecommendedSkills, SKILL_CATALOG } from './data/skillCatalog.ts';
+import {
+  formatProviderSupportLabel,
+  getRecommendedSkills,
+  SKILL_CATALOG,
+  type SkillCatalogItem,
+} from './data/skillCatalog.ts';
 import { CONSULTATION_TEST_TEMPLATES } from './data/consultationTestTemplates.ts';
 import './App.css';
 
@@ -149,6 +154,21 @@ function App() {
       current.includes(skillId)
         ? current.filter((id) => id !== skillId)
         : [...current, skillId],
+    );
+  }
+
+  function renderSkillSupportBadges(skill: SkillCatalogItem) {
+    return (
+      <div className="skill-support-badges">
+        {skill.providerSupport.map((entry) => (
+          <span
+            key={`${skill.id}-${entry.provider}`}
+            className={`skill-support-pill skill-support-${entry.supportType}`}
+          >
+            {formatProviderSupportLabel(entry)}
+          </span>
+        ))}
+      </div>
     );
   }
 
@@ -422,8 +442,17 @@ function App() {
                           <p>{skill.description}</p>
                         </div>
                       </div>
+                      {renderSkillSupportBadges(skill)}
                       <p className="skill-meta">
-                        source: {skill.sourceType} / risk: {skill.riskLevel} / providers: {skill.providers.join(', ')}
+                        出典: {skill.sourceLabel} / risk: {skill.riskLevel}
+                        {skill.sourceUrl ? (
+                          <>
+                            {' / '}
+                            <a href={skill.sourceUrl} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>
+                              公式ソース
+                            </a>
+                          </>
+                        ) : null}
                       </p>
                     </label>
                   );

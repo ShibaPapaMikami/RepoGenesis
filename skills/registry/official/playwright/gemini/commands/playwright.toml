@@ -1,0 +1,13 @@
+name = "playwright-browser-qa"
+description = "Validate a browser flow, inspect UI regressions, and summarize concrete follow-up."
+
+prompt = """
+Use this command when a page flow or UI regression needs browser-based verification.
+
+Workflow:
+1. Reproduce the target flow.
+2. Capture the smallest useful failure evidence.
+3. Separate visual, behavioral, and data issues.
+4. Recommend a concrete fix or regression test.
+5. Summarize verified behavior and remaining gaps.
+"""

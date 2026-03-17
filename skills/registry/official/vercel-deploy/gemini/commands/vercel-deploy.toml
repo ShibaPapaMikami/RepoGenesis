@@ -1,0 +1,13 @@
+name = "vercel-deploy-check"
+description = "Check Vercel build, environment, and deployment state before or after release."
+
+prompt = """
+Use this command when a project deploys through Vercel.
+
+Workflow:
+1. Confirm target branch, commit, and environment.
+2. Check build output and missing environment variables.
+3. Verify production deployment state and rollback target.
+4. Capture the public URL, request identifiers, and any blocking error.
+5. Summarize release status and next action.
+"""

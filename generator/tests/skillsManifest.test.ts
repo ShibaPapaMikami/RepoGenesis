@@ -63,10 +63,25 @@ describe('skills manifest schema', () => {
       status: 'stable',
       riskLevel: 'low',
       sourceType: 'official',
+      sourceLabel: 'Example official skill',
       sourceUrl: 'https://example.com/skills/review-checklist',
       tags: ['review', 'quality'],
       installMode: 'copy',
       providers: ['codex', 'claude_code', 'gemini_cli'],
+      providerSupport: [
+        {
+          provider: 'codex',
+          supportType: 'official',
+        },
+        {
+          provider: 'claude_code',
+          supportType: 'curated',
+        },
+        {
+          provider: 'gemini_cli',
+          supportType: 'curated',
+        },
+      ],
       artifacts: [
         {
           provider: 'codex',
@@ -100,9 +115,16 @@ describe('skills manifest schema', () => {
       status: 'stable',
       riskLevel: 'low',
       sourceType: 'official',
+      sourceLabel: 'Example official skill',
       tags: [],
       installMode: 'copy',
       providers: ['claude_code'],
+      providerSupport: [
+        {
+          provider: 'claude_code',
+          supportType: 'curated',
+        },
+      ],
       artifacts: [
         {
           provider: 'gemini_cli',

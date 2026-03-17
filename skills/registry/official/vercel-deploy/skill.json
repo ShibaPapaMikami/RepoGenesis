@@ -1,0 +1,56 @@
+{
+  "id": "vercel-deploy",
+  "name": "Vercel Deploy Check",
+  "description": "Inspect Vercel build, env, and deployment state before or after shipping a web app.",
+  "owner": "openai",
+  "version": "0.1.0",
+  "status": "stable",
+  "riskLevel": "medium",
+  "sourceType": "official",
+  "sourceLabel": "OpenAI official skills",
+  "sourceUrl": "https://github.com/openai/skills/tree/main/skills/.curated/vercel-deploy",
+  "tags": [
+    "vercel",
+    "deploy",
+    "ops",
+    "frontend"
+  ],
+  "installMode": "copy",
+  "providers": [
+    "codex",
+    "claude_code",
+    "gemini_cli"
+  ],
+  "providerSupport": [
+    {
+      "provider": "codex",
+      "supportType": "official"
+    },
+    {
+      "provider": "claude_code",
+      "supportType": "curated"
+    },
+    {
+      "provider": "gemini_cli",
+      "supportType": "curated"
+    }
+  ],
+  "artifacts": [
+    {
+      "provider": "codex",
+      "artifactKind": "skill",
+      "entryPath": "codex/SKILL.md"
+    },
+    {
+      "provider": "claude_code",
+      "artifactKind": "skill",
+      "entryPath": "claude/SKILL.md"
+    },
+    {
+      "provider": "gemini_cli",
+      "artifactKind": "command",
+      "entryPath": "gemini/commands/vercel-deploy.toml"
+    }
+  ],
+  "reviewRequired": false
+}

@@ -5,14 +5,19 @@ import { listSelectableSkillRegistryItems, loadSkillRegistry } from '../src/skil
 const REGISTRY_ROOT = path.resolve(__dirname, '../../skills/registry');
 
 describe('skill registry loader', () => {
-  it('loads curated registry entries from the filesystem', () => {
+  it('loads multiple registry entries from the filesystem in id order', () => {
     const items = loadSkillRegistry(REGISTRY_ROOT);
-    expect(items.length).toBeGreaterThan(0);
-    expect(items[0]?.id).toBe('repo-readiness-review');
+    expect(items.map((item) => item.id)).toEqual([
+      'gh-fix-ci',
+      'playwright',
+      'render-deploy',
+      'repo-readiness-review',
+      'vercel-deploy',
+    ]);
   });
 
   it('lists stable entries by default', () => {
     const items = listSelectableSkillRegistryItems(REGISTRY_ROOT);
-    expect(items.map((item) => item.status)).toEqual(['stable']);
+    expect(new Set(items.map((item) => item.status))).toEqual(new Set(['stable']));
   });
 });

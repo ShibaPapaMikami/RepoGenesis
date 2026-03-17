@@ -11,7 +11,10 @@ import {
 } from '../../utils/generateRepository';
 import { downloadErrorReport, submitFeedback, type FeedbackType, type ErrorReportPayload } from '../../utils/feedback';
 import { assessIntakeReadiness, getConsultationReviewHints, type ConsultationPromptVariant, type IntakeDraft } from '../../utils/intakeParser';
-import type { SkillCatalogItem } from '../../data/skillCatalog.ts';
+import {
+  formatProviderSupportLabel,
+  type SkillCatalogItem,
+} from '../../data/skillCatalog.ts';
 import { buildSkillInstallHandoffText } from '../../utils/skillInstallHandoff.ts';
 
 interface JsonOutputProps {
@@ -273,7 +276,17 @@ export function JsonOutput({
           <ul>
             {selectedSkills.map((skill) => (
               <li key={skill.id}>
-                <strong>{skill.name}</strong> ({skill.sourceType}, {skill.version}) - {skill.providers.join(', ')}
+                <strong>{skill.name}</strong> ({skill.sourceLabel}, {skill.version})
+                <div className="skill-support-badges">
+                  {skill.providerSupport.map((entry) => (
+                    <span
+                      key={`${skill.id}-${entry.provider}`}
+                      className={`skill-support-pill skill-support-${entry.supportType}`}
+                    >
+                      {formatProviderSupportLabel(entry)}
+                    </span>
+                  ))}
+                </div>
               </li>
             ))}
           </ul>
