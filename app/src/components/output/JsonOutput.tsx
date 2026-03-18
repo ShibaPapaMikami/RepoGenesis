@@ -10,7 +10,7 @@ import {
   getRemoteAuthMode,
 } from '../../utils/generateRepository';
 import { canRecoverCookieSession, refreshCookieSession } from '../../utils/authRecovery.ts';
-import { downloadErrorReport, submitFeedback, type FeedbackType, type ErrorReportPayload } from '../../utils/feedback';
+import { downloadErrorReport, type ErrorReportPayload } from '../../utils/feedback';
 import { assessIntakeReadiness, getConsultationReviewHints, type ConsultationPromptVariant, type IntakeDraft } from '../../utils/intakeParser';
 import {
   formatSkillProviderNames,
@@ -24,10 +24,10 @@ interface JsonOutputProps {
   sectionRef?: RefObject<HTMLElement | null>;
   title?: string;
   lead?: string;
-  showFeedback?: boolean;
   collapseJsonByDefault?: boolean;
   showJsonTools?: boolean;
   onGenerationStateChange?: (state: 'idle' | 'running' | 'done') => void;
+  onErrorReportChange?: (report: ErrorReportPayload | null) => void;
   state: FormState;
   canExport: boolean;
   errors: Record<string, string>;
@@ -44,10 +44,10 @@ export function JsonOutput({
   sectionRef,
   title = '出力',
   lead,
-  showFeedback = true,
   collapseJsonByDefault = false,
   showJsonTools = false,
   onGenerationStateChange,
+  onErrorReportChange,
   state,
   canExport,
   errors,
@@ -63,12 +63,6 @@ export function JsonOutput({
   const [generatedZip, setGeneratedZip] = useState<{ blob: Blob; filename: string } | null>(null);
   const [authToken, setAuthToken] = useState('');
   const [lastErrorReport, setLastErrorReport] = useState<ErrorReportPayload | null>(null);
-  const [feedbackType, setFeedbackType] = useState<FeedbackType>('bug');
-  const [feedbackTitle, setFeedbackTitle] = useState('');
-  const [feedbackDescription, setFeedbackDescription] = useState('');
-  const [feedbackEmail, setFeedbackEmail] = useState('');
-  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
-  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [jsonPreviewOpen, setJsonPreviewOpen] = useState(!collapseJsonByDefault);
   const [installerCopied, setInstallerCopied] = useState(false);
   const generationMode = getGenerationMode();
@@ -92,6 +86,10 @@ export function JsonOutput({
       setJsonPreviewOpen(true);
     }
   }, [collapseJsonByDefault]);
+
+  useEffect(() => {
+    onErrorReportChange?.(lastErrorReport);
+  }, [lastErrorReport, onErrorReportChange]);
 
   function handleDownload() {
     const blob = new Blob([stringifyProjectSpec(state)], { type: 'application/json' });
@@ -182,40 +180,6 @@ export function JsonOutput({
     a.download = generatedZip.filename;
     a.click();
     URL.revokeObjectURL(url);
-  }
-
-  async function handleSubmitFeedback() {
-    if (feedbackTitle.trim().length < 3) {
-      setFeedbackMessage('タイトルは3文字以上で入力してください。');
-      return;
-    }
-    if (feedbackDescription.trim().length < 10) {
-      setFeedbackMessage('詳細は10文字以上で入力してください。');
-      return;
-    }
-
-    try {
-      setIsSubmittingFeedback(true);
-      setFeedbackMessage(null);
-      const result = await submitFeedback({
-        type: feedbackType,
-        title: feedbackTitle,
-        description: feedbackDescription,
-        email: feedbackEmail,
-        state,
-        errorReport: feedbackType === 'bug' ? lastErrorReport : null,
-        authToken,
-      });
-      setFeedbackMessage(result.message);
-      if (result.ok) {
-        setFeedbackTitle('');
-        setFeedbackDescription('');
-      }
-    } catch (error) {
-      setFeedbackMessage(error instanceof Error ? error.message : '送信に失敗しました');
-    } finally {
-      setIsSubmittingFeedback(false);
-    }
   }
 
   const errorList = Object.entries(errors);
@@ -440,71 +404,6 @@ export function JsonOutput({
         </div>
       )}
 
-      {showFeedback && (
-        <div className="feedback-panel">
-          <h3>フィードバック</h3>
-          <div className="feedback-grid">
-            <div className="form-row">
-              <label htmlFor="feedbackType">種別</label>
-              <select
-                id="feedbackType"
-                value={feedbackType}
-                onChange={(e) => setFeedbackType(e.target.value as FeedbackType)}
-              >
-                <option value="bug">不具合報告</option>
-                <option value="request">要望</option>
-              </select>
-            </div>
-
-            <div className="form-row">
-              <label htmlFor="feedbackTitle">タイトル</label>
-              <input
-                id="feedbackTitle"
-                type="text"
-                value={feedbackTitle}
-                onChange={(e) => setFeedbackTitle(e.target.value)}
-                placeholder="例: ZIP生成が失敗する"
-              />
-            </div>
-
-            <div className="form-row feedback-description">
-              <label htmlFor="feedbackDescription">詳細</label>
-              <textarea
-                id="feedbackDescription"
-                value={feedbackDescription}
-                onChange={(e) => setFeedbackDescription(e.target.value)}
-                placeholder="再現手順や発生条件を記載してください"
-                rows={4}
-              />
-            </div>
-
-            <div className="form-row">
-              <label htmlFor="feedbackEmail">連絡先メール（任意）</label>
-              <input
-                id="feedbackEmail"
-                type="email"
-                value={feedbackEmail}
-                onChange={(e) => setFeedbackEmail(e.target.value)}
-                placeholder="name@gugenka.jp"
-              />
-            </div>
-          </div>
-
-          <div className="output-actions">
-            <button
-              type="button"
-              onClick={handleSubmitFeedback}
-              aria-busy={isSubmittingFeedback}
-              disabled={isSubmittingFeedback}
-              className={`btn-primary ${isSubmittingFeedback ? 'btn-busy' : ''}`}
-            >
-              {isSubmittingFeedback ? '送信中...' : 'フィードバックを送信'}
-            </button>
-          </div>
-          <p className="hint">入力目安: タイトル3文字以上、詳細10文字以上</p>
-          {feedbackMessage && <p>{feedbackMessage}</p>}
-        </div>
-      )}
     </section>
   );
 }

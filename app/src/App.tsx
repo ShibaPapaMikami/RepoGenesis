@@ -26,6 +26,7 @@ import { StructureSection } from './components/sections/StructureSection';
 import { WorkflowSection } from './components/sections/WorkflowSection';
 import { JsonOutput } from './components/output/JsonOutput';
 import { AuthPanel } from './components/auth/AuthPanel';
+import { FeedbackWidget } from './components/feedback/FeedbackWidget';
 import { getGenerationMode, getRemoteAuthMode } from './utils/generateRepository';
 import {
   getConsultationPromptTemplate,
@@ -43,6 +44,7 @@ import {
   type SkillCatalogItem,
 } from './data/skillCatalog.ts';
 import { CONSULTATION_TEST_TEMPLATES } from './data/consultationTestTemplates.ts';
+import type { ErrorReportPayload } from './utils/feedback.ts';
 import './App.css';
 
 declare const __APP_RELEASE__: string;
@@ -113,6 +115,7 @@ function App() {
   const [hasSavedProgress, setHasSavedProgress] = useState<boolean>(() =>
     deriveInitialWizardState(loadDraft(), loadConsultationText(), loadConsultationDraft()).hasProgress);
   const [resultPhase, setResultPhase] = useState<'idle' | 'running' | 'done'>('idle');
+  const [latestErrorReport, setLatestErrorReport] = useState<ErrorReportPayload | null>(null);
   const [authSession, setAuthSession] = useState<{ authenticated: boolean; email: string | null }>({
     authenticated: false,
     email: null,
@@ -752,10 +755,10 @@ function App() {
               sectionRef={outputRef}
               title="Step 7. ZIP生成と結果"
               lead="最後に JSON と ZIP 生成結果を確認します。request id やダウンロード導線もここに集約します。"
-              showFeedback={resultPhase !== 'idle'}
               collapseJsonByDefault
               showJsonTools={testMode}
               onGenerationStateChange={setResultPhase}
+              onErrorReportChange={setLatestErrorReport}
               state={state}
               canExport={exportable}
               errors={errors}
@@ -778,6 +781,8 @@ function App() {
           </button>
         </div>
       </main>
+
+      <FeedbackWidget state={state} errorReport={latestErrorReport} />
     </div>
   );
 }
