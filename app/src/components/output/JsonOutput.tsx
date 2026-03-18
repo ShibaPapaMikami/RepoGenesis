@@ -9,6 +9,7 @@ import {
   getGenerationMode,
   getRemoteAuthMode,
 } from '../../utils/generateRepository';
+import { canRecoverCookieSession, refreshCookieSession } from '../../utils/authRecovery.ts';
 import { downloadErrorReport, submitFeedback, type FeedbackType, type ErrorReportPayload } from '../../utils/feedback';
 import { assessIntakeReadiness, getConsultationReviewHints, type ConsultationPromptVariant, type IntakeDraft } from '../../utils/intakeParser';
 import {
@@ -115,6 +116,10 @@ export function JsonOutput({
   }
 
   async function handleGenerateRepository() {
+    async function attemptGenerate() {
+      return generateRepository(state, authToken, selectedSkills);
+    }
+
     try {
       setIsGenerating(true);
       onGenerationStateChange?.('running');
@@ -125,7 +130,21 @@ export function JsonOutput({
       if (generationMode === 'remote' && remoteAuthMode === 'manual_bearer' && manualBearerUiAvailable) {
         localStorage.setItem('repogenesis_api_token', authToken);
       }
-      const result = await generateRepository(state, authToken, selectedSkills);
+      let result;
+      try {
+        result = await attemptGenerate();
+      } catch (error) {
+        if (
+          error instanceof GenerateRepositoryError
+          && canRecoverCookieSession(error.status, remoteAuthMode, authSession.email)
+        ) {
+          setGenerateMessage('ログイン状態を更新して再試行しています...');
+          await refreshCookieSession(authSession.email as string);
+          result = await attemptGenerate();
+        } else {
+          throw error;
+        }
+      }
       setGeneratedZip({ blob: result.blob, filename: result.filename });
       const fileInfo = result.fileCount ? `${result.fileCount}ファイル` : 'ZIP';
       setLastGenerateRequestId(result.requestId ?? null);
