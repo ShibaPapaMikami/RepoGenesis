@@ -274,7 +274,7 @@ export function JsonOutput({
 
       {selectedSkills.length > 0 && (
         <div className="generation-readiness generation-readiness-info">
-          <h3>選択した AI ガイド</h3>
+          <h3>選択した Skill（スキル）</h3>
           <ul>
             {selectedSkills.map((skill) => (
               <li key={skill.id}>
@@ -288,7 +288,7 @@ export function JsonOutput({
           </ul>
           {generationMode === 'remote' ? (
             <p className="generation-readiness-note">
-              選んだ AI ガイドのファイルは ZIP に入っています。これは自動機能ではなく、解凍後に対応する AI ツールでこの project を開いた時に参照するためのものです。何もしなくても勝手に動くわけではありません。
+              選んだ Skill のファイルは ZIP に入っています。これは自動機能ではなく、解凍後に対応する AI ツールでこの project を開いた時に参照するためのものです。何もしなくても勝手に動くわけではありません。
             </p>
           ) : (
             <>
@@ -401,7 +401,7 @@ export function JsonOutput({
         </button>
       </div>
       {requiresCookieSessionLogin && !authSession.authenticated && (
-        <p className="hint">ZIP 生成には上部の認証セクションでログインが必要です。</p>
+        <p className="hint">公開版の remote ZIP 生成には、上部の認証セクションでのログインが必要です。</p>
       )}
       {generateMessage && (
         <div className={`generation-status generation-status-${generationTone}`}>

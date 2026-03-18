@@ -36,7 +36,7 @@ export interface IntakeDraft {
   suggestedState: FormState;
 }
 
-export type ConsultationPromptVariant = 'new_business' | 'internal_tool' | 'client_project';
+export type ConsultationPromptVariant = 'new_business' | 'internal_tool' | 'client_project' | 'personal_project';
 
 export interface ConsultationPromptOption {
   id: ConsultationPromptVariant;
@@ -206,12 +206,19 @@ ${PROMPT_OUTPUT_RULES}`,
 不明点は「未確定事項」に残してください。
 
 ${PROMPT_OUTPUT_RULES}`,
+  personal_project: `あなたは個人プロジェクトの要件整理アシスタントです。
+個人開発、学習用、ポートフォリオ用のプロジェクト前提で、非エンジニアでも RepoGenesis に反映しやすいように整理してください。
+作る目的、最初に完成させたい範囲、一人で続けられる運用、公開するかどうかを優先し、推測は最小化してください。
+不明点は「未確定事項」に残してください。
+
+${PROMPT_OUTPUT_RULES}`,
 };
 
 export const CONSULTATION_PROMPT_OPTIONS: ConsultationPromptOption[] = [
   { id: 'new_business', label: '新規事業', description: '新しい事業やプロダクトの立ち上げを整理する' },
   { id: 'internal_tool', label: '社内ツール', description: '業務改善や社内利用のツールを整理する' },
   { id: 'client_project', label: 'クライアント案件', description: '受託開発や提案案件の整理に使う' },
+  { id: 'personal_project', label: '個人プロジェクト', description: '個人開発、学習用、ポートフォリオ用の整理に使う' },
 ];
 
 const REVIEW_HINTS: Record<ConsultationPromptVariant, ConsultationReviewHints> = {
@@ -237,6 +244,14 @@ const REVIEW_HINTS: Record<ConsultationPromptVariant, ConsultationReviewHints> =
       '最初の成果物と納品範囲が分かれているか',
       'クライアント固有の制約や機密条件が書かれているか',
       '提案段階の仮説と確定仕様が混ざっていないか',
+    ],
+  },
+  personal_project: {
+    title: '個人プロジェクトで先に確認したいこと',
+    points: [
+      '最初に一人で完成させる範囲が絞れているか',
+      '公開前提なのか、個人利用だけなのかが分かれているか',
+      '学習目的と実運用目的が混ざったまま大きくなりすぎていないか',
     ],
   },
 };

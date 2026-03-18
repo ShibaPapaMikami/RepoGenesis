@@ -1,5 +1,6 @@
 import type { FormState } from '../state/actions';
 import type { IntakeDraft } from './intakeParser';
+import type { ConsultationPromptVariant } from './intakeParser';
 import type { SimpleIntakeState } from './simpleIntake.ts';
 import { normalizeAiTools, type LegacyAiTool } from './aiTools.ts';
 
@@ -9,6 +10,8 @@ const CONSULTATION_DRAFT_KEY = 'consultation_input_draft';
 const SIMPLE_INPUT_KEY = 'simple_input_state';
 const INPUT_MODE_KEY = 'consultation_input_mode';
 const SELECTED_SKILLS_KEY = 'selected_skill_ids';
+const CONSULTATION_PROMPT_VARIANT_KEY = 'consultation_prompt_variant';
+const UI_TEST_MODE_KEY = 'ui_test_mode';
 
 export function saveDraft(state: FormState): void {
   try {
@@ -141,6 +144,42 @@ export function loadSelectedSkills(): string[] {
     return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
   } catch {
     return [];
+  }
+}
+
+export function saveConsultationPromptVariant(variant: ConsultationPromptVariant): void {
+  try {
+    localStorage.setItem(CONSULTATION_PROMPT_VARIANT_KEY, variant);
+  } catch {
+    // silently ignore
+  }
+}
+
+export function loadConsultationPromptVariant(): ConsultationPromptVariant {
+  try {
+    const raw = localStorage.getItem(CONSULTATION_PROMPT_VARIANT_KEY);
+    return raw === 'new_business' || raw === 'internal_tool' || raw === 'client_project' || raw === 'personal_project'
+      ? raw
+      : 'personal_project';
+  } catch {
+    return 'personal_project';
+  }
+}
+
+export function saveUiTestMode(enabled: boolean): void {
+  try {
+    localStorage.setItem(UI_TEST_MODE_KEY, JSON.stringify(enabled));
+  } catch {
+    // silently ignore
+  }
+}
+
+export function loadUiTestMode(): boolean {
+  try {
+    const raw = localStorage.getItem(UI_TEST_MODE_KEY);
+    return raw === 'true';
+  } catch {
+    return false;
   }
 }
 

@@ -332,20 +332,24 @@ test('createIntakeEnvelope should normalize provider-agnostic intake input', () 
 test('getConsultationPromptTemplate should return variant-specific guidance', () => {
   const internalPrompt = getConsultationPromptTemplate('internal_tool');
   const businessPrompt = getConsultationPromptTemplate('new_business');
+  const personalPrompt = getConsultationPromptTemplate('personal_project');
 
-  assert.equal(CONSULTATION_PROMPT_OPTIONS.length, 3);
+  assert.equal(CONSULTATION_PROMPT_OPTIONS.length, 4);
   assert.equal(/社内ツール/.test(internalPrompt), true);
   assert.equal(/新規事業/.test(businessPrompt), true);
+  assert.equal(/個人プロジェクト/.test(personalPrompt), true);
   assert.equal(/## プロジェクト概要/.test(internalPrompt), true);
 });
 
 test('getConsultationReviewHints should return variant-specific review points', () => {
   const internalHints = getConsultationReviewHints('internal_tool');
   const clientHints = getConsultationReviewHints('client_project');
+  const personalHints = getConsultationReviewHints('personal_project');
 
   assert.equal(/社内ツール/.test(internalHints.title), true);
   assert.equal(internalHints.points.length > 0, true);
   assert.equal(/クライアント案件/.test(clientHints.title), true);
+  assert.equal(/個人プロジェクト/.test(personalHints.title), true);
 });
 
 test('updateDraftOpenQuestions should update review and extracted open questions', () => {

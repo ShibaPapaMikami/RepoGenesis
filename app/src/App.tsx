@@ -1,18 +1,24 @@
-import { useReducer, useEffect, useRef, useCallback, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { formReducer, initialFormState } from './state/formReducer';
 import { validationErrors, canExport } from './state/selectors';
 import {
-  saveDraft,
-  loadDraft,
-  clearDraft,
-  saveConsultationText,
-  loadConsultationText,
-  saveConsultationDraft,
-  loadConsultationDraft,
   clearConsultationState,
+  clearDraft,
+  loadConsultationDraft,
+  loadConsultationPromptVariant,
+  loadConsultationText,
+  loadDraft,
   loadSelectedSkills,
+  loadUiTestMode,
+  saveConsultationDraft,
+  saveConsultationPromptVariant,
+  saveConsultationText,
+  saveDraft,
   saveSelectedSkills,
+  saveUiTestMode,
 } from './utils/storage';
+import { IntroSection } from './components/sections/IntroSection';
+import { ConsultationSection } from './components/sections/ConsultationSection';
 import { ProjectSection } from './components/sections/ProjectSection';
 import { TechSection } from './components/sections/TechSection';
 import { SecuritySection } from './components/sections/SecuritySection';
@@ -21,7 +27,6 @@ import { WorkflowSection } from './components/sections/WorkflowSection';
 import { JsonOutput } from './components/output/JsonOutput';
 import { AuthPanel } from './components/auth/AuthPanel';
 import { getGenerationMode, getRemoteAuthMode } from './utils/generateRepository';
-import { ConsultationSection } from './components/sections/ConsultationSection';
 import {
   getConsultationPromptTemplate,
   parseConsultationIntake,
@@ -33,8 +38,8 @@ import {
   formatSkillProviderNames,
   formatSkillProviderSupportSummary,
   getRecommendedSkills,
-  SKILL_RISK_LABELS,
   SKILL_CATALOG,
+  SKILL_RISK_LABELS,
   type SkillCatalogItem,
 } from './data/skillCatalog.ts';
 import { CONSULTATION_TEST_TEMPLATES } from './data/consultationTestTemplates.ts';
@@ -43,101 +48,165 @@ import './App.css';
 declare const __APP_RELEASE__: string;
 declare const __APP_COMMIT__: string;
 
-type GuidedStep = 'prompt' | 'paste' | 'draft' | 'options' | 'review' | 'result';
+type GuidedStep = 'intro' | 'paste' | 'draft' | 'options' | 'review' | 'result';
+type SaveState = 'idle' | 'saving' | 'saved';
 
-function deriveInitialGuidedStep(savedText: string, savedDraft: IntakeDraft | null): GuidedStep {
-  if (savedDraft) return 'draft';
-  if (savedText.trim().length > 0) return 'paste';
-  return 'prompt';
+const WIZARD_STEPS: Array<{ id: GuidedStep; label: string }> = [
+  { id: 'intro', label: '趣旨' },
+  { id: 'paste', label: '相談内容' },
+  { id: 'draft', label: 'ドラフト' },
+  { id: 'options', label: 'オプション' },
+  { id: 'review', label: '最終確認' },
+  { id: 'result', label: 'ZIP生成' },
+];
+
+function deriveInitialWizardState(
+  savedFormDraft: ReturnType<typeof loadDraft>,
+  savedText: string,
+  savedConsultationDraft: IntakeDraft | null,
+): { step: GuidedStep; draftApplied: boolean } {
+  if (savedFormDraft) return { step: 'review', draftApplied: true };
+  if (savedConsultationDraft) return { step: 'draft', draftApplied: false };
+  if (savedText.trim().length > 0) return { step: 'paste', draftApplied: false };
+  return { step: 'intro', draftApplied: false };
+}
+
+function formatSaveLabel(state: SaveState, lastSavedAt: string | null): string {
+  if (state === 'saving') return '自動保存中...';
+  if (lastSavedAt) return `保存済み ${lastSavedAt}`;
+  return '自動保存は有効です';
 }
 
 function App() {
   const [state, dispatch] = useReducer(formReducer, initialFormState);
-  const [consultationText, setConsultationText] = useState(loadConsultationText());
-  const [consultationDraft, setConsultationDraft] = useState<IntakeDraft | null>(loadConsultationDraft());
-  const [consultationPromptVariant, setConsultationPromptVariant] = useState<ConsultationPromptVariant>('internal_tool');
+  const [consultationText, setConsultationText] = useState(() => loadConsultationText());
+  const [consultationDraft, setConsultationDraft] = useState<IntakeDraft | null>(() => loadConsultationDraft());
+  const [consultationPromptVariant, setConsultationPromptVariant] = useState<ConsultationPromptVariant>(() => loadConsultationPromptVariant());
+  const [testMode, setTestMode] = useState(() => loadUiTestMode());
   const [selectedTestTemplateId, setSelectedTestTemplateId] = useState('');
   const [consultationMessage, setConsultationMessage] = useState<string | null>(null);
-  const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>(loadSelectedSkills());
+  const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>(() => loadSelectedSkills());
   const [promptCopied, setPromptCopied] = useState(false);
-  const [guidedStep, setGuidedStep] = useState<GuidedStep>(() => deriveInitialGuidedStep(loadConsultationText(), loadConsultationDraft()));
+  const [guidedStep, setGuidedStep] = useState<GuidedStep>(() =>
+    deriveInitialWizardState(loadDraft(), loadConsultationText(), loadConsultationDraft()).step);
   const [showAdvancedDetail, setShowAdvancedDetail] = useState(false);
-  const [draftApplied, setDraftApplied] = useState(false);
+  const [draftApplied, setDraftApplied] = useState<boolean>(() =>
+    deriveInitialWizardState(loadDraft(), loadConsultationText(), loadConsultationDraft()).draftApplied);
   const [resultPhase, setResultPhase] = useState<'idle' | 'running' | 'done'>('idle');
   const [authSession, setAuthSession] = useState<{ authenticated: boolean; email: string | null }>({
     authenticated: false,
     email: null,
   });
+  const [saveState, setSaveState] = useState<SaveState>('idle');
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+
   const initialized = useRef(false);
   const promptCopyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const outputRef = useRef<HTMLElement | null>(null);
-  const optionsRef = useRef<HTMLElement | null>(null);
-  const reviewRef = useRef<HTMLElement | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const markSaved = useCallback(() => {
+    setSaveState('saved');
+    setLastSavedAt(
+      new Date().toLocaleTimeString('ja-JP', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    );
+  }, []);
+
+  const debouncedSave = useCallback((nextState: typeof state) => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setSaveState('saving');
+    timerRef.current = setTimeout(() => {
+      saveDraft(nextState);
+      markSaved();
+    }, 400);
+  }, [markSaved]);
 
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
-    const draft = loadDraft();
-    if (draft) {
-      dispatch({ type: 'RESTORE_DRAFT', payload: draft });
-    }
+
+    const restoredDraft = loadDraft();
     const restoredText = loadConsultationText();
     const restoredConsultationDraft = loadConsultationDraft();
+    const restored = deriveInitialWizardState(restoredDraft, restoredText, restoredConsultationDraft);
+
+    if (restoredDraft) {
+      dispatch({ type: 'RESTORE_DRAFT', payload: restoredDraft });
+    }
     setConsultationText(restoredText);
     setConsultationDraft(restoredConsultationDraft);
+    setConsultationPromptVariant(loadConsultationPromptVariant());
+    setTestMode(loadUiTestMode());
     setShowAdvancedDetail(false);
-    setDraftApplied(false);
-    setGuidedStep(deriveInitialGuidedStep(restoredText, restoredConsultationDraft));
-  }, []);
-
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const debouncedSave = useCallback((s: typeof state) => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => saveDraft(s), 500);
+    setDraftApplied(restored.draftApplied);
+    setGuidedStep(restored.step);
+    if (restoredDraft || restoredText || restoredConsultationDraft) {
+      setSaveState('saved');
+      setLastSavedAt('復元済み');
+    }
   }, []);
 
   useEffect(() => {
-    if (initialized.current) {
-      debouncedSave(state);
-    }
+    if (!initialized.current) return;
+    debouncedSave(state);
   }, [state, debouncedSave]);
 
   useEffect(() => {
+    if (!initialized.current) return;
+    setSaveState('saving');
     saveConsultationText(consultationText);
-  }, [consultationText]);
+    markSaved();
+  }, [consultationText, markSaved]);
 
   useEffect(() => {
+    if (!initialized.current) return;
+    setSaveState('saving');
     saveConsultationDraft(consultationDraft);
-  }, [consultationDraft]);
+    markSaved();
+  }, [consultationDraft, markSaved]);
 
   useEffect(() => {
+    if (!initialized.current) return;
+    setSaveState('saving');
     saveSelectedSkills(selectedSkillIds);
-  }, [selectedSkillIds]);
+    markSaved();
+  }, [selectedSkillIds, markSaved]);
+
+  useEffect(() => {
+    if (!initialized.current) return;
+    saveConsultationPromptVariant(consultationPromptVariant);
+  }, [consultationPromptVariant]);
+
+  useEffect(() => {
+    if (!initialized.current) return;
+    saveUiTestMode(testMode);
+  }, [testMode]);
 
   useEffect(() => () => {
-    if (promptCopyTimerRef.current) {
-      clearTimeout(promptCopyTimerRef.current);
-    }
+    if (promptCopyTimerRef.current) clearTimeout(promptCopyTimerRef.current);
+    if (timerRef.current) clearTimeout(timerRef.current);
   }, []);
 
   const errors = validationErrors(state);
   const exportable = canExport(state);
   const generationMode = getGenerationMode();
   const requiresCookieSession = generationMode === 'remote' && getRemoteAuthMode() === 'cookie_session';
-  const activeStep = guidedStep === 'result' || resultPhase !== 'idle' ? 'result' : guidedStep;
+  const activeStep = guidedStep;
   const suggestedRepoType = consultationDraft?.suggestedState.structure.repo_type ?? state.structure.repo_type;
   const suggestedSecurity = consultationDraft?.suggestedState.securityLevelOverride ?? state.security.level;
   const summaryProjectName = state.project.name || consultationDraft?.suggestedState.project.name || '未確定';
   const summaryDescription = state.project.description || consultationDraft?.suggestedState.project.description || '未確定';
-  const summaryDomains = state.tech.domains.length > 0 ? state.tech.domains.join(', ') : consultationDraft?.suggestedState.tech.domains.join(', ') || '未確定';
-  const showConsultationSection = guidedStep === 'prompt' || guidedStep === 'paste' || guidedStep === 'draft';
-  const showOptionsSection = draftApplied && guidedStep === 'options';
-  const showReviewSection = draftApplied && guidedStep === 'review';
-  const showOutputSection = draftApplied && activeStep === 'result';
+  const summaryDomains = state.tech.domains.length > 0
+    ? state.tech.domains.join(', ')
+    : consultationDraft?.suggestedState.tech.domains.join(', ') || '未確定';
   const recommendedSkills = getRecommendedSkills(state.tech.ai_tools);
   const starterSkills = recommendedSkills.filter((skill) => skill.selectionStage === 'first');
   const laterSkills = recommendedSkills.filter((skill) => skill.selectionStage === 'later');
   const selectedSkills = SKILL_CATALOG.filter((item) => selectedSkillIds.includes(item.id));
+  const saveLabel = formatSaveLabel(saveState, lastSavedAt);
 
   const recommendationNotes = [
     suggestedRepoType === 'multi'
@@ -152,6 +221,28 @@ function App() {
       ? `外部連携候補: ${consultationDraft.extracted.integrations.join(', ')}`
       : '外部連携は未確定です。生成後に別タスクとして切り出しても進められます。',
   ];
+
+  function canVisitStep(step: GuidedStep): boolean {
+    switch (step) {
+      case 'intro':
+      case 'paste':
+        return true;
+      case 'draft':
+        return Boolean(consultationDraft);
+      case 'options':
+      case 'review':
+      case 'result':
+        return draftApplied;
+      default:
+        return false;
+    }
+  }
+
+  function goToStep(step: GuidedStep) {
+    if (!canVisitStep(step)) return;
+    setGuidedStep(step);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   function toggleSkillSelection(skillId: string) {
     setSelectedSkillIds((current) =>
@@ -193,33 +284,30 @@ function App() {
     );
   }
 
-  function scrollToSection(ref: { current: HTMLElement | null }) {
-    requestAnimationFrame(() => {
-      ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  }
-
   function handleReset() {
     clearDraft();
     clearConsultationState();
     dispatch({ type: 'RESET' });
     setConsultationText('');
     setConsultationDraft(null);
+    setSelectedSkillIds([]);
+    setSelectedTestTemplateId('');
     setConsultationMessage(null);
     setPromptCopied(false);
-    setGuidedStep('prompt');
+    setGuidedStep('intro');
     setShowAdvancedDetail(false);
     setDraftApplied(false);
     setResultPhase('idle');
+    setSaveState('idle');
+    setLastSavedAt(null);
   }
 
   async function handleCopyConsultationPrompt() {
     await navigator.clipboard.writeText(getConsultationPromptTemplate(consultationPromptVariant));
-    setConsultationMessage('相談用プロンプトをコピーしました。壁打ち結果をこの画面に貼り付けてください。');
+    setConsultationMessage('相談用プロンプトをコピーしました。AI で整理した結果を次に貼り付けてください。');
     setPromptCopied(true);
     if (promptCopyTimerRef.current) clearTimeout(promptCopyTimerRef.current);
     promptCopyTimerRef.current = setTimeout(() => setPromptCopied(false), 2400);
-    setGuidedStep('paste');
   }
 
   function handleBuildConsultationDraft() {
@@ -234,7 +322,7 @@ function App() {
       return;
     }
     setConsultationDraft(draft);
-    setConsultationMessage('ドラフトを作成しました。確認できたこと、仮置きした内容、未確定事項を確認してください。');
+    setConsultationMessage('ドラフトを作成しました。内容を確認して次へ進んでください。');
     setGuidedStep('draft');
     setShowAdvancedDetail(false);
     setDraftApplied(false);
@@ -258,19 +346,15 @@ function App() {
     dispatch({ type: 'RESTORE_DRAFT', payload: consultationDraft.suggestedState });
     setConsultationMessage(
       nextStep === 'options'
-        ? 'ドラフトをフォームに反映しました。おすすめオプションを確認してください。'
+        ? 'ドラフトをフォームへ反映しました。次に、必要なオプションだけ確認してください。'
         : openAdvancedDetail
-          ? 'ドラフトをフォームに反映しました。詳細調整を開きます。'
-          : 'ドラフトをフォームに反映しました。最終確認へ進みます。',
+          ? 'ドラフトをフォームへ反映しました。詳細調整を開きます。'
+          : 'ドラフトをフォームへ反映しました。最終確認へ進みます。',
     );
     setGuidedStep(nextStep);
     setShowAdvancedDetail(openAdvancedDetail);
     setDraftApplied(true);
-    if (nextStep === 'options') {
-      scrollToSection(optionsRef);
-      return;
-    }
-    scrollToSection(reviewRef);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function handleChangeDraftOpenQuestions(value: string) {
@@ -285,86 +369,104 @@ function App() {
 
   return (
     <div className="app">
-      <AuthPanel
-        enabled={requiresCookieSession}
-        onSessionChange={setAuthSession}
-        compact
-      />
+      <header className="app-header app-header-public">
+        <div className="app-topbar">
+          <div className="app-topbar-copy">
+            <span className="app-save-status">{saveLabel}</span>
+            <span className="app-save-note">
+              {requiresCookieSession ? 'ログインは ZIP 生成時だけ必要です' : 'ログインなしで最後まで試せます'}
+            </span>
+          </div>
+          <label className="app-utility-toggle">
+            <input
+              type="checkbox"
+              checked={testMode}
+              onChange={(event) => setTestMode(event.target.checked)}
+            />
+            テストモード
+          </label>
+        </div>
 
-      <header className="app-header">
         <h1>RepoGenesis</h1>
         <p>AI対応リポジトリ構造ジェネレータ</p>
         <p className="app-version">{buildLabel}</p>
       </header>
 
-      <main className="app-main">
-        {
-          <>
-            {showConsultationSection ? (
-              <ConsultationSection
-                promptVariant={consultationPromptVariant}
-                onChangePromptVariant={setConsultationPromptVariant}
-                selectedTestTemplateId={selectedTestTemplateId}
-                onChangeTestTemplateId={setSelectedTestTemplateId}
-                onApplyTestTemplate={handleApplyConsultationTestTemplate}
-                intakeText={consultationText}
-                onChangeText={setConsultationText}
-                onCopyPrompt={handleCopyConsultationPrompt}
-                promptCopied={promptCopied}
-                onBuildDraft={handleBuildConsultationDraft}
-                onContinueToOptions={() => applyConsultationDraft('options')}
-                onChangeOpenQuestions={handleChangeDraftOpenQuestions}
-                draft={consultationDraft}
-                message={consultationMessage}
-              />
-            ) : (
-              <section className="form-section step-summary">
-                <p className="section-kicker">{consultationDraft ? 'Step 2' : 'Step 1'}</p>
-                <h2>{consultationDraft ? 'ドラフト確認' : '相談準備と貼り付け'}</h2>
-                <p className="consultation-lead">
-                  {consultationDraft
-                    ? `プロジェクト名候補は「${consultationDraft.suggestedState.project.name || '未確定'}」です。必要ならここを開いて確認できます。`
-                    : consultationText.trim()
-                      ? '相談結果は入力済みです。必要なら貼り付け欄を開いて編集できます。'
-                      : 'まず相談用プロンプトをコピーし、その後で AI の整理結果を貼り付けます。'}
-                </p>
-                <div className="output-actions">
-                  <button
-                    type="button"
-                    onClick={() => setGuidedStep(consultationDraft ? 'draft' : 'paste')}
-                    className="btn-secondary"
-                  >
-                    {consultationDraft ? 'ドラフト確認を開く' : '貼り付け欄を開く'}
-                  </button>
-                </div>
-              </section>
-            )}
-          </>
-        }
+      <AuthPanel enabled={requiresCookieSession} onSessionChange={setAuthSession} compact />
 
-        {!draftApplied && (
-          <>
-            <section className="form-section step-summary step-summary-locked">
-              <p className="section-kicker">Step 3</p>
-              <h2>おすすめオプション</h2>
-              <p className="consultation-lead">ドラフト確定後に、リポジトリ構成・security・進め方の段階数を確認します。</p>
-            </section>
-            <section className="form-section step-summary step-summary-locked">
-              <p className="section-kicker">Step 4</p>
-              <h2>最終確認</h2>
-              <p className="consultation-lead">プロジェクト要点と JSON プレビューは、この後の確認ステップでまとめて表示します。</p>
-            </section>
-            <section className="form-section step-summary step-summary-locked">
-              <p className="section-kicker">Step 5</p>
-              <h2>ZIP生成と結果</h2>
-              <p className="consultation-lead">ZIP 生成、request id、ダウンロード導線は最後にだけ表示します。</p>
-            </section>
-          </>
+      <nav className="wizard-nav" aria-label="作業ステップ">
+        {WIZARD_STEPS.map((step, index) => {
+          const available = canVisitStep(step.id);
+          const current = activeStep === step.id;
+          return (
+            <button
+              key={step.id}
+              type="button"
+              className={`wizard-step${current ? ' wizard-step-current' : ''}${available ? '' : ' wizard-step-locked'}`}
+              onClick={() => goToStep(step.id)}
+              disabled={!available}
+            >
+              <span className="wizard-step-index">{index + 1}</span>
+              <span>{step.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      <main className="app-main">
+        {guidedStep === 'intro' && (
+          <IntroSection
+            onStart={() => goToStep('paste')}
+            saveLabel={saveLabel}
+            requiresLoginForRemoteZip={requiresCookieSession}
+          />
         )}
 
-        {draftApplied && showOptionsSection && (
-          <section ref={optionsRef} className="form-section options-section">
-            <p className="section-kicker">Step 3</p>
+        {guidedStep === 'paste' && (
+          <ConsultationSection
+            mode="paste"
+            showTestTools={testMode}
+            promptVariant={consultationPromptVariant}
+            onChangePromptVariant={setConsultationPromptVariant}
+            selectedTestTemplateId={selectedTestTemplateId}
+            onChangeTestTemplateId={setSelectedTestTemplateId}
+            onApplyTestTemplate={handleApplyConsultationTestTemplate}
+            intakeText={consultationText}
+            onChangeText={setConsultationText}
+            onCopyPrompt={handleCopyConsultationPrompt}
+            promptCopied={promptCopied}
+            onBuildDraft={handleBuildConsultationDraft}
+            onContinueToOptions={() => applyConsultationDraft('options')}
+            onChangeOpenQuestions={handleChangeDraftOpenQuestions}
+            draft={consultationDraft}
+            message={consultationMessage}
+          />
+        )}
+
+        {guidedStep === 'draft' && consultationDraft && (
+          <ConsultationSection
+            mode="draft"
+            showTestTools={testMode}
+            promptVariant={consultationPromptVariant}
+            onChangePromptVariant={setConsultationPromptVariant}
+            selectedTestTemplateId={selectedTestTemplateId}
+            onChangeTestTemplateId={setSelectedTestTemplateId}
+            onApplyTestTemplate={handleApplyConsultationTestTemplate}
+            intakeText={consultationText}
+            onChangeText={setConsultationText}
+            onCopyPrompt={handleCopyConsultationPrompt}
+            promptCopied={promptCopied}
+            onBuildDraft={handleBuildConsultationDraft}
+            onContinueToOptions={() => applyConsultationDraft('options')}
+            onChangeOpenQuestions={handleChangeDraftOpenQuestions}
+            draft={consultationDraft}
+            message={consultationMessage}
+          />
+        )}
+
+        {guidedStep === 'options' && draftApplied && (
+          <section className="form-section options-section">
+            <p className="section-kicker">Step 4</p>
             <h2>おすすめオプション</h2>
             <p className="consultation-lead">
               ここでは generator に既にある設定だけに絞って、repo 構成や security を軽く調整します。迷う場合は推奨値のままで進めます。
@@ -441,23 +543,23 @@ function App() {
             </div>
 
             <div className="consultation-summary skill-selection">
-              <p><strong>AIに追加するガイド（必要なら選ぶ）</strong></p>
+              <p><strong>Skill（スキル）</strong></p>
               <p className="consultation-lead">
                 {generationMode === 'remote'
-                  ? 'ここで選ぶのはアプリ機能ではなく、生成後に Codex / Claude Code / Gemini CLI へ「この repo をどう進めるか」を頼む時の補助ガイドです。選んだガイドのファイルは ZIP に一緒に入りますが、自動では動きません。'
-                  : 'ここで選ぶのは、生成後に AI と一緒に作業する時の補助ガイドです。このモードでは ZIP への自動同梱はまだないため、必要になった時だけ後から追加します。'}
+                  ? 'Skill はアプリ機能ではなく、生成後に Codex / Claude Code / Gemini CLI へ「この repo をどう進めるか」を頼む時の補助ガイドです。選んだ Skill のファイルは ZIP に一緒に入りますが、自動では動きません。'
+                  : 'Skill は、生成後に AI と一緒に作業する時の補助ガイドです。このモードでは ZIP への自動同梱はまだないため、必要になった時だけ後から追加します。'}
               </p>
               <ul className="skill-selection-notes">
-                <li>ZIP に入るのは「ガイドのファイルが一緒に入る」という意味です。</li>
-                <li>解凍後に対応する AI でその project を開くと、そのガイドを参照しながら作業できます。</li>
-                <li>勝手に何かが実行されるわけではなく、必要な場面で AI に頼む時の補助になります。</li>
+                <li>ZIP に入るのは「Skill のファイルが一緒に入る」という意味です。</li>
+                <li>解凍後に対応する AI でその project を開くと、その Skill を参照しながら作業できます。</li>
+                <li>何もしなくても勝手に動くものではなく、AI に頼む時の補助になります。</li>
                 <li>迷う場合は、まず `Repo Readiness Review` だけ選べば十分です。</li>
               </ul>
               {recommendedSkills.length > 0 ? (
                 <>
                   {starterSkills.length > 0 && (
                     <div className="skill-group">
-                      <p><strong>最初に入れておくとよい候補</strong></p>
+                      <p><strong>最初に入れておくとよい Skill</strong></p>
                       <div className="skill-grid">
                         {starterSkills.map(renderSkillCard)}
                       </div>
@@ -465,7 +567,7 @@ function App() {
                   )}
                   {laterSkills.length > 0 && (
                     <div className="skill-group">
-                      <p><strong>困った時に追加する候補</strong></p>
+                      <p><strong>困った時に追加する Skill</strong></p>
                       <div className="skill-grid">
                         {laterSkills.map(renderSkillCard)}
                       </div>
@@ -480,48 +582,22 @@ function App() {
             </div>
 
             <div className="output-actions">
-              <button
-                type="button"
-                onClick={() => {
-                  setGuidedStep('review');
-                  scrollToSection(reviewRef);
-                }}
-                className="btn-primary"
-              >
+              <button type="button" onClick={() => goToStep('draft')} className="btn-secondary">
+                ドラフトへ戻る
+              </button>
+              <button type="button" onClick={() => goToStep('review')} className="btn-primary">
                 最終確認へ進む
               </button>
             </div>
           </section>
         )}
 
-        {draftApplied && !showOptionsSection && (
-          <section className="form-section step-summary">
-            <p className="section-kicker">Step 3</p>
-            <h2>おすすめオプション</h2>
-            <p className="consultation-lead">
-              リポジトリ構成: {state.structure.repo_type === 'single' ? 'シングル' : 'マルチ'} / security: {state.security.level} / 段階数: {state.workflow.phases_count}
-            </p>
-            <div className="output-actions">
-              <button
-                type="button"
-                onClick={() => {
-                  setGuidedStep('options');
-                  scrollToSection(optionsRef);
-                }}
-                className="btn-secondary"
-              >
-                おすすめオプションを開く
-              </button>
-            </div>
-          </section>
-        )}
-
-        {draftApplied && showReviewSection && (
-          <section ref={reviewRef} className="form-section final-review-section">
-            <p className="section-kicker">Step 4</p>
+        {guidedStep === 'review' && draftApplied && (
+          <section className="form-section final-review-section">
+            <p className="section-kicker">Step 5</p>
             <h2>最終確認</h2>
             <p className="consultation-lead">
-              生成前の要点だけを先に確認し、必要になった時だけ詳細調整を開く導線に変えています。
+              生成前の要点だけを先に確認し、必要になった時だけ詳細調整を開く形にしています。
             </p>
 
             <div className="review-summary-grid">
@@ -550,34 +626,11 @@ function App() {
             </div>
 
             <div className="consultation-summary">
-              <p><strong>選択した AI ガイド:</strong> {selectedSkills.length > 0 ? selectedSkills.map((skill) => skill.name).join(', ') : 'なし'}</p>
+              <p><strong>選択した Skill（スキル）:</strong> {selectedSkills.length > 0 ? selectedSkills.map((skill) => skill.name).join(', ') : 'なし'}</p>
               {selectedSkills.length > 0 && (
-                <p className="consultation-lead">選んだガイドは ZIP に一緒に入りますが、自動実行はされません。解凍後に対応する AI でこの project を開いた時に使います。</p>
+                <p className="consultation-lead">選んだ Skill は ZIP に一緒に入りますが、自動実行はされません。解凍後に対応する AI でこの project を開いた時に使います。</p>
               )}
             </div>
-
-            {!showAdvancedDetail && (
-              <div className="output-actions">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setGuidedStep('result');
-                    setResultPhase('idle');
-                    scrollToSection(outputRef);
-                  }}
-                  className="btn-primary"
-                >
-                  ZIP生成へ進む
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAdvancedDetail(true)}
-                  className="btn-secondary"
-                >
-                  詳細調整を開く
-                </button>
-              </div>
-            )}
 
             {showAdvancedDetail && (
               <div className="advanced-detail-stack">
@@ -618,94 +671,60 @@ function App() {
                 <SecuritySection state={state} dispatch={dispatch} />
                 <StructureSection state={state} dispatch={dispatch} errors={errors} />
                 <WorkflowSection state={state} dispatch={dispatch} errors={errors} />
-                <div className="output-actions">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setGuidedStep('result');
-                      setResultPhase('idle');
-                      scrollToSection(outputRef);
-                    }}
-                    className="btn-primary"
-                  >
-                    ZIP生成へ進む
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowAdvancedDetail(false)}
-                    className="btn-secondary"
-                  >
-                    詳細調整を閉じる
-                  </button>
-                </div>
               </div>
             )}
-          </section>
-        )}
 
-        {draftApplied && !showReviewSection && (
-          <section className="form-section step-summary">
-            <p className="section-kicker">Step 4</p>
-            <h2>最終確認</h2>
-            <p className="consultation-lead">
-              project: {summaryProjectName} / domain: {summaryDomains} / リポジトリ構成: {state.structure.repo_type === 'single' ? 'シングル' : 'マルチ'}
-            </p>
             <div className="output-actions">
+              <button type="button" onClick={() => goToStep('options')} className="btn-secondary">
+                オプションへ戻る
+              </button>
               <button
                 type="button"
-                onClick={() => {
-                  setGuidedStep('review');
-                  scrollToSection(reviewRef);
-                }}
+                onClick={() => setShowAdvancedDetail((current) => !current)}
                 className="btn-secondary"
               >
-                最終確認を開く
+                {showAdvancedDetail ? '詳細調整を閉じる' : '詳細調整を開く'}
               </button>
-            </div>
-          </section>
-        )}
-
-        {showOutputSection && (
-          <JsonOutput
-            sectionRef={outputRef}
-            title="Step 5. ZIP生成と結果"
-            lead="JSONプレビューは最後にまとめ、ZIP 生成と request id の確認をこのセクションへ集約します。"
-            showFeedback={resultPhase !== 'idle'}
-            collapseJsonByDefault
-            onGenerationStateChange={setResultPhase}
-            state={state}
-            canExport={exportable}
-            errors={errors}
-            authSession={authSession}
-            consultationDraft={consultationDraft}
-            consultationPromptVariant={consultationPromptVariant}
-            selectedSkills={selectedSkills}
-          />
-        )}
-
-        {draftApplied && !showOutputSection && (
-          <section className="form-section step-summary">
-            <p className="section-kicker">Step 5</p>
-            <h2>ZIP生成と結果</h2>
-            <p className="consultation-lead">
-              {resultPhase === 'done'
-                ? '前回の生成結果があります。必要ならもう一度このステップを開いて確認できます。'
-                : 'まだ生成していません。最終確認ができたら、ここで ZIP を生成します。'}
-            </p>
-            <div className="output-actions">
               <button
                 type="button"
                 onClick={() => {
                   setGuidedStep('result');
                   setResultPhase('idle');
-                  scrollToSection(outputRef);
+                  requestAnimationFrame(() => {
+                    outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  });
                 }}
-                className="btn-secondary"
+                className="btn-primary"
               >
-                ZIP生成ステップを開く
+                ZIP生成へ進む
               </button>
             </div>
           </section>
+        )}
+
+        {guidedStep === 'result' && draftApplied && (
+          <>
+            <JsonOutput
+              sectionRef={outputRef}
+              title="Step 6. ZIP生成と結果"
+              lead="最後に JSON と ZIP 生成結果を確認します。request id やダウンロード導線もここに集約します。"
+              showFeedback={resultPhase !== 'idle'}
+              collapseJsonByDefault
+              onGenerationStateChange={setResultPhase}
+              state={state}
+              canExport={exportable}
+              errors={errors}
+              authSession={authSession}
+              consultationDraft={consultationDraft}
+              consultationPromptVariant={consultationPromptVariant}
+              selectedSkills={selectedSkills}
+            />
+            <div className="output-actions page-actions">
+              <button type="button" onClick={() => goToStep('review')} className="btn-secondary">
+                最終確認へ戻る
+              </button>
+            </div>
+          </>
         )}
 
         <div className="app-actions">

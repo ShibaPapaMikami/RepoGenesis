@@ -280,7 +280,7 @@ export function AuthPanel({ enabled, onSessionChange, compact = false }: AuthPan
           <div>
             <p className="section-kicker">Auth</p>
             <p className="auth-panel-subtitle">
-              {email ? `ログイン中: ${email}` : 'ZIP生成の前に Gugenka アカウントでログインします。'}
+              {email ? `ログイン中: ${email}` : '公開版では、ログインすると remote ZIP 生成が使えます。入力と draft 確認はログインなしでも進められます。'}
             </p>
             {message && <p className={status === 'error' ? 'error auth-message' : 'auth-message'}>{message}</p>}
           </div>
