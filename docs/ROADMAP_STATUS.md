@@ -1,7 +1,7 @@
 # ROADMAP_STATUS.md — Current Position
 
 ## Last Updated
-2026-03-17
+2026-03-18
 
 ## Roadmap Position
 Phase 6 / Hardening
@@ -10,7 +10,9 @@ Phase 6 / Hardening
 - Phase 0-4 are complete.
 - Phase 5 is complete.
 - Production deployment works with authenticated ZIP generation.
-- Latest confirmed production UI during the current timeout triage is `v0.1.1 (b4cacf5)` on 2026-03-13.
+- Public wizard UI has been refactored into a multi-step flow with intro, draft review, options, detail tuning, final review, and ZIP generation.
+- Test samples are now hidden behind `テストモード` and the public sample set no longer includes the AI minutes project.
+- The latest main branch includes the public-facing sample replacement on `04a9281`.
 - Remote ZIP generation succeeds in production and surfaces request IDs for log correlation (`srv-1773186465441` confirmed).
 - Timeout responses in production now also surface BFF request IDs for log correlation (`bff-eeab21ca-35a3-4acd-a51b-80d9b15bf8b5` confirmed).
 - After the timeout observation, a same-day retry on production succeeded again.
@@ -39,7 +41,7 @@ Phase 6 / Hardening
 - Keep optional skill layer separate from the intake/generator core while hardening local export behavior and provider-specific guidance.
 
 ## Next Three Tasks
-1. Verify production `v0.1.1 (c4b2c8a)` and confirm the new multi-skill catalog / provider badges behave correctly in the browser.
+1. Verify production on the latest public wizard commit and confirm the new intro / resume / detail step flow works correctly in the browser.
 2. Decide persistent storage for feedback and generation support data.
 3. Split pending large changes into separate tracks:
    - AI tool independence (`PROJECT.md` / `CLAUDE.md` / `GEMINI.md`)

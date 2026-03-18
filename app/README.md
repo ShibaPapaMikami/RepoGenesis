@@ -1,9 +1,14 @@
-# RepoGenesis Web Form (`app/`)
+# RepoGenesis Web (`app/`)
 
-RepoGenesis の Web フォーム。`ProjectSpec` を生成し、以下の2つを行える。
+RepoGenesis の公開向け Web wizard。AI との相談結果を貼り付けて draft を作り、必要な調整だけ行って starter repo の ZIP を生成する。
 
-1. `project_spec.json` のダウンロード
-2. `Generate Repository (ZIP)` によるブラウザ内リポジトリ生成
+主な機能:
+
+1. 相談結果の貼り付けから draft 作成
+2. step-by-step の詳細調整と最終確認
+3. `project_spec.json` の内部生成
+4. local / remote ZIP 生成
+5. Skill（スキル）の選択と remote ZIP への同梱
 
 ## 開発
 
@@ -39,11 +44,11 @@ npm run test:e2e
 ```
 
 検証内容:
-- `相談結果を反映` モードの基本導線
-- 相談の種類ごとのテスト入力反映
-- `draft` 生成と詳細入力への反映
+- AI-first wizard の基本導線
+- 相談の種類ごとの draft 化
+- `draft` 生成と詳細調整への反映
 - JSON プレビューの必須形状
-- 入力モード切替と `Reset`
+- テストモードと reset 導線
 
 補足:
 - `playwright.config.ts` が Vite dev server (`npm run dev`) を自動起動する
@@ -82,6 +87,7 @@ npm run dev
 - レスポンスZIPをそのままダウンロードする
 - 失敗時は `Download Error JSON` でエラー情報を共有可能
 - フォーム下部の `Feedback` から bug/request を送信可能
+- テストモードをオンにすると固定テスト文章と JSON 補助導線を表示できる
 
 Cloudflare Pages 公開手順:
 - `docs/CLOUDFLARE_PAGES_DEPLOY.md`

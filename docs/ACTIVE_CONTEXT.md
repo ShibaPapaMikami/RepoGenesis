@@ -1,7 +1,7 @@
 # ACTIVE_CONTEXT.md — Current Project State
 
 ## Last Updated
-2026-03-17
+2026-03-18
 
 ## Current Phase
 Phase 6 — AI-Assisted Spec Authoring (Hardening)
@@ -95,6 +95,12 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - skill registry schema に provider ごとの support type (`official` / `curated`) を追加した
   - `skills/registry/official/` を追加し、OpenAI 公式 curated skills を参照元にした provider-aware wrappers を追加した
   - `repo-readiness-review` には Gemini CLI command artifact 実体を追加し、metadata と bundling 実体を一致させた
+  - public wizard を `趣旨 -> 相談内容 -> ドラフト -> オプション -> 詳細調整 -> 最終確認 -> ZIP生成` の multi-step flow に再編した
+  - 初回アクセスは常に intro から始め、前回保存内容は `前回の続きを再開` から明示的に戻すようにした
+  - `固定テスト文章` は `テストモード` の時だけ表示するようにした
+  - 相談種別に `個人プロジェクト` を追加した
+  - `JSONコピー / JSONダウンロード` は通常表示から外し、テストモード時だけ表示するようにした
+  - 公開向けの固定テスト文章から `AI議事録` を外し、`社内FAQポータル` に差し替えた (`04a9281`)
 
 ## What Is Being Done Now
 - いまの主要テーマ:
@@ -126,8 +132,8 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - remote ZIP timeout は request id で追える状態。再試行成功済みのため、当面は Render 側の再発監視を継続
   - AI tool 非依存化 (`PROJECT.md + CLAUDE.md + GEMINI.md`) は未反映
   - skill layer は provider-aware contract / installer / Web selection / remote ZIP 同梱まで反映。自動インストールと local ZIP 同梱は未反映
-  - production での multi-skill catalog / provider badge 実地確認はこれから
-  - 現在の大きい未コミット差分を concern ごとに分離する必要がある
+  - production での最新 public wizard (`04a9281`) の実地確認はこれから
+  - feedback 永続保存と公開向け docs 整理は継続
 
 ## Key Decisions Made
 - React + Vite (SPA)。Next.jsは後回し。(ADR-0001)
