@@ -1,5 +1,8 @@
 interface IntroSectionProps {
   onStart: () => void;
+  onResume: () => void;
+  hasSavedProgress: boolean;
+  resumeStepLabel: string;
   saveLabel: string;
   requiresLoginForRemoteZip: boolean;
 }
@@ -26,7 +29,14 @@ const FLOW_POINTS = [
   'Skill と最終設定を選んで ZIP を生成する',
 ];
 
-export function IntroSection({ onStart, saveLabel, requiresLoginForRemoteZip }: IntroSectionProps) {
+export function IntroSection({
+  onStart,
+  onResume,
+  hasSavedProgress,
+  resumeStepLabel,
+  saveLabel,
+  requiresLoginForRemoteZip,
+}: IntroSectionProps) {
   return (
     <section className="form-section intro-section">
       <p className="section-kicker">Step 1</p>
@@ -67,9 +77,26 @@ export function IntroSection({ onStart, saveLabel, requiresLoginForRemoteZip }: 
         ))}
       </div>
 
+      {hasSavedProgress && (
+        <div className="intro-resume-card">
+          <div>
+            <p className="section-kicker">再開できます</p>
+            <h4>前回の入力内容がブラウザに残っています</h4>
+            <p>
+              途中保存された内容を使って <strong>{resumeStepLabel}</strong> から再開できます。新しく始める場合は前回内容を消して Step 2 から進みます。
+            </p>
+          </div>
+          <div className="output-actions">
+            <button type="button" onClick={onResume} className="btn-secondary">
+              前回の続きを再開
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="output-actions">
         <button type="button" onClick={onStart} className="btn-primary">
-          相談を始める
+          {hasSavedProgress ? '新しく始める' : '相談を始める'}
         </button>
       </div>
     </section>

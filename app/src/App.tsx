@@ -60,15 +60,32 @@ const WIZARD_STEPS: Array<{ id: GuidedStep; label: string }> = [
   { id: 'result', label: 'ZIP生成' },
 ];
 
+function hasFormProgress(savedFormDraft: ReturnType<typeof loadDraft>): boolean {
+  if (!savedFormDraft) return false;
+  return Boolean(
+    savedFormDraft.project.name
+      || savedFormDraft.project.description
+      || savedFormDraft.project.slug
+      || savedFormDraft.project.owner
+      || savedFormDraft.tech.domains.length
+      || savedFormDraft.tech.frameworks.length
+      || savedFormDraft.tech.ai_tools.length
+      || savedFormDraft.tech.primary_language !== initialFormState.tech.primary_language
+      || savedFormDraft.structure.repo_type !== initialFormState.structure.repo_type
+      || savedFormDraft.workflow.phases_count !== initialFormState.workflow.phases_count,
+  );
+}
+
 function deriveInitialWizardState(
   savedFormDraft: ReturnType<typeof loadDraft>,
   savedText: string,
   savedConsultationDraft: IntakeDraft | null,
-): { step: GuidedStep; draftApplied: boolean } {
-  if (savedFormDraft) return { step: 'review', draftApplied: true };
-  if (savedConsultationDraft) return { step: 'draft', draftApplied: false };
-  if (savedText.trim().length > 0) return { step: 'paste', draftApplied: false };
-  return { step: 'intro', draftApplied: false };
+): { step: GuidedStep; draftApplied: boolean; hasProgress: boolean } {
+  const hasProgress = Boolean(savedText.trim().length > 0 || savedConsultationDraft || hasFormProgress(savedFormDraft));
+  if (savedFormDraft) return { step: 'review', draftApplied: true, hasProgress };
+  if (savedConsultationDraft) return { step: 'draft', draftApplied: false, hasProgress };
+  if (savedText.trim().length > 0) return { step: 'paste', draftApplied: false, hasProgress };
+  return { step: 'intro', draftApplied: false, hasProgress };
 }
 
 function formatSaveLabel(state: SaveState, lastSavedAt: string | null): string {
@@ -87,11 +104,14 @@ function App() {
   const [consultationMessage, setConsultationMessage] = useState<string | null>(null);
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>(() => loadSelectedSkills());
   const [promptCopied, setPromptCopied] = useState(false);
-  const [guidedStep, setGuidedStep] = useState<GuidedStep>(() =>
-    deriveInitialWizardState(loadDraft(), loadConsultationText(), loadConsultationDraft()).step);
+  const [guidedStep, setGuidedStep] = useState<GuidedStep>('intro');
   const [showAdvancedDetail, setShowAdvancedDetail] = useState(false);
   const [draftApplied, setDraftApplied] = useState<boolean>(() =>
     deriveInitialWizardState(loadDraft(), loadConsultationText(), loadConsultationDraft()).draftApplied);
+  const [resumeTargetStep, setResumeTargetStep] = useState<GuidedStep>(() =>
+    deriveInitialWizardState(loadDraft(), loadConsultationText(), loadConsultationDraft()).step);
+  const [hasSavedProgress, setHasSavedProgress] = useState<boolean>(() =>
+    deriveInitialWizardState(loadDraft(), loadConsultationText(), loadConsultationDraft()).hasProgress);
   const [resultPhase, setResultPhase] = useState<'idle' | 'running' | 'done'>('idle');
   const [authSession, setAuthSession] = useState<{ authenticated: boolean; email: string | null }>({
     authenticated: false,
@@ -142,7 +162,9 @@ function App() {
     setTestMode(loadUiTestMode());
     setShowAdvancedDetail(false);
     setDraftApplied(restored.draftApplied);
-    setGuidedStep(restored.step);
+    setResumeTargetStep(restored.step);
+    setHasSavedProgress(restored.hasProgress);
+    setGuidedStep('intro');
     if (restoredDraft || restoredText || restoredConsultationDraft) {
       setSaveState('saved');
       setLastSavedAt('復元済み');
@@ -295,6 +317,8 @@ function App() {
     setConsultationMessage(null);
     setPromptCopied(false);
     setGuidedStep('intro');
+    setResumeTargetStep('paste');
+    setHasSavedProgress(false);
     setShowAdvancedDetail(false);
     setDraftApplied(false);
     setResultPhase('idle');
@@ -337,8 +361,19 @@ function App() {
     setConsultationDraft(null);
     setConsultationMessage(`固定テスト文章「${template.label}」を貼り付け欄に反映しました。`);
     setGuidedStep('paste');
+    setResumeTargetStep('paste');
+    setHasSavedProgress(true);
     setDraftApplied(false);
     setShowAdvancedDetail(false);
+  }
+
+  function handleStartFresh() {
+    handleReset();
+    setGuidedStep('paste');
+  }
+
+  function handleResumeSavedProgress() {
+    goToStep(resumeTargetStep);
   }
 
   function applyConsultationDraft(nextStep: 'options' | 'review', openAdvancedDetail = false) {
@@ -416,7 +451,10 @@ function App() {
       <main className="app-main">
         {guidedStep === 'intro' && (
           <IntroSection
-            onStart={() => goToStep('paste')}
+            onStart={handleStartFresh}
+            onResume={handleResumeSavedProgress}
+            hasSavedProgress={hasSavedProgress}
+            resumeStepLabel={WIZARD_STEPS.find((step) => step.id === resumeTargetStep)?.label ?? '途中のステップ'}
             saveLabel={saveLabel}
             requiresLoginForRemoteZip={requiresCookieSession}
           />
