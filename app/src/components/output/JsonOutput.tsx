@@ -25,6 +25,7 @@ interface JsonOutputProps {
   lead?: string;
   showFeedback?: boolean;
   collapseJsonByDefault?: boolean;
+  showJsonTools?: boolean;
   onGenerationStateChange?: (state: 'idle' | 'running' | 'done') => void;
   state: FormState;
   canExport: boolean;
@@ -44,6 +45,7 @@ export function JsonOutput({
   lead,
   showFeedback = true,
   collapseJsonByDefault = false,
+  showJsonTools = false,
   onGenerationStateChange,
   state,
   canExport,
@@ -288,7 +290,7 @@ export function JsonOutput({
           </ul>
           {generationMode === 'remote' ? (
             <p className="generation-readiness-note">
-              選んだ Skill のファイルは ZIP に入っています。これは自動機能ではなく、解凍後に対応する AI ツールでこの project を開いた時に参照するためのものです。何もしなくても勝手に動くわけではありません。
+              選んだ Skill（スキル）のファイルは ZIP に入っています。これは自動機能ではなく、解凍後に対応する AI ツールでこの project を開いた時に参照するためのものです。何もしなくても勝手に動くわけではありません。
             </p>
           ) : (
             <>
@@ -346,22 +348,26 @@ export function JsonOutput({
       )}
 
       <div className="output-actions">
-        <button
-          type="button"
-          onClick={handleDownload}
-          disabled={!canExport}
-          className="btn-primary"
-        >
-          JSONをダウンロード
-        </button>
-        <button
-          type="button"
-          onClick={handleCopy}
-          disabled={!canExport}
-          className="btn-secondary"
-        >
-          {copied ? 'コピー済み' : 'JSONをコピー'}
-        </button>
+        {showJsonTools && (
+          <>
+            <button
+              type="button"
+              onClick={handleDownload}
+              disabled={!canExport}
+              className="btn-secondary"
+            >
+              JSONをダウンロード
+            </button>
+            <button
+              type="button"
+              onClick={handleCopy}
+              disabled={!canExport}
+              className="btn-secondary"
+            >
+              {copied ? 'コピー済み' : 'JSONをコピー'}
+            </button>
+          </>
+        )}
         <button
           type="button"
           onClick={handleGenerateRepository}

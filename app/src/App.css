@@ -13,7 +13,15 @@
 }
 
 .app-header-public {
-  text-align: left;
+  text-align: center;
+}
+
+.app-header,
+.auth-panel,
+.wizard-nav,
+.app-main {
+  width: min(1180px, 100%);
+  margin-inline: auto;
 }
 
 .app-topbar {
@@ -85,7 +93,7 @@
 
 .wizard-nav {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   gap: 0.6rem;
   margin-bottom: 2rem;
 }
@@ -487,6 +495,10 @@
   gap: 0.75rem;
 }
 
+.consultation-submit-row {
+  margin-top: 1.1rem;
+}
+
 .generation-status {
   margin-top: 0.85rem;
   border: 1px solid #dbe5f0;
@@ -642,6 +654,7 @@
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
+  margin-top: 0.5rem;
 }
 
 .mode-switcher {
@@ -809,6 +822,10 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.85rem;
+}
+
+.intro-section .output-actions {
+  margin-top: 1.25rem;
 }
 
 .intro-resume-card {

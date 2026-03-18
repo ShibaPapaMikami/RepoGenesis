@@ -14,7 +14,7 @@ const VALUE_POINTS = [
   },
   {
     title: '最終確認をして ZIP を生成',
-    body: 'リポジトリ構成、security、Skill を整えてから ZIP を生成できます。',
+    body: 'リポジトリ構成、security、Skill（スキル）を整えてから ZIP を生成できます。',
   },
   {
     title: '途中で閉じても続きから再開',
@@ -26,7 +26,7 @@ const FLOW_POINTS = [
   '相談用プロンプトをコピーする',
   'AI で整理した内容を貼り付ける',
   'draft を確認して必要な項目だけ直す',
-  'Skill と最終設定を選んで ZIP を生成する',
+  'Skill（スキル）と最終設定を選んで ZIP を生成する',
 ];
 
 export function IntroSection({
@@ -49,7 +49,7 @@ export function IntroSection({
         <div className="intro-copy">
           <h3>アイデアや要件メモを、すぐ作業できる形へ整えます</h3>
           <p>
-            社内ツール、クライアント案件、個人プロジェクトまで、相談ベースの文章から構成案・説明・Skill をまとめて整えます。
+            社内ツール、クライアント案件、個人プロジェクトまで、相談ベースの文章から構成案・説明・Skill（スキル）をまとめて整えます。
           </p>
           <div className="intro-meta">
             <span className="intro-chip">{saveLabel}</span>

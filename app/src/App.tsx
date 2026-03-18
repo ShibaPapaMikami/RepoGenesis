@@ -48,7 +48,7 @@ import './App.css';
 declare const __APP_RELEASE__: string;
 declare const __APP_COMMIT__: string;
 
-type GuidedStep = 'intro' | 'paste' | 'draft' | 'options' | 'review' | 'result';
+type GuidedStep = 'intro' | 'paste' | 'draft' | 'options' | 'detail' | 'review' | 'result';
 type SaveState = 'idle' | 'saving' | 'saved';
 
 const WIZARD_STEPS: Array<{ id: GuidedStep; label: string }> = [
@@ -56,6 +56,7 @@ const WIZARD_STEPS: Array<{ id: GuidedStep; label: string }> = [
   { id: 'paste', label: '相談内容' },
   { id: 'draft', label: 'ドラフト' },
   { id: 'options', label: 'オプション' },
+  { id: 'detail', label: '詳細調整' },
   { id: 'review', label: '最終確認' },
   { id: 'result', label: 'ZIP生成' },
 ];
@@ -105,7 +106,6 @@ function App() {
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>(() => loadSelectedSkills());
   const [promptCopied, setPromptCopied] = useState(false);
   const [guidedStep, setGuidedStep] = useState<GuidedStep>('intro');
-  const [showAdvancedDetail, setShowAdvancedDetail] = useState(false);
   const [draftApplied, setDraftApplied] = useState<boolean>(() =>
     deriveInitialWizardState(loadDraft(), loadConsultationText(), loadConsultationDraft()).draftApplied);
   const [resumeTargetStep, setResumeTargetStep] = useState<GuidedStep>(() =>
@@ -160,7 +160,6 @@ function App() {
     setConsultationDraft(restoredConsultationDraft);
     setConsultationPromptVariant(loadConsultationPromptVariant());
     setTestMode(loadUiTestMode());
-    setShowAdvancedDetail(false);
     setDraftApplied(restored.draftApplied);
     setResumeTargetStep(restored.step);
     setHasSavedProgress(restored.hasProgress);
@@ -252,6 +251,7 @@ function App() {
       case 'draft':
         return Boolean(consultationDraft);
       case 'options':
+      case 'detail':
       case 'review':
       case 'result':
         return draftApplied;
@@ -319,7 +319,6 @@ function App() {
     setGuidedStep('intro');
     setResumeTargetStep('paste');
     setHasSavedProgress(false);
-    setShowAdvancedDetail(false);
     setDraftApplied(false);
     setResultPhase('idle');
     setSaveState('idle');
@@ -348,7 +347,6 @@ function App() {
     setConsultationDraft(draft);
     setConsultationMessage('ドラフトを作成しました。内容を確認して次へ進んでください。');
     setGuidedStep('draft');
-    setShowAdvancedDetail(false);
     setDraftApplied(false);
     setResultPhase('idle');
   }
@@ -364,7 +362,6 @@ function App() {
     setResumeTargetStep('paste');
     setHasSavedProgress(true);
     setDraftApplied(false);
-    setShowAdvancedDetail(false);
   }
 
   function handleStartFresh() {
@@ -376,18 +373,17 @@ function App() {
     goToStep(resumeTargetStep);
   }
 
-  function applyConsultationDraft(nextStep: 'options' | 'review', openAdvancedDetail = false) {
+  function applyConsultationDraft(nextStep: 'options' | 'detail' | 'review') {
     if (!consultationDraft) return;
     dispatch({ type: 'RESTORE_DRAFT', payload: consultationDraft.suggestedState });
     setConsultationMessage(
       nextStep === 'options'
         ? 'ドラフトをフォームへ反映しました。次に、必要なオプションだけ確認してください。'
-        : openAdvancedDetail
-          ? 'ドラフトをフォームへ反映しました。詳細調整を開きます。'
+        : nextStep === 'detail'
+          ? 'ドラフトをフォームへ反映しました。詳細調整で必要な項目だけ確認してください。'
           : 'ドラフトをフォームへ反映しました。最終確認へ進みます。',
     );
     setGuidedStep(nextStep);
-    setShowAdvancedDetail(openAdvancedDetail);
     setDraftApplied(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -584,12 +580,12 @@ function App() {
               <p><strong>Skill（スキル）</strong></p>
               <p className="consultation-lead">
                 {generationMode === 'remote'
-                  ? 'Skill はアプリ機能ではなく、生成後に Codex / Claude Code / Gemini CLI へ「この repo をどう進めるか」を頼む時の補助ガイドです。選んだ Skill のファイルは ZIP に一緒に入りますが、自動では動きません。'
-                  : 'Skill は、生成後に AI と一緒に作業する時の補助ガイドです。このモードでは ZIP への自動同梱はまだないため、必要になった時だけ後から追加します。'}
+                  ? 'Skill（スキル）はアプリ機能ではなく、生成後に Codex / Claude Code / Gemini CLI へ「この repo をどう進めるか」を頼む時の補助ガイドです。選んだ Skill のファイルは ZIP に一緒に入りますが、自動では動きません。'
+                  : 'Skill（スキル）は、生成後に AI と一緒に作業する時の補助ガイドです。このモードでは ZIP への自動同梱はまだないため、必要になった時だけ後から追加します。'}
               </p>
               <ul className="skill-selection-notes">
-                <li>ZIP に入るのは「Skill のファイルが一緒に入る」という意味です。</li>
-                <li>解凍後に対応する AI でその project を開くと、その Skill を参照しながら作業できます。</li>
+                <li>ZIP に入るのは「Skill（スキル）のファイルが一緒に入る」という意味です。</li>
+                <li>解凍後に対応する AI でその project を開くと、その Skill（スキル）を参照しながら作業できます。</li>
                 <li>何もしなくても勝手に動くものではなく、AI に頼む時の補助になります。</li>
                 <li>迷う場合は、まず `Repo Readiness Review` だけ選べば十分です。</li>
               </ul>
@@ -597,7 +593,7 @@ function App() {
                 <>
                   {starterSkills.length > 0 && (
                     <div className="skill-group">
-                      <p><strong>最初に入れておくとよい Skill</strong></p>
+                      <p><strong>最初に入れておくとよい Skill（スキル）</strong></p>
                       <div className="skill-grid">
                         {starterSkills.map(renderSkillCard)}
                       </div>
@@ -605,7 +601,7 @@ function App() {
                   )}
                   {laterSkills.length > 0 && (
                     <div className="skill-group">
-                      <p><strong>困った時に追加する Skill</strong></p>
+                      <p><strong>困った時に追加する Skill（スキル）</strong></p>
                       <div className="skill-grid">
                         {laterSkills.map(renderSkillCard)}
                       </div>
@@ -623,6 +619,65 @@ function App() {
               <button type="button" onClick={() => goToStep('draft')} className="btn-secondary">
                 ドラフトへ戻る
               </button>
+              <button type="button" onClick={() => goToStep('detail')} className="btn-primary">
+                詳細調整へ進む
+              </button>
+            </div>
+          </section>
+        )}
+
+        {guidedStep === 'detail' && draftApplied && (
+          <section className="form-section detail-section">
+            <p className="section-kicker">Step 5</p>
+            <h2>詳細調整</h2>
+            <p className="consultation-lead">
+              必要に応じて project / tech / security / repo 構成をここで調整します。迷う場合は大きく変えずに次へ進んで問題ありません。
+            </p>
+
+            <div className="advanced-detail-stack">
+              {consultationDraft && (
+                <section className="form-section consultation-followup">
+                  <h2>相談結果からの確認事項</h2>
+                  <p className="consultation-lead">
+                    相談結果から仮置きした内容と未確定事項です。必要に応じて下の詳細入力で調整してください。
+                  </p>
+                  <div className="consultation-columns">
+                    <div className="consultation-card">
+                      <h4>仮置きした内容</h4>
+                      <ul>
+                        {consultationDraft.certainty.provisional.map((item) => <li key={item}>{item}</li>)}
+                      </ul>
+                    </div>
+                    <div className="consultation-card consultation-card-wide">
+                      <h4>未確定事項</h4>
+                      <ul>
+                        {consultationDraft.certainty.unresolved.map((item) => <li key={item}>{item}</li>)}
+                      </ul>
+                      <div className="form-row consultation-inline-editor">
+                        <label htmlFor="detailOpenQuestionsEditor">open questions を整理</label>
+                        <textarea
+                          id="detailOpenQuestionsEditor"
+                          rows={4}
+                          value={consultationDraft.review.openQuestions.join('\n')}
+                          onChange={(e) => handleChangeDraftOpenQuestions(e.target.value)}
+                          placeholder={'例:\n外部APIが本当に必要か\nシングル構成で十分か'}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
+              <ProjectSection state={state} dispatch={dispatch} errors={errors} />
+              <TechSection state={state} dispatch={dispatch} errors={errors} />
+              <SecuritySection state={state} dispatch={dispatch} />
+              <StructureSection state={state} dispatch={dispatch} errors={errors} />
+              <WorkflowSection state={state} dispatch={dispatch} errors={errors} />
+            </div>
+
+            <div className="output-actions">
+              <button type="button" onClick={() => goToStep('options')} className="btn-secondary">
+                オプションへ戻る
+              </button>
               <button type="button" onClick={() => goToStep('review')} className="btn-primary">
                 最終確認へ進む
               </button>
@@ -632,10 +687,10 @@ function App() {
 
         {guidedStep === 'review' && draftApplied && (
           <section className="form-section final-review-section">
-            <p className="section-kicker">Step 5</p>
+            <p className="section-kicker">Step 6</p>
             <h2>最終確認</h2>
             <p className="consultation-lead">
-              生成前の要点だけを先に確認し、必要になった時だけ詳細調整を開く形にしています。
+              生成前の要点だけを確認します。ここでは読むことに集中して、問題があれば前のステップへ戻って調整します。
             </p>
 
             <div className="review-summary-grid">
@@ -666,62 +721,13 @@ function App() {
             <div className="consultation-summary">
               <p><strong>選択した Skill（スキル）:</strong> {selectedSkills.length > 0 ? selectedSkills.map((skill) => skill.name).join(', ') : 'なし'}</p>
               {selectedSkills.length > 0 && (
-                <p className="consultation-lead">選んだ Skill は ZIP に一緒に入りますが、自動実行はされません。解凍後に対応する AI でこの project を開いた時に使います。</p>
+                <p className="consultation-lead">選んだ Skill（スキル）は ZIP に一緒に入りますが、自動実行はされません。解凍後に対応する AI でこの project を開いた時に使います。</p>
               )}
             </div>
 
-            {showAdvancedDetail && (
-              <div className="advanced-detail-stack">
-                {consultationDraft && (
-                  <section className="form-section consultation-followup">
-                    <h2>相談結果からの確認事項</h2>
-                    <p className="consultation-lead">
-                      相談結果から仮置きした内容と未確定事項です。必要に応じて下の詳細入力で調整してください。
-                    </p>
-                    <div className="consultation-columns">
-                      <div className="consultation-card">
-                        <h4>仮置きした内容</h4>
-                        <ul>
-                          {consultationDraft.certainty.provisional.map((item) => <li key={item}>{item}</li>)}
-                        </ul>
-                      </div>
-                      <div className="consultation-card consultation-card-wide">
-                        <h4>未確定事項</h4>
-                        <ul>
-                          {consultationDraft.certainty.unresolved.map((item) => <li key={item}>{item}</li>)}
-                        </ul>
-                        <div className="form-row consultation-inline-editor">
-                          <label htmlFor="detailOpenQuestionsEditor">open questions を整理</label>
-                          <textarea
-                            id="detailOpenQuestionsEditor"
-                            rows={4}
-                            value={consultationDraft.review.openQuestions.join('\n')}
-                            onChange={(e) => handleChangeDraftOpenQuestions(e.target.value)}
-                            placeholder={'例:\n外部APIが本当に必要か\nシングル構成で十分か'}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </section>
-                )}
-                <ProjectSection state={state} dispatch={dispatch} errors={errors} />
-                <TechSection state={state} dispatch={dispatch} errors={errors} />
-                <SecuritySection state={state} dispatch={dispatch} />
-                <StructureSection state={state} dispatch={dispatch} errors={errors} />
-                <WorkflowSection state={state} dispatch={dispatch} errors={errors} />
-              </div>
-            )}
-
             <div className="output-actions">
-              <button type="button" onClick={() => goToStep('options')} className="btn-secondary">
-                オプションへ戻る
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAdvancedDetail((current) => !current)}
-                className="btn-secondary"
-              >
-                {showAdvancedDetail ? '詳細調整を閉じる' : '詳細調整を開く'}
+              <button type="button" onClick={() => goToStep('detail')} className="btn-secondary">
+                詳細調整へ戻る
               </button>
               <button
                 type="button"
@@ -744,10 +750,11 @@ function App() {
           <>
             <JsonOutput
               sectionRef={outputRef}
-              title="Step 6. ZIP生成と結果"
+              title="Step 7. ZIP生成と結果"
               lead="最後に JSON と ZIP 生成結果を確認します。request id やダウンロード導線もここに集約します。"
               showFeedback={resultPhase !== 'idle'}
               collapseJsonByDefault
+              showJsonTools={testMode}
               onGenerationStateChange={setResultPhase}
               state={state}
               canExport={exportable}
@@ -767,7 +774,7 @@ function App() {
 
         <div className="app-actions">
           <button type="button" onClick={handleReset} className="btn-reset">
-            Reset
+            リセットして始めから
           </button>
         </div>
       </main>

@@ -176,9 +176,6 @@ export function ConsultationSection({
         <button type="button" onClick={onCopyPrompt} className="btn-secondary">
           {promptCopied ? 'コピーしました' : '相談用プロンプトをコピー'}
         </button>
-        <button type="button" onClick={onBuildDraft} className="btn-primary" disabled={!intakeText.trim()}>
-          ドラフトを作成
-        </button>
       </div>
 
       <div className="form-row">
@@ -196,6 +193,12 @@ export function ConsultationSection({
       </div>
 
       {message && <p className="consultation-message" role="status" aria-live="polite">{message}</p>}
+
+      <div className="output-actions consultation-submit-row">
+        <button type="button" onClick={onBuildDraft} className="btn-primary" disabled={!intakeText.trim()}>
+          ドラフトを作成
+        </button>
+      </div>
 
     </section>
   );
