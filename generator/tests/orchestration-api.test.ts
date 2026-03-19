@@ -101,7 +101,7 @@ describe('orchestration api', () => {
       expect(res.body.requestId).toBe('req-123');
       expect(res.body.specVersion).toBe('1.0');
       expect(res.body.repoType).toBe('single');
-      expect(res.body.fileCount).toBe(22);
+      expect(res.body.fileCount).toBe(24);
       expect(res.body.artifact.filename).toBe('orchestration-test.zip');
       expect(res.body.artifact.contentType).toBe('application/zip');
     }
@@ -142,7 +142,7 @@ describe('orchestration api', () => {
 
     expect(res.status).toBe(200);
     if (res.status === 200) {
-      expect(res.body.fileCount).toBeGreaterThan(22);
+      expect(res.body.fileCount).toBeGreaterThan(24);
       expect(res.body.zipBuffer.toString('utf8')).toContain('.claude/skills/repo-readiness-review/SKILL.md');
       expect(res.body.zipBuffer.toString('utf8')).not.toContain('scripts/install-selected-skills.sh');
     }

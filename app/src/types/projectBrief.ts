@@ -1,4 +1,13 @@
-import type { Domain, PrimaryLanguage, AiTool, SecurityLevel, RepoType, RepoKind } from '../constants/enums';
+import type {
+  Domain,
+  PrimaryLanguage,
+  AiTool,
+  SecurityLevel,
+  RepoType,
+  RepoKind,
+  TechDecisionStatus,
+  DependencyCategory,
+} from '../constants/enums';
 import type { LegacyAiTool } from '../utils/aiTools';
 import type { SupportedSpecVersion } from '../constants/spec';
 
@@ -45,12 +54,40 @@ export interface WorkflowInfo {
   phases_count: number;
 }
 
+export interface TechDecision {
+  topic: string;
+  choice: string;
+  status: TechDecisionStatus;
+  rationale: string;
+  decision_date: string;
+  notes: string;
+}
+
+export interface ExternalDependency {
+  name: string;
+  category: DependencyCategory;
+  status: TechDecisionStatus;
+  purpose: string;
+  owner: string;
+  source: string;
+  license: string;
+  env_vars: string[];
+  data_outbound: boolean;
+  notes: string;
+}
+
+export interface PlanningInfo {
+  tech_decisions: TechDecision[];
+  external_dependencies: ExternalDependency[];
+}
+
 export interface ProjectBrief {
   project: ProjectInfo;
   tech: TechInfo;
   security: SecurityInfo;
   structure: StructureInfo;
   workflow: WorkflowInfo;
+  planning: PlanningInfo;
 }
 
 export interface ProjectSpec extends ProjectBrief {

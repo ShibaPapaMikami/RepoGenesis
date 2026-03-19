@@ -1,5 +1,6 @@
 import type { ProjectBrief } from '../schema';
 import { hasAiTool } from '../aiTools';
+import { getAdoptedDependencySummaryLines, getAdoptedTechSummaryLines } from '../planning';
 import { formatOwner } from '../templateDisplay';
 
 export function generateActiveContext(brief: ProjectBrief): string {
@@ -14,6 +15,12 @@ export function generateActiveContext(brief: ProjectBrief): string {
     hasAiTool(brief.tech, 'claude_code') ? '`CLAUDE.md`' : null,
     hasAiTool(brief.tech, 'gemini_cli') ? '`GEMINI.md`' : null,
   ].filter(Boolean).join('\n- ');
+  const decisionLines = [
+    `- Project initialized: ${project.name} (${project.slug})`,
+    `- Owner: ${formatOwner(project.owner)}`,
+    ...getAdoptedTechSummaryLines(brief).map((line) => `- Adopted decision: ${line}`),
+    ...getAdoptedDependencySummaryLines(brief).map((line) => `- Adopted dependency: ${line}`),
+  ];
 
   return `# ACTIVE_CONTEXT.md — Current Project State
 
@@ -37,12 +44,13 @@ ${currentPhase}
 - Product scope may still contain TBD items that should be resolved during planning.
 
 ## Key Decisions Made
-- Project initialized: ${project.name} (${project.slug})
-- Owner: ${formatOwner(project.owner)}
+${decisionLines.join('\n')}
 
 ## Files That Exist
 - ${toolFiles}
 - \`docs/ACTIVE_CONTEXT.md\` (this file)
+- \`docs/TECH_DECISIONS.md\`
+- \`docs/EXTERNAL_DEPENDENCIES.md\`
 - \`docs/REQUIREMENTS.md\`
 - \`docs/ARCHITECTURE.md\`
 - \`docs/ROADMAP.md\`

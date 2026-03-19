@@ -1,8 +1,11 @@
 import type { ProjectBrief } from '../schema';
+import { getAdoptedDependencyBulletLines, getAdoptedTechBulletLines } from '../planning';
 import { formatDomains, formatOwner } from '../templateDisplay';
 
 export function generateArchitecture(brief: ProjectBrief): string {
   const { project, tech, structure } = brief;
+  const adoptedDecisions = getAdoptedTechBulletLines(brief);
+  const adoptedDependencies = getAdoptedDependencyBulletLines(brief);
 
   const frameworkLine = tech.frameworks.length > 0
     ? `- Frameworks: ${tech.frameworks.join(', ')}\n`
@@ -80,6 +83,12 @@ ${project.name} — ${project.description}
 - Primary Language: ${tech.primary_language}
 ${frameworkLine}
 ${structureSection}
+
+## Adopted Technology Decisions
+${adoptedDecisions.length > 0 ? adoptedDecisions.join('\n') : '- No adopted technology decisions were captured at generation time.'}
+
+## Adopted External Dependencies
+${adoptedDependencies.length > 0 ? adoptedDependencies.join('\n') : '- No adopted external dependencies were captured at generation time.'}
 
 ## Architecture Overview
 ${overview}

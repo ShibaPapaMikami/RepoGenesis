@@ -37,6 +37,10 @@ function makeState(): FormState {
     workflow: {
       phases_count: 3,
     },
+    planning: {
+      tech_decisions: [],
+      external_dependencies: [],
+    },
     slugManuallyEdited: false,
     securityLevelOverride: null,
   };
@@ -49,6 +53,26 @@ test('buildProjectSpec should always include supported specVersion', () => {
 
 test('buildProjectSpec should map form state to ProjectSpec shape', () => {
   const state = makeState();
+  state.planning.tech_decisions.push({
+    topic: 'AI API',
+    choice: 'OpenAI API',
+    status: 'adopted',
+    rationale: 'Use hosted summaries',
+    decision_date: '2026-03-19',
+    notes: '',
+  });
+  state.planning.external_dependencies.push({
+    name: 'OpenAI API',
+    category: 'ai_api',
+    status: 'adopted',
+    purpose: 'Generate summaries',
+    owner: 'AI team',
+    source: 'https://platform.openai.com/',
+    license: 'Commercial',
+    env_vars: ['OPENAI_API_KEY'],
+    data_outbound: true,
+    notes: '',
+  });
   const spec = buildProjectSpec(state);
 
   assert.equal(spec.project.slug, state.project.slug);
@@ -57,6 +81,8 @@ test('buildProjectSpec should map form state to ProjectSpec shape', () => {
   assert.equal(Array.isArray(spec.tech.frameworks), true);
   assert.deepEqual(spec.tech.ai_tools, ['claude_code']);
   assert.equal(spec.tech.ai_tool, 'claude_cli');
+  assert.equal(spec.planning.tech_decisions[0].choice, 'OpenAI API');
+  assert.deepEqual(spec.planning.external_dependencies[0].env_vars, ['OPENAI_API_KEY']);
 });
 
 test('buildProjectSpec should preserve codex in ai_tools', () => {

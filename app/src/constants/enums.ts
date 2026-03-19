@@ -39,6 +39,49 @@ export const AI_TOOL_LABELS: Record<AiTool, string> = {
 export const SECURITY_LEVELS = ['low', 'medium', 'high'] as const;
 export type SecurityLevel = typeof SECURITY_LEVELS[number];
 
+export const TECH_DECISION_STATUSES = ['adopted', 'candidate', 'open', 'rejected'] as const;
+export type TechDecisionStatus = typeof TECH_DECISION_STATUSES[number];
+
+export const TECH_DECISION_STATUS_LABELS: Record<TechDecisionStatus, string> = {
+  adopted: 'Adopted',
+  candidate: 'Candidate',
+  open: 'Open',
+  rejected: 'Rejected',
+};
+
+export const DEPENDENCY_CATEGORIES = [
+  'ai_api',
+  'model',
+  'external_service',
+  'oss',
+  'github_repo',
+  'npm_package',
+  'auth',
+  'database',
+  'storage',
+  'notification',
+  'ocr',
+  'batch',
+  'other',
+] as const;
+export type DependencyCategory = typeof DEPENDENCY_CATEGORIES[number];
+
+export const DEPENDENCY_CATEGORY_LABELS: Record<DependencyCategory, string> = {
+  ai_api: 'AI API',
+  model: 'モデル',
+  external_service: '外部サービス',
+  oss: '外部OSS',
+  github_repo: 'GitHubリポジトリ',
+  npm_package: 'npm package',
+  auth: '認証',
+  database: 'データベース',
+  storage: 'ストレージ',
+  notification: '通知',
+  ocr: 'OCR/文書解析',
+  batch: '定期実行/バッチ',
+  other: 'その他',
+};
+
 export const REPO_TYPES = ['single', 'multi'] as const;
 export type RepoType = typeof REPO_TYPES[number];
 

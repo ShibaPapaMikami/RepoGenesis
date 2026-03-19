@@ -24,6 +24,7 @@ import { TechSection } from './components/sections/TechSection';
 import { SecuritySection } from './components/sections/SecuritySection';
 import { StructureSection } from './components/sections/StructureSection';
 import { WorkflowSection } from './components/sections/WorkflowSection';
+import { PlanningSection } from './components/sections/PlanningSection';
 import { JsonOutput } from './components/output/JsonOutput';
 import { AuthPanel } from './components/auth/AuthPanel';
 import { FeedbackWidget } from './components/feedback/FeedbackWidget';
@@ -230,6 +231,8 @@ function App() {
   const starterSkills = recommendedSkills.filter((skill) => skill.selectionStage === 'first');
   const laterSkills = recommendedSkills.filter((skill) => skill.selectionStage === 'later');
   const selectedSkills = SKILL_CATALOG.filter((item) => selectedSkillIds.includes(item.id));
+  const adoptedTechDecisions = state.planning.tech_decisions.filter((item) => item.status === 'adopted' && item.topic.trim() && item.choice.trim());
+  const adoptedExternalDependencies = state.planning.external_dependencies.filter((item) => item.status === 'adopted' && item.name.trim());
   const saveLabel = formatSaveLabel(saveState, lastSavedAt);
 
   const recommendationNotes = [
@@ -675,6 +678,7 @@ function App() {
               <SecuritySection state={state} dispatch={dispatch} />
               <StructureSection state={state} dispatch={dispatch} errors={errors} />
               <WorkflowSection state={state} dispatch={dispatch} errors={errors} />
+              <PlanningSection state={state} dispatch={dispatch} />
             </div>
 
             <div className="output-actions">
@@ -719,6 +723,38 @@ function App() {
 
             <div className="consultation-summary">
               <p><strong>説明候補:</strong> {summaryDescription}</p>
+            </div>
+
+            <div className="review-summary-grid review-planning-grid">
+              <div className="consultation-card">
+                <h4>adopted decisions</h4>
+                {adoptedTechDecisions.length > 0 ? (
+                  <ul>
+                    {adoptedTechDecisions.map((item) => (
+                      <li key={`${item.topic}-${item.choice}`}>
+                        <strong>{item.topic}:</strong> {item.choice}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>まだ採用済みの技術判断はありません。</p>
+                )}
+              </div>
+              <div className="consultation-card consultation-card-wide">
+                <h4>adopted dependencies</h4>
+                {adoptedExternalDependencies.length > 0 ? (
+                  <ul>
+                    {adoptedExternalDependencies.map((item) => (
+                      <li key={`${item.category}-${item.name}`}>
+                        <strong>{item.name}</strong> ({item.category})
+                        {item.env_vars.length > 0 ? ` / env: ${item.env_vars.join(', ')}` : ''}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>まだ採用済みの外部依存はありません。</p>
+                )}
+              </div>
             </div>
 
             <div className="consultation-summary">

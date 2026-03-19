@@ -183,6 +183,7 @@
 
 .form-row input[type="text"],
 .form-row input[type="number"],
+.form-row input[type="date"],
 .form-row textarea,
 .form-row select {
   width: 100%;
@@ -1123,6 +1124,72 @@
   font-size: 0.88rem;
 }
 
+.review-planning-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.planning-group + .planning-group {
+  margin-top: 1.5rem;
+}
+
+.planning-group-header,
+.planning-item-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.planning-group-header {
+  margin-bottom: 0.85rem;
+}
+
+.planning-group-header h3,
+.planning-item-header strong {
+  margin: 0;
+}
+
+.planning-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.planning-item {
+  border: 1px solid #dbe5f0;
+  border-radius: 14px;
+  padding: 1rem;
+  background: #fbfdff;
+}
+
+.planning-item-header {
+  margin-bottom: 0.85rem;
+}
+
+.planning-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.planning-grid-tight {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 100%;
+}
+
+.btn-small {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.82rem;
+}
+
 .advanced-detail-stack {
   display: flex;
   flex-direction: column;
@@ -1169,6 +1236,9 @@
   .simple-grid,
   .consultation-columns,
   .review-summary-grid,
+  .review-planning-grid,
+  .planning-grid,
+  .planning-grid-tight,
   .intro-hero,
   .intro-value-grid,
   .intro-resume-card {

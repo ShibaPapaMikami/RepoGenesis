@@ -1,7 +1,9 @@
 import type { ProjectBrief } from '../schema';
+import { getAdoptedEnvVars } from '../planning';
 
 export function generateEnvExample(brief: ProjectBrief): string {
   const { security } = brief;
+  const adoptedEnvVars = getAdoptedEnvVars(brief);
 
   let content = `# Environment Variables
 # Copy this file to .env and fill in real values.
@@ -11,7 +13,15 @@ export function generateEnvExample(brief: ProjectBrief): string {
 NODE_ENV=development
 PORT=3000`;
 
-  if (security.has_api_keys) {
+  if (adoptedEnvVars.length > 0) {
+    content += `
+
+# Adopted External Services`;
+    for (const envVar of adoptedEnvVars) {
+      content += `
+${envVar}=YOUR_${envVar}_HERE`;
+    }
+  } else if (security.has_api_keys) {
     content += `
 
 # API Keys

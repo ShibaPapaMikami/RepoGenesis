@@ -1,7 +1,36 @@
 import type { FormAction, FormState } from './actions';
 import { slugify } from '../utils/slugify';
 import { calculateMinSecurityLevel } from '../utils/securityCalc';
-import type { SecurityLevel } from '../constants/enums';
+import type { DependencyCategory, SecurityLevel, TechDecisionStatus } from '../constants/enums';
+
+function createEmptyTechDecision(status: TechDecisionStatus = 'open') {
+  return {
+    topic: '',
+    choice: '',
+    status,
+    rationale: '',
+    decision_date: '',
+    notes: '',
+  };
+}
+
+function createEmptyExternalDependency(
+  category: DependencyCategory = 'external_service',
+  status: TechDecisionStatus = 'open',
+) {
+  return {
+    name: '',
+    category,
+    status,
+    purpose: '',
+    owner: '',
+    source: '',
+    license: '',
+    env_vars: [],
+    data_outbound: false,
+    notes: '',
+  };
+}
 
 export const initialFormState: FormState = {
   project: {
@@ -31,6 +60,10 @@ export const initialFormState: FormState = {
   },
   workflow: {
     phases_count: 3,
+  },
+  planning: {
+    tech_decisions: [],
+    external_dependencies: [],
   },
   slugManuallyEdited: false,
   securityLevelOverride: null,
@@ -199,6 +232,79 @@ export function formReducer(state: FormState, action: FormAction): FormState {
     // Workflow
     case 'SET_PHASES_COUNT':
       return { ...state, workflow: { ...state.workflow, phases_count: action.payload } };
+
+    // Planning
+    case 'ADD_TECH_DECISION':
+      return {
+        ...state,
+        planning: {
+          ...state.planning,
+          tech_decisions: [...state.planning.tech_decisions, createEmptyTechDecision()],
+        },
+      };
+    case 'REMOVE_TECH_DECISION':
+      return {
+        ...state,
+        planning: {
+          ...state.planning,
+          tech_decisions: state.planning.tech_decisions.filter((_, index) => index !== action.payload),
+        },
+      };
+    case 'SET_TECH_DECISION_FIELD': {
+      const tech_decisions = state.planning.tech_decisions.map((item, index) =>
+        index === action.payload.index ? { ...item, [action.payload.field]: action.payload.value } : item,
+      );
+      return {
+        ...state,
+        planning: { ...state.planning, tech_decisions },
+      };
+    }
+    case 'ADD_EXTERNAL_DEPENDENCY':
+      return {
+        ...state,
+        planning: {
+          ...state.planning,
+          external_dependencies: [
+            ...state.planning.external_dependencies,
+            createEmptyExternalDependency(),
+          ],
+        },
+      };
+    case 'REMOVE_EXTERNAL_DEPENDENCY':
+      return {
+        ...state,
+        planning: {
+          ...state.planning,
+          external_dependencies: state.planning.external_dependencies.filter((_, index) => index !== action.payload),
+        },
+      };
+    case 'SET_EXTERNAL_DEPENDENCY_FIELD': {
+      const external_dependencies = state.planning.external_dependencies.map((item, index) =>
+        index === action.payload.index ? { ...item, [action.payload.field]: action.payload.value } : item,
+      );
+      return {
+        ...state,
+        planning: { ...state.planning, external_dependencies },
+      };
+    }
+    case 'SET_EXTERNAL_DEPENDENCY_ENV_VARS': {
+      const external_dependencies = state.planning.external_dependencies.map((item, index) =>
+        index === action.payload.index ? { ...item, env_vars: action.payload.value } : item,
+      );
+      return {
+        ...state,
+        planning: { ...state.planning, external_dependencies },
+      };
+    }
+    case 'SET_EXTERNAL_DEPENDENCY_DATA_OUTBOUND': {
+      const external_dependencies = state.planning.external_dependencies.map((item, index) =>
+        index === action.payload.index ? { ...item, data_outbound: action.payload.value } : item,
+      );
+      return {
+        ...state,
+        planning: { ...state.planning, external_dependencies },
+      };
+    }
 
     // Meta
     case 'RESTORE_DRAFT':

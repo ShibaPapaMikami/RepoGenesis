@@ -63,6 +63,8 @@ describe('E2E — single-repo', { timeout: 20000 }, () => {
       'PROJECT.md',
       'CLAUDE.md',
       'docs/ACTIVE_CONTEXT.md',
+      'docs/TECH_DECISIONS.md',
+      'docs/EXTERNAL_DEPENDENCIES.md',
       'docs/REQUIREMENTS.md',
       'docs/ARCHITECTURE.md',
       'docs/ROADMAP.md',
@@ -134,13 +136,13 @@ describe('E2E — single-repo', { timeout: 20000 }, () => {
 describe('E2E — app export', { timeout: 20000 }, () => {
   const SLUG = 'app-export-test';
 
-  it('should exit 0 and generate 22 files from app export JSON', () => {
+  it('should exit 0 and generate 24 files from app export JSON', () => {
     const result = run('test_brief_app_export.json', 'app-export');
     expect(result.exitCode, `CLI failed.\nstdout: ${result.stdout}\nstderr: ${result.stderr}`).toBe(0);
-    expect(result.stdout).toContain('22 files');
+    expect(result.stdout).toContain('24 files');
   });
 
-  it('should create all 22 required single-repo files from app export', () => {
+  it('should create all 24 required single-repo files from app export', () => {
     run('test_brief_app_export.json', 'app-export');
     const base = path.join(TMP_OUTPUT, 'app-export', SLUG);
 
@@ -148,6 +150,8 @@ describe('E2E — app export', { timeout: 20000 }, () => {
       'PROJECT.md',
       'CLAUDE.md',
       'docs/ACTIVE_CONTEXT.md',
+      'docs/TECH_DECISIONS.md',
+      'docs/EXTERNAL_DEPENDENCIES.md',
       'docs/REQUIREMENTS.md',
       'docs/ARCHITECTURE.md',
       'docs/ROADMAP.md',
@@ -169,7 +173,7 @@ describe('E2E — app export', { timeout: 20000 }, () => {
       '.repogenesis/manifest.json',
     ];
 
-    expect(requiredFiles.length).toBe(22);
+    expect(requiredFiles.length).toBe(24);
 
     for (const file of requiredFiles) {
       const fullPath = path.join(base, file);
@@ -191,7 +195,7 @@ describe('E2E — multi-repo', { timeout: 20000 }, () => {
     run('test_brief_multi.json', 'multi');
     const base = path.join(TMP_OUTPUT, 'multi', SLUG);
 
-    for (const file of ['PROJECT.md', 'CLAUDE.md', 'GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', 'docs/runbooks/README.md', 'docs/runbooks/skill-install.md', '.gitignore', 'skills/README.md', 'repogenesis.skills.json', '.repogenesis/manifest.json']) {
+    for (const file of ['PROJECT.md', 'CLAUDE.md', 'GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', 'docs/TECH_DECISIONS.md', 'docs/EXTERNAL_DEPENDENCIES.md', 'docs/runbooks/README.md', 'docs/runbooks/skill-install.md', '.gitignore', 'skills/README.md', 'repogenesis.skills.json', '.repogenesis/manifest.json']) {
       expect(fs.existsSync(path.join(base, file)), `Missing workspace file: ${file}`).toBe(true);
     }
   });

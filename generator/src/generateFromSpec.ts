@@ -4,6 +4,8 @@ import { generateProjectMd } from './templates/projectMd';
 import { generateClaudeMd } from './templates/claudeMd';
 import { generateGeminiMd } from './templates/geminiMd';
 import { generateActiveContext } from './templates/activeContext';
+import { generateTechDecisions } from './templates/techDecisions';
+import { generateExternalDependencies } from './templates/externalDependencies';
 import { generateRequirements } from './templates/requirements';
 import { generateArchitecture } from './templates/architecture';
 import { generateRoadmap } from './templates/roadmap';
@@ -148,6 +150,8 @@ ${deps}
 - \`docs/ARCHITECTURE.md\`
 - \`docs/ROADMAP.md\`
 - \`docs/VERSIONING_STANDARD.md\`
+- \`../docs/TECH_DECISIONS.md\`
+- \`../docs/EXTERNAL_DEPENDENCIES.md\`
 - \`docs/ADR/0000-template.md\`
 - \`plans/template.md\`
 - \`prompts/restart.md\`
@@ -196,6 +200,8 @@ function buildSingleRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions)
     ['PROJECT.md', generateProjectMd(brief, { scope: 'single' })],
     ...buildToolWrapperEntries(brief, { scope: 'single' }),
     ['docs/ACTIVE_CONTEXT.md', generateActiveContext(brief)],
+    ['docs/TECH_DECISIONS.md', generateTechDecisions(brief)],
+    ['docs/EXTERNAL_DEPENDENCIES.md', generateExternalDependencies(brief)],
     ['docs/REQUIREMENTS.md', generateRequirements(brief)],
     ['docs/ARCHITECTURE.md', generateArchitecture(brief)],
     ['docs/ROADMAP.md', generateRoadmap(brief)],
@@ -242,6 +248,8 @@ function buildMultiRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions):
     ['PROJECT.md', generateProjectMd(brief, { scope: 'workspace' })],
     ...buildToolWrapperEntries(brief, { scope: 'workspace' }),
     ['GLOBAL_CONTEXT.md', generateGlobalContext(brief)],
+    ['docs/TECH_DECISIONS.md', generateTechDecisions(brief)],
+    ['docs/EXTERNAL_DEPENDENCIES.md', generateExternalDependencies(brief)],
     ['REQUIREMENTS.md', generateRequirements(brief)],
     ['SECURITY.md', generateSecurity(brief)],
     ['VERSIONING_STANDARD.md', generateVersioningStandard(brief)],

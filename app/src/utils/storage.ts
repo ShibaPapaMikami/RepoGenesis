@@ -192,5 +192,9 @@ function migrateDraft(state: FormState): FormState {
       ai_tools: normalizeAiTools(state.tech.ai_tools ?? [], legacyAiTool),
       ai_tool_detail: state.tech.ai_tool_detail ?? '',
     },
+    planning: {
+      tech_decisions: state.planning?.tech_decisions ?? [],
+      external_dependencies: state.planning?.external_dependencies ?? [],
+    },
   };
 }

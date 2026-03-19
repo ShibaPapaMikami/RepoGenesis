@@ -45,6 +45,10 @@ function makeState(): FormState {
     workflow: {
       phases_count: 3,
     },
+    planning: {
+      tech_decisions: [],
+      external_dependencies: [],
+    },
     slugManuallyEdited: false,
     securityLevelOverride: null,
   };
@@ -84,6 +88,65 @@ test('parseConsultationIntake should extract core sections into a draft', () => 
   assert.deepEqual(draft.extracted.integrations, ['Slack', 'Google Drive']);
   assert.equal(draft.review.facts.some((item) => item.includes('概要: 社内向けのAI活用案件管理ツールを作りたい')), true);
   assert.equal(draft.review.openQuestions.some((item) => item.includes('1リポジトリで十分かは未確定')), true);
+});
+
+test('parseConsultationIntake should derive planning suggestions from input candidates and integrations', () => {
+  const input = `## プロジェクト概要
+AI で契約を要約する社内ツール
+
+## 想定ユーザー
+- 契約管理担当
+
+## 解決したい課題
+契約の要点確認に時間がかかる
+
+## 最初に作るべきもの
+契約PDFを登録して要約を保存する画面
+
+## 扱うデータ
+- 契約PDF
+
+## 外部連携候補
+- Slack
+- Supabase Auth
+
+## 未確定事項
+- 通知は Slack かメールか未確定
+
+## RepoGenesis入力候補
+- 採用するAI API: OpenAI API
+- 採用するモデル: gpt-5.4
+- 採用する外部OSS / GitHubリポジトリ / npm package: opendataloader-pdf
+- DB/Storage は Supabase を採用
+- まだ決めきっていない項目: OCR対応`;
+
+  const draft = parseConsultationIntake(input, makeState());
+
+  assert.equal(
+    draft.suggestedState.planning.tech_decisions.some((item) =>
+      item.topic === 'AI API' && item.choice === 'OpenAI API' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    draft.suggestedState.planning.tech_decisions.some((item) =>
+      item.choice === 'gpt-5.4'),
+    true,
+  );
+  assert.equal(
+    draft.suggestedState.planning.external_dependencies.some((item) =>
+      item.name === 'OpenAI API' && item.env_vars.includes('OPENAI_API_KEY')),
+    true,
+  );
+  assert.equal(
+    draft.suggestedState.planning.external_dependencies.some((item) =>
+      item.name === 'Slack' && item.category === 'notification'),
+    true,
+  );
+  assert.equal(
+    draft.suggestedState.planning.external_dependencies.some((item) =>
+      item.name === 'Supabase Auth' && item.category === 'auth'),
+    true,
+  );
 });
 
 test('parseConsultationIntake should create provisional state without changing schema shape', () => {

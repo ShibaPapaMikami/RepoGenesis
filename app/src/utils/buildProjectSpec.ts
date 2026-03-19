@@ -55,6 +55,28 @@ export function buildProjectSpec(state: FormState): ProjectSpec {
     workflow: {
       phases_count: state.workflow.phases_count,
     },
+    planning: {
+      tech_decisions: state.planning.tech_decisions.map((item) => ({
+        topic: item.topic,
+        choice: item.choice,
+        status: item.status,
+        rationale: item.rationale,
+        decision_date: item.decision_date,
+        notes: item.notes,
+      })),
+      external_dependencies: state.planning.external_dependencies.map((item) => ({
+        name: item.name,
+        category: item.category,
+        status: item.status,
+        purpose: item.purpose,
+        owner: item.owner,
+        source: item.source,
+        license: item.license,
+        env_vars: item.env_vars,
+        data_outbound: item.data_outbound,
+        notes: item.notes,
+      })),
+    },
   };
 }
 

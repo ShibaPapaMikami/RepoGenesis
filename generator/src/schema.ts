@@ -8,6 +8,22 @@ const legacyAiToolEnum = z.enum(['claude_cli', 'other']);
 const securityLevelEnum = z.enum(['low', 'medium', 'high']);
 const repoTypeEnum = z.enum(['single', 'multi']);
 const repoKindEnum = z.enum(['frontend', 'backend', 'infra', 'sdk', 'unity', 'mobile', 'ops']);
+const decisionStatusEnum = z.enum(['adopted', 'candidate', 'open', 'rejected']);
+const dependencyCategoryEnum = z.enum([
+  'ai_api',
+  'model',
+  'external_service',
+  'oss',
+  'github_repo',
+  'npm_package',
+  'auth',
+  'database',
+  'storage',
+  'notification',
+  'ocr',
+  'batch',
+  'other',
+]);
 
 const slugRegex = /^[a-z0-9][a-z0-9-]*$/;
 
@@ -74,6 +90,36 @@ const workflowSchema = z.object({
   phases_count: z.number().int().min(1).max(10).default(3),
 });
 
+const techDecisionSchema = z.object({
+  topic: z.string().default(''),
+  choice: z.string().default(''),
+  status: decisionStatusEnum.default('open'),
+  rationale: z.string().default(''),
+  decision_date: z.string().default(''),
+  notes: z.string().default(''),
+});
+
+const externalDependencySchema = z.object({
+  name: z.string().default(''),
+  category: dependencyCategoryEnum.default('other'),
+  status: decisionStatusEnum.default('open'),
+  purpose: z.string().default(''),
+  owner: z.string().default(''),
+  source: z.string().default(''),
+  license: z.string().default(''),
+  env_vars: z.array(z.string()).default([]),
+  data_outbound: z.boolean().default(false),
+  notes: z.string().default(''),
+});
+
+const planningSchema = z.object({
+  tech_decisions: z.array(techDecisionSchema).default([]),
+  external_dependencies: z.array(externalDependencySchema).default([]),
+}).default({
+  tech_decisions: [],
+  external_dependencies: [],
+});
+
 export const SUPPORTED_SPEC_VERSIONS = ['1.0'] as const;
 export type SpecVersion = typeof SUPPORTED_SPEC_VERSIONS[number];
 
@@ -84,6 +130,7 @@ const briefBodySchema = z.object({
   security: securitySchema,
   structure: structureSchema,
   workflow: workflowSchema,
+  planning: planningSchema,
 });
 
 type BriefBody = z.infer<typeof briefBodySchema>;

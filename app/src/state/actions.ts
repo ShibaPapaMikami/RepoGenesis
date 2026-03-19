@@ -1,4 +1,13 @@
-import type { Domain, PrimaryLanguage, AiTool, SecurityLevel, RepoType, RepoKind } from '../constants/enums';
+import type {
+  Domain,
+  PrimaryLanguage,
+  AiTool,
+  SecurityLevel,
+  RepoType,
+  RepoKind,
+  TechDecisionStatus,
+  DependencyCategory,
+} from '../constants/enums';
 
 export type FormAction =
   // Project
@@ -30,6 +39,29 @@ export type FormAction =
   | { type: 'SET_REPO_DEPENDS_ON'; payload: { index: number; value: string[] } }
   // Workflow
   | { type: 'SET_PHASES_COUNT'; payload: number }
+  // Planning
+  | { type: 'ADD_TECH_DECISION' }
+  | { type: 'REMOVE_TECH_DECISION'; payload: number }
+  | {
+    type: 'SET_TECH_DECISION_FIELD';
+    payload: {
+      index: number;
+      field: 'topic' | 'choice' | 'status' | 'rationale' | 'decision_date' | 'notes';
+      value: string;
+    };
+  }
+  | { type: 'ADD_EXTERNAL_DEPENDENCY' }
+  | { type: 'REMOVE_EXTERNAL_DEPENDENCY'; payload: number }
+  | {
+    type: 'SET_EXTERNAL_DEPENDENCY_FIELD';
+    payload: {
+      index: number;
+      field: 'name' | 'category' | 'status' | 'purpose' | 'owner' | 'source' | 'license' | 'notes';
+      value: string;
+    };
+  }
+  | { type: 'SET_EXTERNAL_DEPENDENCY_ENV_VARS'; payload: { index: number; value: string[] } }
+  | { type: 'SET_EXTERNAL_DEPENDENCY_DATA_OUTBOUND'; payload: { index: number; value: boolean } }
   // Meta
   | { type: 'RESTORE_DRAFT'; payload: FormState }
   | { type: 'RESET' };
@@ -68,6 +100,28 @@ export interface FormState {
   };
   workflow: {
     phases_count: number;
+  };
+  planning: {
+    tech_decisions: {
+      topic: string;
+      choice: string;
+      status: TechDecisionStatus;
+      rationale: string;
+      decision_date: string;
+      notes: string;
+    }[];
+    external_dependencies: {
+      name: string;
+      category: DependencyCategory;
+      status: TechDecisionStatus;
+      purpose: string;
+      owner: string;
+      source: string;
+      license: string;
+      env_vars: string[];
+      data_outbound: boolean;
+      notes: string;
+    }[];
   };
   slugManuallyEdited: boolean;
   securityLevelOverride: SecurityLevel | null;

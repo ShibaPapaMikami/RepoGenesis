@@ -44,6 +44,44 @@ describe('projectBriefSchema', () => {
     if (result.success) {
       expect(result.data.tech.ai_tools).toEqual(['claude_code']);
       expect(result.data.tech.ai_tool).toBe('claude_cli');
+      expect(result.data.planning.tech_decisions).toEqual([]);
+      expect(result.data.planning.external_dependencies).toEqual([]);
+    }
+  });
+
+  it('should accept structured planning metadata', () => {
+    const result = projectBriefSchema.safeParse(validBrief({
+      planning: {
+        tech_decisions: [
+          {
+            topic: 'AI API',
+            choice: 'OpenAI API',
+            status: 'adopted',
+            rationale: 'Used for summaries',
+            decision_date: '2026-03-19',
+            notes: '',
+          },
+        ],
+        external_dependencies: [
+          {
+            name: 'OpenAI API',
+            category: 'ai_api',
+            status: 'adopted',
+            purpose: 'Generate summaries',
+            owner: 'AI team',
+            source: 'https://platform.openai.com/',
+            license: 'Commercial',
+            env_vars: ['OPENAI_API_KEY'],
+            data_outbound: true,
+            notes: '',
+          },
+        ],
+      },
+    }));
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.planning.tech_decisions[0].choice).toBe('OpenAI API');
+      expect(result.data.planning.external_dependencies[0].env_vars).toEqual(['OPENAI_API_KEY']);
     }
   });
 

@@ -1,5 +1,6 @@
 import type { ProjectBrief } from '../schema';
 import { formatAiTools, hasAiTool } from '../aiTools';
+import { getAdoptedDependencyBulletLines, getAdoptedTechBulletLines } from '../planning';
 import { formatDomains, formatOwner, formatProjectDescription } from '../templateDisplay';
 
 interface RepoEntry {
@@ -57,6 +58,8 @@ ${brief.project.slug}/
 ${toolLines}
 ├── docs/
 │   ├── ACTIVE_CONTEXT.md
+│   ├── TECH_DECISIONS.md
+│   ├── EXTERNAL_DEPENDENCIES.md
 │   ├── REQUIREMENTS.md
 │   ├── ARCHITECTURE.md
 │   ├── ROADMAP.md
@@ -84,6 +87,12 @@ ${toolLines}
 ├── REQUIREMENTS.md
 ├── SECURITY.md
 ├── VERSIONING_STANDARD.md
+├── docs/
+│   ├── TECH_DECISIONS.md
+│   ├── EXTERNAL_DEPENDENCIES.md
+│   └── runbooks/
+│       ├── README.md
+│       └── skill-install.md
 ├── prompts/
 │   └── restart.md
 ├── .gitignore
@@ -112,12 +121,32 @@ ${toolLines}
 \`\`\``;
 }
 
+function buildAdoptedPlanningSection(brief: ProjectBrief): string {
+  const adoptedDecisions = getAdoptedTechBulletLines(brief);
+  const adoptedDependencies = getAdoptedDependencyBulletLines(brief);
+
+  if (adoptedDecisions.length === 0 && adoptedDependencies.length === 0) {
+    return '';
+  }
+
+  const sections: string[] = [];
+  if (adoptedDecisions.length > 0) {
+    sections.push(`- Adopted Decisions:\n${adoptedDecisions.map((line) => `  ${line}`).join('\n')}`);
+  }
+  if (adoptedDependencies.length > 0) {
+    sections.push(`- Adopted External Dependencies:\n${adoptedDependencies.map((line) => `  ${line}`).join('\n')}`);
+  }
+
+  return `${sections.join('\n')}\n`;
+}
+
 export function generateProjectMd(
   brief: ProjectBrief,
   options: GenerateProjectMdOptions = {},
 ): string {
   const scope = options.scope ?? (brief.structure.repo_type === 'multi' ? 'workspace' : 'single');
   const repo = options.repo;
+  const adoptedPlanning = buildAdoptedPlanningSection(brief);
 
   const frameworkLine = brief.tech.frameworks.length > 0
     ? `- Frameworks: ${brief.tech.frameworks.join(', ')}\n`
@@ -142,6 +171,7 @@ ${deps}## Tech Stack
 - Domains: ${formatDomains(brief.tech.domains)}
 - Primary Language: ${brief.tech.primary_language}
 ${frameworkLine}- AI Tools: ${formatAiTools(brief.tech)}
+${adoptedPlanning}
 
 ## Absolute Rules
 ### 1. No Guessing
@@ -156,6 +186,8 @@ ${buildSecurityRules(brief)}
 - \`docs/ROADMAP.md\` tracks phase progression for this repository.
 - \`docs/ARCHITECTURE.md\` defines this repository's technical boundaries.
 - \`docs/VERSIONING_STANDARD.md\` defines runtime traceability rules.
+- \`../docs/TECH_DECISIONS.md\` tracks workspace-level adopted, candidate, and open technical decisions.
+- \`../docs/EXTERNAL_DEPENDENCIES.md\` tracks workspace-level external dependencies and their status.
 - \`../GLOBAL_CONTEXT.md\` is the workspace-level source of truth for cross-repo context.
 
 ### 4. Session Protocol
@@ -185,6 +217,7 @@ ${formatProjectDescription(brief.project.description)}
 - Domains: ${formatDomains(brief.tech.domains)}
 - Primary Language: ${brief.tech.primary_language}
 ${frameworkLine}- AI Tools: ${formatAiTools(brief.tech)}
+${adoptedPlanning}
 
 ## Workspace Repositories
 ${repoList}
@@ -201,6 +234,8 @@ ${buildSecurityRules(brief)}
 - \`GLOBAL_CONTEXT.md\` is the single source of truth for workspace-level current state.
 - \`REQUIREMENTS.md\` is the single source of truth for workspace-level requirements.
 - \`SECURITY.md\` defines shared security rules.
+- \`docs/TECH_DECISIONS.md\` tracks adopted, candidate, and open technical decisions.
+- \`docs/EXTERNAL_DEPENDENCIES.md\` tracks adopted, candidate, and open external dependencies.
 - Each repository's \`PROJECT.md\` defines repository-local rules.
 - Each repository's \`docs/ACTIVE_CONTEXT.md\` defines repository-local state.
 
@@ -224,6 +259,7 @@ ${formatProjectDescription(brief.project.description)}
 - Domains: ${formatDomains(brief.tech.domains)}
 - Primary Language: ${brief.tech.primary_language}
 ${frameworkLine}- AI Tools: ${formatAiTools(brief.tech)}
+${adoptedPlanning}
 
 ## Development Workflow
 - Use the tool-specific wrapper that matches your environment when present.
@@ -243,6 +279,8 @@ ${buildSecurityRules(brief)}
 - \`docs/ACTIVE_CONTEXT.md\` is the single source of truth for current project state.
 - \`docs/ROADMAP.md\` is the single source of truth for phase progression.
 - \`docs/REQUIREMENTS.md\` is the single source of truth for what the system must do.
+- \`docs/TECH_DECISIONS.md\` tracks adopted, candidate, and open technical decisions.
+- \`docs/EXTERNAL_DEPENDENCIES.md\` tracks adopted, candidate, and open external dependencies.
 - \`docs/VERSIONING_STANDARD.md\` defines release/version traceability rules.
 - If conversation conflicts with files, files win.
 

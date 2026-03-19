@@ -38,6 +38,10 @@ function makeState(): FormState {
     workflow: {
       phases_count: 3,
     },
+    planning: {
+      tech_decisions: [],
+      external_dependencies: [],
+    },
     slugManuallyEdited: false,
     securityLevelOverride: null,
   };

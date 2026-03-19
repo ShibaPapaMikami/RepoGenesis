@@ -38,6 +38,52 @@ const SINGLE_BRIEF = {
   workflow: {
     phases_count: 3,
   },
+  planning: {
+    tech_decisions: [
+      {
+        topic: 'AI API',
+        choice: 'OpenAI API',
+        status: 'adopted',
+        rationale: 'Contract summaries are generated through the hosted API.',
+        decision_date: '2026-01-01',
+        notes: '',
+      },
+      {
+        topic: 'Model',
+        choice: 'gpt-5.4',
+        status: 'candidate',
+        rationale: 'Version can still change during evaluation.',
+        decision_date: '',
+        notes: '',
+      },
+    ],
+    external_dependencies: [
+      {
+        name: 'OpenAI API',
+        category: 'ai_api',
+        status: 'adopted',
+        purpose: 'Generate summaries from uploaded documents',
+        owner: 'AI Platform',
+        source: 'https://platform.openai.com/',
+        license: 'Commercial',
+        env_vars: ['OPENAI_API_KEY'],
+        data_outbound: true,
+        notes: '',
+      },
+      {
+        name: 'Supabase',
+        category: 'database',
+        status: 'adopted',
+        purpose: 'Store records and metadata',
+        owner: 'Platform',
+        source: 'https://supabase.com/',
+        license: 'Commercial',
+        env_vars: ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY'],
+        data_outbound: true,
+        notes: '',
+      },
+    ],
+  },
 };
 
 const MULTI_BRIEF = {
@@ -75,6 +121,10 @@ const MULTI_BRIEF = {
   workflow: {
     phases_count: 5,
   },
+  planning: {
+    tech_decisions: [],
+    external_dependencies: [],
+  },
 };
 
 let tmpDir: string;
@@ -99,12 +149,14 @@ describe('generator — single-repo', () => {
     const result = generate({ inputPath, outputPath: tmpDir, force: false });
 
     expect(result.success).toBe(true);
-    expect(result.filesCreated.length).toBe(22);
+    expect(result.filesCreated.length).toBe(24);
 
     const expectedFiles = [
       'PROJECT.md',
       'CLAUDE.md',
       'docs/ACTIVE_CONTEXT.md',
+      'docs/TECH_DECISIONS.md',
+      'docs/EXTERNAL_DEPENDENCIES.md',
       'docs/REQUIREMENTS.md',
       'docs/ARCHITECTURE.md',
       'docs/ROADMAP.md',
@@ -147,7 +199,7 @@ describe('generator — single-repo', () => {
     // Second generate with --force
     const result = generate({ inputPath, outputPath: tmpDir, force: true });
     expect(result.success).toBe(true);
-    expect(result.filesCreated.length).toBe(22);
+    expect(result.filesCreated.length).toBe(24);
   });
 
   it('should render normalized project descriptions in generated docs', () => {
@@ -168,6 +220,44 @@ describe('generator — single-repo', () => {
 
     expect(projectMd).toContain('Collect visitor registrations / Capture staff notes / Export follow-up lists');
     expect(requirements).toContain('**Description**: Collect visitor registrations / Capture staff notes / Export follow-up lists');
+  });
+
+  it('should reflect adopted planning docs and env vars in generated outputs', () => {
+    const inputPath = writeInputFile(SINGLE_BRIEF);
+    const result = generate({ inputPath, outputPath: tmpDir, force: true });
+
+    const projectMd = fs.readFileSync(path.join(result.outputDir, 'PROJECT.md'), 'utf-8');
+    const activeContext = fs.readFileSync(path.join(result.outputDir, 'docs/ACTIVE_CONTEXT.md'), 'utf-8');
+    const architecture = fs.readFileSync(path.join(result.outputDir, 'docs/ARCHITECTURE.md'), 'utf-8');
+    const techDecisions = fs.readFileSync(path.join(result.outputDir, 'docs/TECH_DECISIONS.md'), 'utf-8');
+    const externalDependencies = fs.readFileSync(path.join(result.outputDir, 'docs/EXTERNAL_DEPENDENCIES.md'), 'utf-8');
+    const envExample = fs.readFileSync(path.join(result.outputDir, '.env.example'), 'utf-8');
+
+    expect(projectMd).toContain('Adopted Decisions');
+    expect(projectMd).toContain('AI API: OpenAI API');
+    expect(projectMd).toContain('docs/TECH_DECISIONS.md');
+    expect(projectMd).toContain('docs/EXTERNAL_DEPENDENCIES.md');
+
+    expect(activeContext).toContain('Adopted decision: AI API: OpenAI API');
+    expect(activeContext).toContain('Adopted dependency: Supabase (Database)');
+
+    expect(architecture).toContain('## Adopted Technology Decisions');
+    expect(architecture).toContain('## Adopted External Dependencies');
+    expect(architecture).toContain('OpenAI API (AI API)');
+
+    expect(techDecisions).toContain('## Adopted Decisions');
+    expect(techDecisions).toContain('### AI API');
+    expect(techDecisions).toContain('OpenAI API');
+    expect(techDecisions).toContain('## Candidate Decisions');
+    expect(techDecisions).toContain('gpt-5.4');
+
+    expect(externalDependencies).toContain('## Adopted Dependencies');
+    expect(externalDependencies).toContain('### Supabase');
+    expect(externalDependencies).toContain('SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY');
+
+    expect(envExample).toContain('OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE');
+    expect(envExample).toContain('SUPABASE_URL=YOUR_SUPABASE_URL_HERE');
+    expect(envExample).not.toContain('API_SECRET=YOUR_API_SECRET_HERE');
   });
 
   it('should generate coherent starter docs without placeholder requirement and architecture text', () => {
@@ -214,7 +304,7 @@ describe('generator — multi-repo', () => {
     expect(result.success).toBe(true);
 
     // Workspace-level files
-    const workspaceFiles = ['PROJECT.md', 'CLAUDE.md', 'GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', 'docs/runbooks/README.md', 'docs/runbooks/skill-install.md', '.gitignore', 'skills/README.md', 'repogenesis.skills.json'];
+    const workspaceFiles = ['PROJECT.md', 'CLAUDE.md', 'GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', 'docs/TECH_DECISIONS.md', 'docs/EXTERNAL_DEPENDENCIES.md', 'docs/runbooks/README.md', 'docs/runbooks/skill-install.md', '.gitignore', 'skills/README.md', 'repogenesis.skills.json'];
     for (const file of workspaceFiles) {
       const fullPath = path.join(result.outputDir, file);
       expect(fs.existsSync(fullPath), `Expected workspace file: ${file}`).toBe(true);
@@ -344,13 +434,15 @@ describe('generateFromSpec — pure function', () => {
     return result.data;
   }
 
-  it('should return Map with 22 files for single-repo', () => {
+  it('should return Map with 24 files for single-repo', () => {
     const brief = parseBrief(SINGLE_BRIEF);
     const files = generateFromSpec(brief);
-    expect(files.size).toBe(22);
+    expect(files.size).toBe(24);
     expect(files.has('PROJECT.md')).toBe(true);
     expect(files.has('CLAUDE.md')).toBe(true);
     expect(files.has('SECURITY.md')).toBe(true);
+    expect(files.has('docs/TECH_DECISIONS.md')).toBe(true);
+    expect(files.has('docs/EXTERNAL_DEPENDENCIES.md')).toBe(true);
     expect(files.has('docs/VERSIONING_STANDARD.md')).toBe(true);
     expect(files.has('docs/runbooks/README.md')).toBe(true);
     expect(files.has('docs/runbooks/skill-install.md')).toBe(true);
@@ -363,11 +455,13 @@ describe('generateFromSpec — pure function', () => {
   it('should return Map with correct files for multi-repo', () => {
     const brief = parseBrief(MULTI_BRIEF);
     const files = generateFromSpec(brief);
-    // 15 workspace + 11 * 2 repos + 1 manifest = 38
-    expect(files.size).toBe(38);
+    // 17 workspace + 11 * 2 repos + 1 manifest = 40
+    expect(files.size).toBe(40);
     expect(files.has('PROJECT.md')).toBe(true);
     expect(files.has('CLAUDE.md')).toBe(true);
     expect(files.has('GLOBAL_CONTEXT.md')).toBe(true);
+    expect(files.has('docs/TECH_DECISIONS.md')).toBe(true);
+    expect(files.has('docs/EXTERNAL_DEPENDENCIES.md')).toBe(true);
     expect(files.has('VERSIONING_STANDARD.md')).toBe(true);
     expect(files.has('docs/runbooks/README.md')).toBe(true);
     expect(files.has('docs/runbooks/skill-install.md')).toBe(true);
@@ -443,7 +537,7 @@ describe('generateFromSpec — pure function', () => {
     const manifest = JSON.parse(manifestRaw as string);
     expect(manifest.specVersion).toBe('1.0');
     expect(manifest.repoType).toBe('single');
-    expect(manifest.fileCount).toBe(22);
+    expect(manifest.fileCount).toBe(24);
     expect(manifest.source).toBe('legacyBrief');
     expect(manifest.selectedSkills).toEqual([]);
   });

@@ -3,6 +3,7 @@ import { createIntakeEnvelope } from './intakeProvider.ts';
 import type { FormState } from '../state/actions.ts';
 import type { Domain, RepoType, SecurityLevel } from '../constants/enums.ts';
 import { calculateMinSecurityLevel } from './securityCalc.ts';
+import { derivePlanningSuggestions } from './planning.ts';
 
 export interface IntakeReadiness {
   blocking: string[];
@@ -55,6 +56,8 @@ interface IntakeExtractionInput {
   firstDeliverable: string | null;
   integrations: string[];
   candidateInputs: string[];
+  candidateText: string;
+  externalText: string;
   combinedText: string;
 }
 
@@ -623,6 +626,8 @@ export function deriveDraftSuggestions(
     firstDeliverable,
     integrations,
     candidateInputs,
+    candidateText,
+    externalText,
     combinedText,
   } = extracted;
 
@@ -704,6 +709,12 @@ export function deriveDraftSuggestions(
         ...currentState.workflow,
         phases_count: inferredPhasesCount,
       },
+      planning: derivePlanningSuggestions({
+        currentState,
+        candidateText,
+        externalText,
+        combinedText,
+      }),
       slugManuallyEdited: currentState.slugManuallyEdited,
       securityLevelOverride: resolvedSecurityLevel,
     },
@@ -737,6 +748,8 @@ export function parseConsultationIntake(input: string, currentState: FormState):
     firstDeliverable,
     integrations,
     candidateInputs,
+    candidateText: sections['RepoGenesis入力候補'] ?? '',
+    externalText: sections['外部連携候補'] ?? '',
     combinedText: inferenceText,
   });
 
