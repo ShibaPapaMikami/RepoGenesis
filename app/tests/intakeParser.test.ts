@@ -235,6 +235,16 @@ test('parseConsultationIntake should prefer explicit key-value planning hints an
     deps.some((item) => item.name === 'single'),
     false,
   );
+  assert.equal(
+    draft.suggestedState.planning.tech_decisions.some((item) =>
+      item.topic === 'Notification' && item.choice === 'Slack' && item.status !== 'adopted'),
+    false,
+  );
+  assert.equal(
+    draft.suggestedState.planning.tech_decisions.some((item) =>
+      item.topic === 'Notification' && item.choice === 'Email provider'),
+    false,
+  );
 });
 
 test('parseConsultationIntake should create provisional state without changing schema shape', () => {

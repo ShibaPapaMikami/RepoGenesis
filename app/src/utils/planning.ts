@@ -675,6 +675,27 @@ function buildDefaultTechDecisions(state: FormState): TechDecisionItem[] {
   return items;
 }
 
+function dedupeNotificationDecisions(items: TechDecisionItem[]): TechDecisionItem[] {
+  const adoptedNotificationChoices = items
+    .filter((item) => item.topic === 'Notification' && item.status === 'adopted')
+    .map((item) => item.choice.toLowerCase())
+    .join(' ');
+
+  if (!adoptedNotificationChoices) return items;
+
+  return items.filter((item) => {
+    if (item.topic !== 'Notification' || item.status === 'adopted') return true;
+
+    const choice = item.choice.toLowerCase();
+    if (choice === 'slack' && adoptedNotificationChoices.includes('slack')) return false;
+    if ((choice === 'email provider' || choice.includes('email')) && /email|メール/.test(adoptedNotificationChoices)) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
 export function derivePlanningSuggestions(input: PlanningSuggestionInput): FormState['planning'] {
   const decisionBucket = new Map<string, TechDecisionItem>();
   const dependencyBucket = new Map<string, ExternalDependencyItem>();
@@ -710,7 +731,7 @@ export function derivePlanningSuggestions(input: PlanningSuggestionInput): FormS
   }
 
   return {
-    tech_decisions: Array.from(decisionBucket.values()),
+    tech_decisions: dedupeNotificationDecisions(Array.from(decisionBucket.values())),
     external_dependencies: Array.from(dependencyBucket.values()),
   };
 }
