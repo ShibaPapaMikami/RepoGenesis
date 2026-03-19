@@ -27,6 +27,7 @@ export function generateRoadmap(brief: ProjectBrief): string {
         : i === 1
           ? 'In Progress'
           : 'Not Started';
+    const taskMarker = status === 'Complete' ? 'x' : ' ';
     const goals = i === 0
       ? [
           'Create the starter repository structure and baseline docs.',
@@ -55,9 +56,9 @@ export function generateRoadmap(brief: ProjectBrief): string {
     phases.push(`### Phase ${phaseNum}: ${title}
 - **Status**: ${status}
 - **Goals**:
-${goals.map((goal) => `  - [ ] ${goal}`).join('\n')}
+${goals.map((goal) => `  - [${taskMarker}] ${goal}`).join('\n')}
 - **Deliverables**:
-${deliverables.map((item) => `  - [ ] ${item}`).join('\n')}
+${deliverables.map((item) => `  - [${taskMarker}] ${item}`).join('\n')}
 `);
   }
 

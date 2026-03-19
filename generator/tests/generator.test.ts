@@ -181,15 +181,19 @@ describe('generator — single-repo', () => {
 
     expect(activeContext).toContain('## Current Phase');
     expect(activeContext).toContain('Phase 1 — Planning');
+    expect(activeContext).toContain('`docs/VERSIONING_STANDARD.md`');
     expect(roadmap).toContain('### Phase 0: Project Setup & Foundation');
     expect(roadmap).toContain('- **Status**: Complete');
+    expect(roadmap).toContain('- [x] Create the starter repository structure and baseline docs.');
     expect(roadmap).toContain('### Phase 1: Primary Workflow Delivery');
     expect(roadmap).toContain('- **Status**: In Progress');
+    expect(roadmap).toContain('- [ ] Turn the generated starter into a concrete execution plan.');
 
     expect(requirements).not.toContain('[Define your first requirement]');
     expect(requirements).not.toContain('[Define your second requirement]');
     expect(requirements).toContain('### R1: Deliver the primary workflow');
     expect(requirements).toContain('### R2: Keep the project operable and traceable from day one');
+    expect(requirements).toContain('The exact boundary of the initial scope is written down');
 
     expect(architecture).not.toContain('[Describe the high-level architecture here]');
     expect(architecture).not.toContain('[List and describe key system components]');

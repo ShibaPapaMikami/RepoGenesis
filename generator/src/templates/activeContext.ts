@@ -46,6 +46,7 @@ ${currentPhase}
 - \`docs/REQUIREMENTS.md\`
 - \`docs/ARCHITECTURE.md\`
 - \`docs/ROADMAP.md\`
+- \`docs/VERSIONING_STANDARD.md\`
 - \`docs/ADR/0000-template.md\`
 - \`docs/runbooks/README.md\`
 - \`docs/runbooks/skill-install.md\`

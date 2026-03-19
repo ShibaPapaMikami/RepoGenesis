@@ -15,6 +15,7 @@ export function generateRequirements(brief: ProjectBrief): string {
     `  - [ ] A user can complete the first end-to-end workflow for ${project.name}.`,
     `  - [ ] The main inputs and outputs for that workflow are explicitly handled in code or documented in the repository.`,
     `  - [ ] The first workflow is small enough to deliver within the current planning horizon without broadening scope unnecessarily.`,
+    `  - [ ] The exact boundary of the initial scope is written down, including what is included now and what is explicitly deferred.`,
     ``,
     `### R2: Keep the project operable and traceable from day one`,
     `- Description: ${project.name} must remain easy to start, safe to configure, and easy to inspect while the product scope is still evolving.`,
