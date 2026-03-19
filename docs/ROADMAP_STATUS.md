@@ -1,7 +1,7 @@
 # ROADMAP_STATUS.md — Current Position
 
 ## Last Updated
-2026-03-18
+2026-03-19
 
 ## Roadmap Position
 Phase 6 / Hardening
@@ -33,15 +33,18 @@ Phase 6 / Hardening
 - Skill catalog now surfaces provider-specific support in the UI (`Codex: 公式`, `Claude Code: RepoGenesis対応`, `Gemini CLI: RepoGenesis対応`).
 - Official-style skill registry entries now exist for `gh-fix-ci`, `playwright`, `vercel-deploy`, and `render-deploy`, in addition to the existing `repo-readiness-review`.
 - The existing `repo-readiness-review` entry now includes a concrete Gemini CLI command artifact instead of metadata-only support.
+- Intake / generator の planning model が追加され、技術判断と外部依存を `Adopted / Candidate / Open / Rejected` として保持できるようになった。
+- `docs/TECH_DECISIONS.md` と `docs/EXTERNAL_DEPENDENCIES.md` が標準生成され、adopted な API / model / service / OSS は `PROJECT.md`、`docs/ARCHITECTURE.md`、`.env.example` に反映されるようになった。
+- `RepoGenesis入力候補` の key-value ヒントから planning 候補を組み立てる parser / state / generator の回帰テストが追加された。
 
 ## What This Phase Still Needs
-- Fix the provider-independent intake contract against current parser behavior.
-- Add deterministic `draft -> spec` mapping rules and tests.
+- Verify the latest planning-aware generation flow on production and confirm generated docs stay coherent across browser export and remote ZIP generation.
+- Refine the public UI so non-engineers can understand planning fields without reading internal terminology.
 - Keep AI provider integration behind the normalized intake boundary.
 - Keep optional skill layer separate from the intake/generator core while hardening local export behavior and provider-specific guidance.
 
 ## Next Three Tasks
-1. Verify production on the latest public wizard commit and confirm the new intro / resume / detail step flow works correctly in the browser.
+1. Verify production on the latest planning-aware public wizard commit and confirm `TECH_DECISIONS` / `EXTERNAL_DEPENDENCIES` / `.env.example` stay aligned.
 2. Decide persistent storage for feedback and generation support data.
 3. Split pending large changes into separate tracks:
    - AI tool independence (`PROJECT.md` / `CLAUDE.md` / `GEMINI.md`)

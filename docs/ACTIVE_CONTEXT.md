@@ -1,7 +1,7 @@
 # ACTIVE_CONTEXT.md — Current Project State
 
 ## Last Updated
-2026-03-18
+2026-03-19
 
 ## Current Phase
 Phase 6 — AI-Assisted Spec Authoring (Hardening)
@@ -101,6 +101,9 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - 相談種別に `個人プロジェクト` を追加した
   - `JSONコピー / JSONダウンロード` は通常表示から外し、テストモード時だけ表示するようにした
   - 公開向けの固定テスト文章から `AI議事録` を外し、`社内FAQポータル` に差し替えた (`04a9281`)
+  - intake / generator に planning model を追加し、技術判断と外部依存を `Adopted / Candidate / Open / Rejected` で保持できるようにした
+  - `docs/TECH_DECISIONS.md` と `docs/EXTERNAL_DEPENDENCIES.md` を標準生成し、adopted な API / model / service / OSS を `PROJECT.md` / `docs/ARCHITECTURE.md` / `.env.example` に反映するようにした (`d19f447`)
+  - `RepoGenesis入力候補` の key-value ヒントから planning 候補を作る parser / state / generator の回帰テストを追加した
 
 ## What Is Being Done Now
 - いまの主要テーマ:
@@ -133,6 +136,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - AI tool 非依存化 (`PROJECT.md + CLAUDE.md + GEMINI.md`) は未反映
   - skill layer は provider-aware contract / installer / Web selection / remote ZIP 同梱まで反映。自動インストールと local ZIP 同梱は未反映
   - production での最新 public wizard (`04a9281`) の実地確認はこれから
+  - planning-aware な public wizard / remote ZIP の実地確認はこれから
   - feedback 永続保存と公開向け docs 整理は継続
 
 ## Key Decisions Made
@@ -162,6 +166,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 - template versioningなし（テンプレートのバージョン管理未対応）
 - AI tool 非依存の `PROJECT.md` / `GEMINI.md` 分離が未反映
 - feedback 保存先が Render ローカルファイル
+- planning 候補の語彙はまだルールベースで、AI API / OSS / notification provider の表現揺れを今後追加で吸収する必要がある
 
 ## Files That Exist
 - `claude.md`

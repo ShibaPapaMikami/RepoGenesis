@@ -5,10 +5,16 @@
 目的は、UI 実装・parser 実装・将来の AI API 連携を同じ provider 非依存の境界に揃えることにある。
 
 この契約は「どの AI を使うか」ではなく、「RepoGenesis が何を受け取り、どこまで deterministic に正規化するか」を固定する。
+加えて、自然文の要件整理と、技術判断・外部依存の planning 情報を分離して扱うことを目的とする。
 
 ## Input Model
 最初の対象は markdown 形式の貼り付け入力。
 完全 JSON は要求しない。
+
+入力は次の二層で扱う。
+
+- 自然文で書く業務要件
+- `RepoGenesis入力候補` に書く構造化ヒント
 
 受け入れ対象:
 - `## 見出し` 形式
@@ -31,6 +37,30 @@
 - `## 最初に作るべきもの`
 - `## 外部連携候補`
 - `## RepoGenesis入力候補`
+
+### Structured Candidate Hints
+`RepoGenesis入力候補` では、自然文の補足として key-value 形式を許可する。
+このセクションは deterministic に解釈できる候補だけを拾う。
+
+代表例:
+
+- `name`
+- `slug`
+- `domain` / `domains`
+- `language`
+- `framework`
+- `database`
+- `storage`
+- `auth`
+- `ai_api`
+- `ai_model`
+- `pdf_extractor`
+- `notification`
+- `security_level`
+- `repo_style`
+- `phases`
+
+構造化ヒントは、要件本文そのものの代替ではなく、planning 候補と初期 spec 補助として扱う。
 
 ### Accepted Heading Set
 受け入れる見出し名は次に固定する。
@@ -68,8 +98,12 @@ Slack、Google Drive、将来的には社内DB。
 APIを先に作るべきか、1リポジトリで十分かは未確定。
 
 ## RepoGenesis入力候補
+- name: 営業案件相談ダッシュボード
 - domain: web, ai
-- security: medium
+- security_level: medium
+- ai_api: OpenAI API
+- ai_model: gpt-5.4
+- notification: Slack
 ```
 
 ## Internal Draft Model
@@ -104,6 +138,47 @@ type IntakeDraft = {
 };
 ```
 
+`suggestedState` には既存の project / tech / security / structure / workflow に加えて、
+planning 情報を含める。
+
+```ts
+type PlanningState = {
+  tech_decisions: Array<{
+    topic: string;
+    choice: string;
+    status: 'adopted' | 'candidate' | 'open' | 'rejected';
+    rationale: string;
+    decision_date: string;
+    notes: string;
+  }>;
+  external_dependencies: Array<{
+    name: string;
+    category:
+      | 'ai_api'
+      | 'model'
+      | 'external_service'
+      | 'oss'
+      | 'github_repo'
+      | 'npm_package'
+      | 'auth'
+      | 'database'
+      | 'storage'
+      | 'notification'
+      | 'ocr'
+      | 'batch'
+      | 'other';
+    status: 'adopted' | 'candidate' | 'open' | 'rejected';
+    purpose: string;
+    owner: string;
+    source: string;
+    license: string;
+    env_vars: string[];
+    data_outbound: boolean;
+    notes: string;
+  }>;
+};
+```
+
 ## Mapping Rules
 ### Deterministic only
 - parser は明示的な記述だけを使う
@@ -118,19 +193,53 @@ type IntakeDraft = {
 - `securityLevel` は `payment data` / `credentials` / 強い機密情報が無ければ原則 `medium` 仮置き
 
 ### Candidate Input Normalization
-`RepoGenesis入力候補` は provider ごとに文体がぶれても、次だけを拾えればよい。
+`RepoGenesis入力候補` は provider ごとに文体がぶれても、次を deterministic に拾えることを目標にする。
 
-- `domain`
-- `security`
+- `name`
+- `slug`
+- `domain` / `domains`
+- `language`
+- `framework`
+- `database`
+- `storage`
+- `auth`
+- `ai_api`
+- `ai_model`
+- `pdf_extractor`
+- `notification`
+- `security_level`
+- `repo_style`
+- `phases`
 - `single / multi`
 - `has_api_keys`
 
 例:
 
 - `domain は web と ai が候補`
-- `security は medium を想定`
+- `security_level は medium を想定`
 - `single repo を想定`
 - `has_api_keys を想定`
+- `ai_api は OpenAI API`
+- `database は Supabase`
+- `notification は Slack first`
+
+### Planning Normalization
+planning 情報は次のルールで `suggestedState.planning` に落とす。
+
+- `Adopted`
+  - 実装前提として扱う
+  - 生成物では `PROJECT.md`、`docs/ARCHITECTURE.md`、`.env.example` に反映する
+- `Candidate`
+  - 候補として保持する
+  - 生成物では `docs/EXTERNAL_DEPENDENCIES.md` または `docs/TECH_DECISIONS.md` に記録する
+- `Open`
+  - 未確定事項として保持する
+  - 生成物では `docs/ACTIVE_CONTEXT.md` と `docs/TECH_DECISIONS.md` に反映する
+- `Rejected`
+  - 明示的に採用しない候補として保持できるが、初期 parser は必須ではない
+
+planning は「要件」と「技術判断」を分離するための内部モデルであり、
+業務要件そのものを上書きするものではない。
 
 ### Field Precedence
 `suggestedState` を組むときの優先順位は次に固定する。
@@ -144,6 +253,7 @@ type IntakeDraft = {
 - `project.owner` は相談結果から抽出していないため既存 state を維持する
 - `slug` は手動編集済みなら維持し、そうでなければ `project.name` から再生成する
 - 再生成 slug が空になる場合は安全な fallback を使う
+- `planning` は既存 state を盲目的に維持せず、今回の入力から取れた adopted / candidate / open を優先して上書きする
 
 ### Readiness Classification
 `review` と `certainty` の意味は次で固定する。
@@ -163,6 +273,7 @@ type IntakeDraft = {
 - `未確定` はチェックリストとして別表示する
 - 詳細入力へ遷移しても rawText と openQuestions は失わない
 - 以前の別案件 state が残っていても、相談結果から取れた主要値は上書きできる必要がある
+- `planning` は project / tech / security とは別セクションで保持し、後段の generator と docs 生成に渡せる必要がある
 
 ## Review Gate Requirements
 生成前に最低限次を表示する。
@@ -192,6 +303,8 @@ Phase 6 入口時点で最低限次を満たす。
 1. markdown を貼れる
 2. 見出し揺れを吸収しつつ、許可見出しだけへ正規化できる
 3. `summary / users / problem / firstDeliverable / openQuestions / candidateInputs` を抽出できる
-4. 既存 form state に対して deterministic な優先順位で `suggestedState` を作れる
-5. 未確定事項を review 画面に出せる
-6. timeout や AI 出力の揺れがあっても provider 非依存で同じ draft shape に落ちる
+4. `RepoGenesis入力候補` の key-value ヒントから planning 候補を `suggestedState.planning` へ落とせる
+5. 既存 form state に対して deterministic な優先順位で `suggestedState` を作れる
+6. 未確定事項を review 画面に出せる
+7. adopted / candidate / open の planning 情報が generator 出力に渡せる
+8. timeout や AI 出力の揺れがあっても provider 非依存で同じ draft shape に落ちる
