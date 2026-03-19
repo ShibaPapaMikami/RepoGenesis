@@ -27,7 +27,9 @@ function pickHeader(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
-const UPSTREAM_TIMEOUT_MS = 45_000;
+// Keep the BFF timeout below the browser-side timeout so the user still gets a
+// structured 504 response with requestId instead of a generic client abort.
+const UPSTREAM_TIMEOUT_MS = 55_000;
 
 function createRequestId(): string {
   return `bff-${randomUUID()}`;
