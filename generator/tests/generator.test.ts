@@ -169,6 +169,37 @@ describe('generator — single-repo', () => {
     expect(projectMd).toContain('Collect visitor registrations / Capture staff notes / Export follow-up lists');
     expect(requirements).toContain('**Description**: Collect visitor registrations / Capture staff notes / Export follow-up lists');
   });
+
+  it('should generate coherent starter docs without placeholder requirement and architecture text', () => {
+    const inputPath = writeInputFile(SINGLE_BRIEF);
+    const result = generate({ inputPath, outputPath: tmpDir, force: true });
+
+    const activeContext = fs.readFileSync(path.join(result.outputDir, 'docs/ACTIVE_CONTEXT.md'), 'utf-8');
+    const roadmap = fs.readFileSync(path.join(result.outputDir, 'docs/ROADMAP.md'), 'utf-8');
+    const requirements = fs.readFileSync(path.join(result.outputDir, 'docs/REQUIREMENTS.md'), 'utf-8');
+    const architecture = fs.readFileSync(path.join(result.outputDir, 'docs/ARCHITECTURE.md'), 'utf-8');
+
+    expect(activeContext).toContain('## Current Phase');
+    expect(activeContext).toContain('Phase 1 — Planning');
+    expect(roadmap).toContain('### Phase 0: Project Setup & Foundation');
+    expect(roadmap).toContain('- **Status**: Complete');
+    expect(roadmap).toContain('### Phase 1: Primary Workflow Delivery');
+    expect(roadmap).toContain('- **Status**: In Progress');
+
+    expect(requirements).not.toContain('[Define your first requirement]');
+    expect(requirements).not.toContain('[Define your second requirement]');
+    expect(requirements).toContain('### R1: Deliver the primary workflow');
+    expect(requirements).toContain('### R2: Keep the project operable and traceable from day one');
+
+    expect(architecture).not.toContain('[Describe the high-level architecture here]');
+    expect(architecture).not.toContain('[List and describe key system components]');
+    expect(architecture).not.toContain('[Describe how data flows through the system]');
+    expect(architecture).not.toContain('[Describe deployment and infrastructure details]');
+    expect(architecture).toContain('## Architecture Overview');
+    expect(architecture).toContain('## Key Components');
+    expect(architecture).toContain('## Data Flow');
+    expect(architecture).toContain('## Infrastructure');
+  });
 });
 
 describe('generator — multi-repo', () => {
