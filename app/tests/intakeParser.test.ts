@@ -184,6 +184,7 @@ test('parseConsultationIntake should prefer explicit key-value planning hints an
 ## RepoGenesis入力候補
 - name: 契約台帳・期限管理ツール
 - slug: contract-ledger-deadline-manager
+- domains: web
 - framework: Next.js
 - database: Supabase
 - storage: Supabase Storage
@@ -231,6 +232,7 @@ test('parseConsultationIntake should prefer explicit key-value planning hints an
     deps.some((item) => item.name === 'Email provider' && item.category === 'notification' && item.status === 'candidate'),
     true,
   );
+  assert.deepEqual(draft.suggestedState.tech.domains, ['web']);
   assert.equal(
     deps.some((item) => item.name === 'single'),
     false,

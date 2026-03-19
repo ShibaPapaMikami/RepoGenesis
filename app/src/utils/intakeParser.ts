@@ -329,8 +329,30 @@ function inferDomains(text: string): Domain[] {
   return [...new Set(domains)];
 }
 
+function parseExplicitDomainValue(value: string | null): Domain[] {
+  if (!value) return [];
+
+  return value
+    .split(/[、,\s/]+/)
+    .map((part) => part.trim().toLowerCase())
+    .filter(Boolean)
+    .flatMap((part): Domain[] => {
+      if (part === 'web' || part === 'ウェブ') return ['web'];
+      if (part === 'ai' || part === 'llm') return ['ai'];
+      if (part === 'mobile' || part === 'モバイル') return ['mobile'];
+      if (part === 'unity') return ['unity'];
+      if (part === 'xr' || part === 'vr' || part === 'ar' || part === 'mr') return ['xr'];
+      if (part === 'infra' || part === 'devops') return ['infra'];
+      if (part === 'cli') return ['cli'];
+      if (part === 'iot') return ['iot'];
+      return [];
+    })
+    .filter((domain, index, list) => list.indexOf(domain) === index);
+}
+
 function inferDomainsFromCandidateInputs(items: string[]): Domain[] {
-  return inferDomains(items.join('\n'));
+  const explicitValue = extractCandidateInputValue(items, ['domain', 'domains', '技術ドメイン']);
+  return parseExplicitDomainValue(explicitValue);
 }
 
 function inferSecurityLevelFromCandidateInputs(items: string[]): SecurityLevel | null {
@@ -673,7 +695,9 @@ export function deriveDraftSuggestions(
   const explicitName = cleanFieldValue(extractCandidateInputValue(candidateInputs, ['name', 'project name', 'project_name', 'プロジェクト名']));
   const explicitSlug = cleanFieldValue(extractCandidateInputValue(candidateInputs, ['slug', 'project slug', 'project_slug', 'スラッグ']));
   const explicitCandidateDomains = inferDomainsFromCandidateInputs(candidateInputs);
-  const inferredDomains = [...new Set([...explicitCandidateDomains, ...inferDomains(combinedText)])];
+  const inferredDomains = explicitCandidateDomains.length > 0
+    ? explicitCandidateDomains
+    : inferDomains(combinedText);
   const inferenceSource = [
     summary ?? '',
     problem ?? '',
