@@ -305,6 +305,14 @@ function toList(text: string | undefined): string[] {
     .filter(Boolean);
 }
 
+function toCandidateList(text: string | undefined): string[] {
+  if (!text) return [];
+  return text
+    .split('\n')
+    .map((line) => line.replace(/^[-*]\s*/, '').trim())
+    .filter(Boolean);
+}
+
 function inferDomains(text: string): Domain[] {
   const domains: Domain[] = [];
   const normalized = text.trim();
@@ -344,6 +352,37 @@ function inferHasApiKeysFromCandidateInputs(items: string[]): boolean | null {
   const text = items.join('\n').toLowerCase();
   if (/has_api_keys|api keys|apiキー/.test(text)) return true;
   if (/api連携あり|外部連携あり/.test(text)) return true;
+  return null;
+}
+
+function extractCandidateInputValue(items: string[], keys: string[]): string | null {
+  const normalizedKeys = keys.map((key) => key.toLowerCase());
+
+  for (const item of items) {
+    const trimmed = item.trim();
+    const colonMatch = trimmed.match(/^([^:：]{2,80})[:：]\s*(.+)$/);
+    if (colonMatch) {
+      const label = colonMatch[1].trim().toLowerCase();
+      if (normalizedKeys.includes(label)) {
+        return colonMatch[2].trim();
+      }
+    }
+
+    const waMatch = trimmed.match(/^(.{2,80}?)\s*は\s*(.+)$/u);
+    if (waMatch) {
+      const label = waMatch[1].trim().toLowerCase();
+      if (normalizedKeys.includes(label)) {
+        return waMatch[2]
+          .trim()
+          .replace(/\s*(を|が)?\s*(採用|利用|使用)(する|したい|予定)?$/u, '')
+          .replace(/\s*(を|が)?\s*想定(する|したい|です)?$/u, '')
+          .replace(/\s*(が|は)\s*候補(です)?$/u, '')
+          .replace(/\s*(は|が)\s*未確定(です)?$/u, '')
+          .trim();
+      }
+    }
+  }
+
   return null;
 }
 
@@ -631,6 +670,8 @@ export function deriveDraftSuggestions(
     combinedText,
   } = extracted;
 
+  const explicitName = cleanFieldValue(extractCandidateInputValue(candidateInputs, ['name', 'project name', 'project_name', 'プロジェクト名']));
+  const explicitSlug = cleanFieldValue(extractCandidateInputValue(candidateInputs, ['slug', 'project slug', 'project_slug', 'スラッグ']));
   const explicitCandidateDomains = inferDomainsFromCandidateInputs(candidateInputs);
   const inferredDomains = [...new Set([...explicitCandidateDomains, ...inferDomains(combinedText)])];
   const inferenceSource = [
@@ -640,16 +681,18 @@ export function deriveDraftSuggestions(
     candidateInputs.join('\n'),
     integrations.join('\n'),
   ].join('\n');
-  const projectName = cleanFieldValue(summary) || cleanFieldValue(firstDeliverable)
+  const projectName = explicitName
+    || (cleanFieldValue(summary) || cleanFieldValue(firstDeliverable)
     ? guessProjectName(summary, firstDeliverable, problem)
-    : currentState.project.name;
+    : currentState.project.name);
   const projectDescription = normalizeDescriptionText(summary)
     || normalizeDescriptionText(problem)
     || normalizeDescriptionText(currentState.project.description);
   const owner = currentState.project.owner;
-  const generatedSlug = slugify(projectName);
+  const generatedSlug = explicitSlug || slugify(projectName);
   const shouldPreserveManualSlug = currentState.slugManuallyEdited
     && currentState.project.slug
+    && !explicitSlug
     && slugify(currentState.project.name) === generatedSlug;
   const slug = shouldPreserveManualSlug
     ? currentState.project.slug
@@ -732,7 +775,7 @@ export function parseConsultationIntake(input: string, currentState: FormState):
   const dataKinds = toList(sections['扱うデータ']);
   const integrations = toList(sections['外部連携候補']);
   const openQuestions = toList(sections['未確定事項']);
-  const candidateInputs = toList(sections['RepoGenesis入力候補']);
+  const candidateInputs = toCandidateList(sections['RepoGenesis入力候補']);
   const inferenceText = [
     summary ?? '',
     users.join('\n'),

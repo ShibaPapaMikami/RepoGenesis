@@ -147,6 +147,94 @@ AI で契約を要約する社内ツール
       item.name === 'Supabase Auth' && item.category === 'auth'),
     true,
   );
+  assert.equal(
+    draft.suggestedState.planning.external_dependencies.some((item) =>
+      item.name === 'Supabase' && item.category === 'database' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    draft.suggestedState.planning.external_dependencies.some((item) =>
+      item.name === 'Supabase Storage' && item.category === 'storage' && item.status === 'adopted'),
+    true,
+  );
+});
+
+test('parseConsultationIntake should prefer explicit key-value planning hints and normalize dependencies', () => {
+  const input = `## プロジェクト概要
+締結済み契約を社内で保管し、AIで要約する社内Webツール
+
+## 想定ユーザー
+- 契約管理担当者
+
+## 解決したい課題
+契約の要点確認に時間がかかる
+
+## 最初に作るべきもの
+契約PDFの登録と一覧画面
+
+## 扱うデータ
+- 契約PDF
+
+## 外部連携候補
+- Slack
+
+## 未確定事項
+- メール通知を初期スコープに含めるか
+
+## RepoGenesis入力候補
+- name: 契約台帳・期限管理ツール
+- slug: contract-ledger-deadline-manager
+- framework: Next.js
+- database: Supabase
+- storage: Supabase Storage
+- auth: Supabase Auth
+- ai_api: OpenAI API
+- ai_model: gpt-5.4
+- pdf_extractor: opendataloader-pdf
+- notification: Slack first, email later
+- repo_style: single`;
+
+  const draft = parseConsultationIntake(input, makeState());
+  const deps = draft.suggestedState.planning.external_dependencies;
+
+  assert.equal(draft.suggestedState.project.name, '契約台帳・期限管理ツール');
+  assert.equal(draft.suggestedState.project.slug, 'contract-ledger-deadline-manager');
+  assert.equal(
+    deps.some((item) => item.name === 'OpenAI API' && item.category === 'ai_api' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    deps.some((item) => item.name === 'Supabase' && item.category === 'database' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    deps.some((item) => item.name === 'Supabase Storage' && item.category === 'storage' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    deps.some((item) => item.name === 'Supabase Auth' && item.category === 'auth' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    deps.some((item) => item.name === 'opendataloader-pdf' && item.category === 'npm_package' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    deps.filter((item) => item.name === 'Slack' && item.category === 'notification').length,
+    1,
+  );
+  assert.equal(
+    deps.some((item) => item.name === 'Slack' && item.category === 'notification' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    deps.some((item) => item.name === 'Email provider' && item.category === 'notification' && item.status === 'candidate'),
+    true,
+  );
+  assert.equal(
+    deps.some((item) => item.name === 'single'),
+    false,
+  );
 });
 
 test('parseConsultationIntake should create provisional state without changing schema shape', () => {
