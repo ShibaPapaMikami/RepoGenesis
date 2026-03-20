@@ -1,5 +1,6 @@
 import { useEffect, useState, type RefObject } from 'react';
 import type { FormState } from '../../state/actions';
+import { formatAiToolWrapperFiles } from '../../constants/enums.ts';
 import { PROJECT_SPEC_FILENAME } from '../../constants/spec';
 import { buildProjectSpec, stringifyProjectSpec } from '../../utils/buildProjectSpec';
 import {
@@ -195,6 +196,7 @@ export function JsonOutput({
       : generatedZip
         ? 'success'
         : 'info';
+  const activeWrapperFiles = formatAiToolWrapperFiles(state.tech.ai_tools);
   const installerHandoffText = buildSkillInstallHandoffText(state.project.slug, state.tech.ai_tools, selectedSkills);
 
   return (
@@ -273,17 +275,22 @@ export function JsonOutput({
           </ul>
           {generationMode === 'remote' ? (
             <p className="generation-readiness-note">
-              選んだ Skill（スキル）のファイルは ZIP に入っています。これは自動機能ではなく、解凍後に対応する AI ツールでこの project を開いた時に参照するためのものです。何もしなくても勝手に動くわけではありません。
+              選んだ Skill（スキル）のファイルは ZIP に入っています。これは自動機能ではなく、解凍後に対応する AI ツールでこの project を開き、
+              {activeWrapperFiles || 'tool-specific wrapper'}
+              と一緒に参照するためのものです。何もしなくても勝手に動くわけではありません。
             </p>
           ) : (
             <>
               <p className="generation-readiness-note">
-                このモードではまだ ZIP へ自動同梱されません。必要な場合だけ、ZIP 展開後に追加してください。
+                このモードではまだ ZIP へ自動同梱されません。
+                {activeWrapperFiles ? `生成物には ${activeWrapperFiles} が入るので、まずそこから読み始めてください。` : ''}
+                必要な場合だけ、ZIP 展開後に追加してください。
               </p>
               <div className="installer-handoff">
                 <p><strong>追加コマンド例</strong></p>
                 <p className="generation-readiness-note">
                   ZIP 展開後に、RepoGenesis の `generator/` ディレクトリから実行してください。
+                  {activeWrapperFiles ? `${activeWrapperFiles} を入口にすると分かりやすいです。` : ''}
                 </p>
                 <pre>{installerHandoffText}</pre>
                 <div className="output-actions">

@@ -1,9 +1,9 @@
 import type { ProjectBrief } from '../schema';
 import { generateToolGuidance, type GenerateToolGuidanceOptions } from './toolGuidance';
 
-export function generateGeminiMd(
+export function generateAgentsMd(
   brief: ProjectBrief,
   options: GenerateToolGuidanceOptions = {},
 ): string {
-  return generateToolGuidance(brief, 'gemini_cli', options);
+  return generateToolGuidance(brief, 'codex', options);
 }

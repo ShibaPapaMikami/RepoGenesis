@@ -1,6 +1,7 @@
 import type { ProjectBrief } from '../schema';
+import { buildToolWrapperExampleClause } from '../aiTools';
 
-export function generateRestart(_brief: ProjectBrief): string {
+export function generateRestart(brief: ProjectBrief): string {
   return `# Session Restart Protocol
 
 When starting a new session or restarting, follow these steps:
@@ -8,7 +9,7 @@ When starting a new session or restarting, follow these steps:
 ## Step 1: Read Constitution
 \`\`\`
 Read PROJECT.md
-Read the tool-specific wrapper if present (for example CLAUDE.md or GEMINI.md)
+Read the tool-specific wrapper if present${buildToolWrapperExampleClause(brief.tech)}
 \`\`\`
 
 ## Step 2: Read Current State

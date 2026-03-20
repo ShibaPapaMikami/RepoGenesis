@@ -1,0 +1,33 @@
+{
+  "specVersion": "1.0",
+  "project": {
+    "name": "E2E Codex Test",
+    "slug": "e2e-codex-test",
+    "description": "E2E test project for Codex guidance generation",
+    "owner": "E2E Tester",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  },
+  "tech": {
+    "domains": ["web", "ai"],
+    "primary_language": "typescript",
+    "frameworks": ["Next.js"],
+    "ai_tools": ["codex"],
+    "ai_tool": "other",
+    "ai_tool_detail": ""
+  },
+  "security": {
+    "level": "medium",
+    "has_api_keys": true,
+    "has_user_data": true,
+    "has_payment_data": false,
+    "has_ip_sensitive": false,
+    "has_credentials": false
+  },
+  "structure": {
+    "repo_type": "single",
+    "repos": []
+  },
+  "workflow": {
+    "phases_count": 3
+  }
+}

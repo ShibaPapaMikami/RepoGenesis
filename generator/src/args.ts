@@ -6,6 +6,7 @@ const GENERATE_USAGE = `repogenesis v${VERSION} — AI-ready repository structur
 
 Usage:
   repogenesis --input <path> --output <path> [--force]
+  repogenesis doctor --project <path>
   repogenesis skills list --registry <path> [--include-experimental]
   repogenesis skills add --project <path> --registry <path> --skill <id> [--provider <name>]...
   repogenesis skills remove --project <path> --skill <id>
@@ -29,6 +30,10 @@ export type CliArgs =
       input: string;
       output: string;
       force: boolean;
+    }
+  | {
+      command: 'doctor';
+      project: string;
     }
   | {
       command: 'skills-list';
@@ -88,6 +93,26 @@ function parseGenerateArgs(args: string[]): CliArgs {
   }
 
   return { command: 'generate', input, output, force };
+}
+
+function parseDoctorArgs(args: string[]): CliArgs {
+  let project: string | undefined;
+
+  for (let i = 0; i < args.length; i++) {
+    switch (args[i]) {
+      case '--project':
+        project = args[++i];
+        break;
+      default:
+        exitWithUsage(`Unknown option: ${args[i]}`);
+    }
+  }
+
+  if (!project) {
+    exitWithUsage('Error: --project is required for doctor.');
+  }
+
+  return { command: 'doctor', project };
 }
 
 function parseSkillsArgs(args: string[]): CliArgs {
@@ -199,6 +224,10 @@ export function parseArgs(argv: string[]): CliArgs {
 
   if (args[0] === 'skills') {
     return parseSkillsArgs(args.slice(1));
+  }
+
+  if (args[0] === 'doctor') {
+    return parseDoctorArgs(args.slice(1));
   }
 
   return parseGenerateArgs(args);

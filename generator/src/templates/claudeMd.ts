@@ -1,46 +1,9 @@
 import type { ProjectBrief } from '../schema';
-
-interface RepoEntry {
-  name: string;
-}
-
-interface GenerateClaudeMdOptions {
-  scope?: 'single' | 'workspace' | 'repo';
-  repo?: RepoEntry;
-}
+import { generateToolGuidance, type GenerateToolGuidanceOptions } from './toolGuidance';
 
 export function generateClaudeMd(
-  _brief: ProjectBrief,
-  options: GenerateClaudeMdOptions = {},
+  brief: ProjectBrief,
+  options: GenerateToolGuidanceOptions = {},
 ): string {
-  const scope = options.scope ?? 'single';
-
-  if (scope === 'workspace') {
-    return `# Read PROJECT.md first.
-
-## Claude Code rules
-- On session start, read: \`PROJECT.md\` -> \`GLOBAL_CONTEXT.md\` -> \`REQUIREMENTS.md\`.
-- Before editing a repository, also read that repository's \`PROJECT.md\` and \`docs/ACTIVE_CONTEXT.md\`.
-- Keep project truth in \`PROJECT.md\` and \`docs/\`; this file is only Claude-specific behavior.
-- If \`.claude/skills/\` exists, use it for reusable workflows.
-`;
-  }
-
-  if (scope === 'repo' && options.repo) {
-    return `# Read PROJECT.md first.
-
-## Claude Code rules
-- On session start, read: \`PROJECT.md\` -> \`docs/ACTIVE_CONTEXT.md\` -> \`../GLOBAL_CONTEXT.md\`.
-- This file contains Claude-specific workflow only. Project truth lives in \`PROJECT.md\` and \`docs/\`.
-- If work changes another repository, return to \`../GLOBAL_CONTEXT.md\` and update both repositories' context files.
-`;
-  }
-
-  return `# Read PROJECT.md first.
-
-## Claude Code rules
-- On session start, read: \`PROJECT.md\` -> \`docs/ACTIVE_CONTEXT.md\` -> \`docs/REQUIREMENTS.md\` -> \`docs/ROADMAP.md\`.
-- Keep project truth in \`PROJECT.md\` and \`docs/\`; this file is only Claude-specific behavior.
-- If \`.claude/skills/\` exists, use it for reusable workflows.
-`;
+  return generateToolGuidance(brief, 'claude_code', options);
 }

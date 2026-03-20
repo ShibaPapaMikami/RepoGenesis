@@ -9,7 +9,7 @@
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:contract": "node --experimental-strip-types --test tests/buildProjectSpec.test.ts tests/intakeParser.test.ts tests/simpleIntake.test.ts",
+    "test:contract": "node --experimental-strip-types --test tests/buildProjectSpec.test.ts tests/intakeParser.test.ts tests/simpleIntake.test.ts tests/skillInstallHandoff.test.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

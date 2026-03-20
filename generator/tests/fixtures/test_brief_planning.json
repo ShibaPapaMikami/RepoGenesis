@@ -1,0 +1,71 @@
+{
+  "specVersion": "1.0",
+  "project": {
+    "name": "Planning Aware Test",
+    "slug": "planning-aware-test",
+    "description": "Single repo fixture with adopted planning decisions and external dependencies",
+    "owner": "Planner",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  },
+  "tech": {
+    "domains": ["web", "ai"],
+    "primary_language": "typescript",
+    "frameworks": ["Next.js"],
+    "ai_tools": ["claude_code"],
+    "ai_tool": "claude_cli",
+    "ai_tool_detail": ""
+  },
+  "security": {
+    "level": "medium",
+    "has_api_keys": true,
+    "has_user_data": true,
+    "has_payment_data": false,
+    "has_ip_sensitive": false,
+    "has_credentials": false
+  },
+  "structure": {
+    "repo_type": "single",
+    "repos": []
+  },
+  "workflow": {
+    "phases_count": 3
+  },
+  "planning": {
+    "tech_decisions": [
+      {
+        "topic": "AI API",
+        "choice": "OpenAI API",
+        "status": "adopted",
+        "rationale": "Contract summaries are generated through the hosted API.",
+        "decision_date": "2026-01-01",
+        "notes": ""
+      }
+    ],
+    "external_dependencies": [
+      {
+        "name": "OpenAI API",
+        "category": "ai_api",
+        "status": "adopted",
+        "purpose": "Generate summaries from uploaded documents",
+        "owner": "AI Platform",
+        "source": "https://platform.openai.com/",
+        "license": "Commercial",
+        "env_vars": ["OPENAI_API_KEY"],
+        "data_outbound": true,
+        "notes": ""
+      },
+      {
+        "name": "Supabase",
+        "category": "database",
+        "status": "adopted",
+        "purpose": "Store records and metadata",
+        "owner": "Platform",
+        "source": "https://supabase.com/",
+        "license": "Commercial",
+        "env_vars": ["SUPABASE_URL", "SUPABASE_ANON_KEY"],
+        "data_outbound": true,
+        "notes": ""
+      }
+    ]
+  }
+}

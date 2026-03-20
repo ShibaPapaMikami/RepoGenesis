@@ -1,6 +1,6 @@
 # @gugenka/repogenesis
 
-AI対応リポジトリ構造ジェネレータ。`ProjectSpec JSON` から claude.md・ドキュメント・フォルダ構造を一括生成する。
+AI対応リポジトリ構造ジェネレータ。`ProjectSpec JSON` から `PROJECT.md`、tool-specific wrapper (`AGENTS.md` / `CLAUDE.md` / `GEMINI.md`)、各種ドキュメントとフォルダ構造を一括生成する。
 
 ## インストール（GitHub Packages）
 
@@ -29,6 +29,7 @@ npm install -D @gugenka/repogenesis
 
 ```bash
 repogenesis --input <project_spec.json> --output <出力先> [--force]
+repogenesis doctor --project <生成済みrepoのパス>
 ```
 
 | オプション | 必須 | 説明 |
@@ -36,6 +37,7 @@ repogenesis --input <project_spec.json> --output <出力先> [--force]
 | `--input <path>` | Yes | `ProjectSpec JSON` のパス |
 | `--output <path>` | Yes | 出力先ディレクトリ |
 | `--force` | No | 既存の出力ディレクトリを削除して再生成 |
+| `doctor --project <path>` | No | 生成済み repo の core files / tool wrappers / installed skill artifacts と planning docs / `.env.example` の整合を検査 |
 | `--help` | No | ヘルプ表示 |
 | `--version` | No | バージョン表示 |
 
@@ -50,26 +52,37 @@ repogenesis --input <project_spec.json> --output <出力先> [--force]
 ```bash
 repogenesis --input ./my_project.json --output ./repos
 repogenesis --input ./my_project.json --output ./repos --force
+repogenesis doctor --project ./repos/my-project
 ```
 
 ### 生成されるディレクトリ（single-repo）
 
 ```
 repos/{slug}/
-├── claude.md
+├── PROJECT.md
+├── AGENTS.md        # when Codex is selected
+├── CLAUDE.md        # when Claude Code is selected
+├── GEMINI.md        # when Gemini CLI is selected
 ├── docs/
 │   ├── ACTIVE_CONTEXT.md
+│   ├── TECH_DECISIONS.md
+│   ├── EXTERNAL_DEPENDENCIES.md
 │   ├── REQUIREMENTS.md
 │   ├── ARCHITECTURE.md
 │   ├── ROADMAP.md
 │   ├── VERSIONING_STANDARD.md
-│   └── ADR/0000-template.md
+│   ├── ADR/0000-template.md
+│   └── runbooks/
+│       ├── README.md
+│       └── skill-install.md
 ├── .repogenesis/
 │   └── manifest.json
 ├── plans/template.md
 ├── prompts/restart.md
 ├── SECURITY.md
 ├── .env.example
+├── skills/README.md
+├── repogenesis.skills.json
 └── .gitignore
 ```
 

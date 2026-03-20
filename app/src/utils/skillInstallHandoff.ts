@@ -1,4 +1,4 @@
-import type { AiTool } from '../constants/enums.ts';
+import { formatAiToolNames, formatAiToolWrapperFiles, type AiTool } from '../constants/enums.ts';
 import { mapAiToolToSkillProvider, type SkillCatalogItem, type SkillProvider } from '../data/skillCatalog.ts';
 
 function resolveSkillProviders(skill: SkillCatalogItem, aiTools: AiTool[]): SkillProvider[] {
@@ -39,7 +39,12 @@ export function buildSkillInstallHandoffText(
   aiTools: AiTool[],
   skills: SkillCatalogItem[],
 ): string {
+  const toolNames = formatAiToolNames(aiTools);
+  const wrapperFiles = formatAiToolWrapperFiles(aiTools);
+
   return [
+    ...(toolNames ? [`# Open the generated project with ${toolNames}`] : []),
+    ...(wrapperFiles ? [`# Thin wrapper files: ${wrapperFiles}`] : []),
     'cd /path/to/RepoGenesis/generator',
     'npm run build',
     ...buildSkillInstallCommands(projectSlug, aiTools, skills),

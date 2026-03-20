@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { parseArgs } from './args';
+import { doctor } from './doctor';
 import { generate } from './generator';
 import { installSkill, removeSkill } from './skillInstaller';
 import { listSelectableSkillRegistryItems } from './skillRegistryLoader';
@@ -24,6 +25,27 @@ if (args.command === 'generate') {
   console.log('Files created:');
   for (const file of result.filesCreated) {
     console.log(`  ${file}`);
+  }
+} else if (args.command === 'doctor') {
+  const result = doctor({ projectRoot: args.project });
+  console.log(result.success ? `Doctor OK: ${result.projectRoot}` : `Doctor FAILED: ${result.projectRoot}`);
+
+  if (result.errors.length > 0) {
+    console.log('Errors:');
+    for (const error of result.errors) {
+      console.log(`  - ${error}`);
+    }
+  }
+
+  if (result.warnings.length > 0) {
+    console.log('Warnings:');
+    for (const warning of result.warnings) {
+      console.log(`  - ${warning}`);
+    }
+  }
+
+  if (!result.success) {
+    process.exit(1);
   }
 } else if (args.command === 'skills-list') {
   const items = listSelectableSkillRegistryItems(args.registry, {

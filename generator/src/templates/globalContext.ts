@@ -1,4 +1,5 @@
 import type { ProjectBrief } from '../schema';
+import { formatToolWrapperFiles } from '../aiTools';
 import { getAdoptedDependencySummaryLines, getAdoptedTechSummaryLines } from '../planning';
 import { formatOwner } from '../templateDisplay';
 
@@ -22,9 +23,14 @@ export function generateGlobalContext(brief: ProjectBrief): string {
 
 ## Dependency Graph
 \`\`\`
-${lines}
+      ${lines}
 \`\`\``;
   }
+
+  const toolWrappers = formatToolWrapperFiles(brief.tech);
+  const toolWrapperLine = toolWrappers
+    ? `- Tool-specific wrappers such as ${toolWrappers} are thin adapters only.`
+    : '- Tool-specific wrappers are thin adapters only.';
 
   return `# GLOBAL_CONTEXT.md — Multi-Repository Workspace
 
@@ -46,7 +52,7 @@ ${adoptedDependencies.length > 0 ? adoptedDependencies.map((line) => `- ${line}`
 
 ## Cross-Repo Conventions
 - Each repository has its own \`PROJECT.md\` with repository-specific rules.
-- Tool-specific wrappers such as \`CLAUDE.md\` and \`GEMINI.md\` are thin adapters only.
+${toolWrapperLine}
 - Shared decisions are documented in this file.
 - Workspace-level technology decisions live in \`docs/TECH_DECISIONS.md\`.
 - Workspace-level external dependencies live in \`docs/EXTERNAL_DEPENDENCIES.md\`.

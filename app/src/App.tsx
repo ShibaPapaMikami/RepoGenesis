@@ -45,6 +45,7 @@ import {
   type SkillCatalogItem,
 } from './data/skillCatalog.ts';
 import { CONSULTATION_TEST_TEMPLATES } from './data/consultationTestTemplates.ts';
+import { formatAiToolNames, formatAiToolWrapperFiles } from './constants/enums.ts';
 import type { ErrorReportPayload } from './utils/feedback.ts';
 import './App.css';
 
@@ -231,6 +232,11 @@ function App() {
   const starterSkills = recommendedSkills.filter((skill) => skill.selectionStage === 'first');
   const laterSkills = recommendedSkills.filter((skill) => skill.selectionStage === 'later');
   const selectedSkills = SKILL_CATALOG.filter((item) => selectedSkillIds.includes(item.id));
+  const activeAiToolNames = formatAiToolNames(state.tech.ai_tools) || 'AI ツール';
+  const activeWrapperFiles = formatAiToolWrapperFiles(state.tech.ai_tools);
+  const skillLead = generationMode === 'remote'
+    ? `Skill（スキル）はアプリ機能ではなく、生成後に ${activeAiToolNames} へ「この repo をどう進めるか」を頼む時の補助ガイドです。選んだ Skill のファイルは ZIP に一緒に入り、${activeWrapperFiles ? `生成された ${activeWrapperFiles} と同じく repo 内 guidance として参照されます` : 'repo 内 guidance として参照されます'}が、自動では動きません。`
+    : `Skill（スキル）は、生成後に ${activeAiToolNames} と一緒に作業する時の補助ガイドです。${activeWrapperFiles ? `まず生成された ${activeWrapperFiles} を入口として読み、必要な Skill を後から足します。` : ''} このモードでは ZIP への自動同梱はまだないため、必要になった時だけ後から追加します。`;
   const adoptedTechDecisions = state.planning.tech_decisions.filter((item) => item.status === 'adopted' && item.topic.trim() && item.choice.trim());
   const adoptedExternalDependencies = state.planning.external_dependencies.filter((item) => item.status === 'adopted' && item.name.trim());
   const saveLabel = formatSaveLabel(saveState, lastSavedAt);
@@ -584,11 +590,7 @@ function App() {
 
             <div className="consultation-summary skill-selection">
               <p><strong>Skill（スキル）</strong></p>
-              <p className="consultation-lead">
-                {generationMode === 'remote'
-                  ? 'Skill（スキル）はアプリ機能ではなく、生成後に Codex / Claude Code / Gemini CLI へ「この repo をどう進めるか」を頼む時の補助ガイドです。選んだ Skill のファイルは ZIP に一緒に入りますが、自動では動きません。'
-                  : 'Skill（スキル）は、生成後に AI と一緒に作業する時の補助ガイドです。このモードでは ZIP への自動同梱はまだないため、必要になった時だけ後から追加します。'}
-              </p>
+              <p className="consultation-lead">{skillLead}</p>
               <ul className="skill-selection-notes">
                 <li>ZIP に入るのは「Skill（スキル）のファイルが一緒に入る」という意味です。</li>
                 <li>解凍後に対応する AI でその project を開くと、その Skill（スキル）を参照しながら作業できます。</li>

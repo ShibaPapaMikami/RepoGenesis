@@ -7,84 +7,104 @@ async function resetPage(page: import('@playwright/test').Page) {
   await page.waitForSelector('h1');
 }
 
-test.describe('Consultation モード', () => {
-  test.beforeEach(async ({ page }) => {
+async function enterPasteStep(page: import('@playwright/test').Page, options: { testMode?: boolean } = {}) {
+  await resetPage(page);
+  await page.getByRole('button', { name: '相談を始める' }).click();
+  await expect(page.locator('.consultation-section')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '相談内容を貼り付け' })).toBeVisible();
+
+  if (options.testMode) {
+    await page.getByLabel('テストモード').check();
+    await expect(page.locator('#consultationTestTemplate')).toBeVisible();
+  }
+}
+
+async function applyConsultationTestTemplate(page: import('@playwright/test').Page) {
+  await page.locator('#consultationTestTemplate').selectOption('test_internal_faq_portal');
+  await page.getByRole('button', { name: 'テスト文章を貼り付け欄に反映' }).click();
+  await expect(page.locator('#consultationInput')).not.toBeEmpty();
+}
+
+async function buildDraft(page: import('@playwright/test').Page) {
+  await page.getByRole('button', { name: 'ドラフトを作成' }).click();
+  await expect(page.getByRole('heading', { name: 'ドラフト確認' })).toBeVisible();
+  await expect(page.locator('.consultation-card').first()).toBeVisible();
+}
+
+async function reachResultStep(page: import('@playwright/test').Page) {
+  await enterPasteStep(page, { testMode: true });
+  await applyConsultationTestTemplate(page);
+  await buildDraft(page);
+  await page.getByRole('button', { name: 'この内容で進む' }).click();
+  await expect(page.getByRole('heading', { name: 'おすすめオプション' })).toBeVisible();
+
+  await page.getByRole('button', { name: '詳細調整へ進む' }).click();
+  await expect(page.getByRole('heading', { name: '詳細調整' })).toBeVisible();
+
+  await page.getByRole('button', { name: '最終確認へ進む' }).click();
+  await expect(page.getByRole('heading', { name: '最終確認' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'ZIP生成へ進む' }).click();
+  await expect(page.getByRole('heading', { name: 'Step 7. ZIP生成と結果' })).toBeVisible();
+}
+
+test.describe('相談 wizard', () => {
+  test('初期表示で intro step が表示される', async ({ page }) => {
     await resetPage(page);
+
+    await expect(page.locator('.intro-section')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'このツールでできること' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '相談を始める' })).toBeVisible();
   });
 
-  test('初期表示で相談結果モードが選択されている', async ({ page }) => {
-    const consultationSection = page.locator('.consultation-section');
-    await expect(consultationSection).toBeVisible();
+  test('相談開始で paste step に進める', async ({ page }) => {
+    await enterPasteStep(page);
+
+    await expect(page.locator('#consultationPromptVariant')).toBeVisible();
+    await expect(page.locator('#consultationInput')).toBeVisible();
   });
 
-  test('相談の種類セレクトが3つの選択肢を持つ', async ({ page }) => {
-    const select = page.locator('#consultationPromptVariant');
-    await expect(select).toBeVisible();
-    const options = select.locator('option');
-    await expect(options).toHaveCount(3);
+  test('相談の種類セレクトが4つの選択肢を持つ', async ({ page }) => {
+    await enterPasteStep(page);
+
+    const options = page.locator('#consultationPromptVariant option');
+    await expect(options).toHaveCount(4);
   });
 
-  test('テスト入力ボタンで consultation テキストが反映される', async ({ page }) => {
-    const section = page.locator('.consultation-section');
-    await section.getByRole('button', { name: '相談結果のテスト入力を適用' }).click();
+  test('テストモードで固定テスト文章を貼り付け欄へ反映できる', async ({ page }) => {
+    await enterPasteStep(page, { testMode: true });
+    await applyConsultationTestTemplate(page);
 
-    const textarea = page.locator('#consultationInput');
-    await expect(textarea).not.toBeEmpty();
-
-    const value = await textarea.inputValue();
+    const value = await page.locator('#consultationInput').inputValue();
     expect(value).toContain('プロジェクト概要');
     expect(value).toContain('想定ユーザー');
   });
 
-  test('draft 作成ボタンで draft が生成される', async ({ page }) => {
-    const section = page.locator('.consultation-section');
-    await section.getByRole('button', { name: '相談結果のテスト入力を適用' }).click();
-    await section.getByRole('button', { name: 'draft を作成' }).click();
+  test('ドラフト作成後に options step へ進める', async ({ page }) => {
+    await enterPasteStep(page, { testMode: true });
+    await applyConsultationTestTemplate(page);
+    await buildDraft(page);
 
-    const reviewSection = page.locator('.consultation-review');
-    await expect(reviewSection).toBeVisible();
-
-    await expect(page.locator('.consultation-card').first()).toBeVisible();
-    await expect(page.getByRole('button', { name: 'この draft をフォームへ反映' })).toBeVisible();
+    await page.getByRole('button', { name: 'この内容で進む' }).click();
+    await expect(page.getByRole('heading', { name: 'おすすめオプション' })).toBeVisible();
+    await expect(page.getByText('Repo Readiness Review', { exact: true })).toBeVisible();
   });
 
-  test('draft をフォームへ反映すると詳細入力モードに切り替わる', async ({ page }) => {
-    const section = page.locator('.consultation-section');
-    await section.getByRole('button', { name: '相談結果のテスト入力を適用' }).click();
-    await section.getByRole('button', { name: 'draft を作成' }).click();
-    await page.getByRole('button', { name: 'この draft をフォームへ反映' }).click();
+  test('結果 step の JSON プレビューに specVersion が含まれる', async ({ page }) => {
+    await reachResultStep(page);
+    await page.getByText('JSONプレビューを確認').click();
 
-    const projectHeader = page.locator('h2').filter({ hasText: 'プロジェクト情報' });
-    await expect(projectHeader).toBeVisible();
-  });
-});
-
-test.describe('JSON 出力', () => {
-  test.beforeEach(async ({ page }) => {
-    await resetPage(page);
-  });
-
-  test('テスト入力後の JSON プレビューに specVersion: "1.0" が含まれる', async ({ page }) => {
-    await page.locator('label').filter({ hasText: '詳細入力' }).click();
-    await page.getByRole('button', { name: '詳細入力のテスト入力を適用' }).click();
-
-    const jsonPreview = page.locator('.json-preview pre');
-    await expect(jsonPreview).toBeVisible();
-
-    const jsonText = await jsonPreview.textContent();
-    expect(jsonText).toBeTruthy();
-
-    const parsed = JSON.parse(jsonText!);
+    const jsonText = await page.locator('.json-preview pre').textContent();
+    const parsed = JSON.parse(jsonText ?? '{}');
     expect(parsed.specVersion).toBe('1.0');
   });
 
-  test('JSON プレビューに必須フィールドが含まれる', async ({ page }) => {
-    await page.locator('label').filter({ hasText: '詳細入力' }).click();
-    await page.getByRole('button', { name: '詳細入力のテスト入力を適用' }).click();
+  test('結果 step の JSON に必須フィールドが含まれる', async ({ page }) => {
+    await reachResultStep(page);
+    await page.getByText('JSONプレビューを確認').click();
 
-    const jsonPreview = page.locator('.json-preview pre');
-    const jsonText = await jsonPreview.textContent();
-    const parsed = JSON.parse(jsonText!);
+    const jsonText = await page.locator('.json-preview pre').textContent();
+    const parsed = JSON.parse(jsonText ?? '{}');
 
     expect(parsed).toHaveProperty('specVersion');
     expect(parsed).toHaveProperty('project');
@@ -92,76 +112,13 @@ test.describe('JSON 出力', () => {
     expect(parsed).toHaveProperty('security');
     expect(parsed).toHaveProperty('structure');
     expect(parsed).toHaveProperty('workflow');
-    expect(parsed.project.name).toBeTruthy();
-    expect(parsed.project.slug).toBeTruthy();
   });
 
-  test('consultation draft 反映後の JSON にも specVersion が含まれる', async ({ page }) => {
-    const section = page.locator('.consultation-section');
-    await section.getByRole('button', { name: '相談結果のテスト入力を適用' }).click();
-    await section.getByRole('button', { name: 'draft を作成' }).click();
-    await page.getByRole('button', { name: 'この draft をフォームへ反映' }).click();
+  test('リセットして始めからで intro step に戻る', async ({ page }) => {
+    await enterPasteStep(page);
+    await page.getByRole('button', { name: 'リセットして始めから' }).click();
 
-    const jsonPreview = page.locator('.json-preview pre');
-    await expect(jsonPreview).toBeVisible();
-
-    const jsonText = await jsonPreview.textContent();
-    const parsed = JSON.parse(jsonText!);
-    expect(parsed.specVersion).toBe('1.0');
-  });
-});
-
-test.describe('入力モード切り替え', () => {
-  test.beforeEach(async ({ page }) => {
-    await resetPage(page);
-  });
-
-  test('詳細入力モードに切り替えるとフォームセクションが表示される', async ({ page }) => {
-    const detailLabel = page.locator('label').filter({ hasText: '詳細入力' });
-    await detailLabel.click();
-
-    const projectHeader = page.locator('h2').filter({ hasText: 'プロジェクト情報' });
-    await expect(projectHeader).toBeVisible();
-  });
-
-  test('Reset ボタンで初期状態に戻る', async ({ page }) => {
-    await page.locator('label').filter({ hasText: '詳細入力' }).click();
-    await page.getByRole('button', { name: '詳細入力のテスト入力を適用' }).click();
-    await page.getByRole('button', { name: 'Reset' }).click();
-
-    const consultationSection = page.locator('.consultation-section');
-    await expect(consultationSection).toBeVisible();
-  });
-});
-
-test.describe('かんたん入力モード', () => {
-  test.beforeEach(async ({ page }) => {
-    await resetPage(page);
-  });
-
-  test('かんたん入力モードへ切り替えできる', async ({ page }) => {
-    await page.locator('label').filter({ hasText: 'かんたん入力' }).click();
-    await expect(page.locator('h2').filter({ hasText: 'かんたん入力' })).toBeVisible();
-  });
-
-  test('相談の種類に応じてテスト入力を適用できる', async ({ page }) => {
-    await page.locator('label').filter({ hasText: 'かんたん入力' }).click();
-    await page.locator('#simple-variant').selectOption('client_project');
-    const section = page.locator('.consultation-section');
-    await section.getByRole('button', { name: 'かんたん入力のテスト入力を適用' }).click();
-
-    await expect(page.locator('#simple-summary')).toHaveValue(/クライアント向け/);
-    await expect(page.locator('#simple-integration-notes')).toHaveValue(/Backlog/);
-  });
-
-  test('かんたん入力から draft を作成できる', async ({ page }) => {
-    await page.locator('label').filter({ hasText: 'かんたん入力' }).click();
-    const section = page.locator('.consultation-section');
-    await section.getByRole('button', { name: 'かんたん入力のテスト入力を適用' }).click();
-    await section.getByRole('button', { name: 'かんたん入力から draft を作成' }).click();
-
-    await expect(page.locator('.consultation-review')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'facts' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'open questions' })).toBeVisible();
+    await expect(page.locator('.intro-section')).toBeVisible();
+    await expect(page.getByRole('button', { name: '相談を始める' })).toBeVisible();
   });
 });

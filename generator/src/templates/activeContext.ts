@@ -1,5 +1,5 @@
 import type { ProjectBrief } from '../schema';
-import { hasAiTool } from '../aiTools';
+import { getToolWrapperFiles } from '../aiTools';
 import { getAdoptedDependencySummaryLines, getAdoptedTechSummaryLines } from '../planning';
 import { formatOwner } from '../templateDisplay';
 
@@ -12,9 +12,8 @@ export function generateActiveContext(brief: ProjectBrief): string {
     : 'Phase 1 planning is in progress. Convert generated docs into concrete requirements, architecture, and first tasks.';
   const toolFiles = [
     '`PROJECT.md`',
-    hasAiTool(brief.tech, 'claude_code') ? '`CLAUDE.md`' : null,
-    hasAiTool(brief.tech, 'gemini_cli') ? '`GEMINI.md`' : null,
-  ].filter(Boolean).join('\n- ');
+    ...getToolWrapperFiles(brief.tech).map((file) => `\`${file}\``),
+  ].join('\n- ');
   const decisionLines = [
     `- Project initialized: ${project.name} (${project.slug})`,
     `- Owner: ${formatOwner(project.owner)}`,

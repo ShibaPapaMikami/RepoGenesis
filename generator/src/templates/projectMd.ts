@@ -1,5 +1,5 @@
 import type { ProjectBrief } from '../schema';
-import { formatAiTools, hasAiTool } from '../aiTools';
+import { buildToolWrapperExampleClause, formatAiTools, getToolWrapperFiles } from '../aiTools';
 import { getAdoptedDependencyBulletLines, getAdoptedTechBulletLines } from '../planning';
 import { formatDomains, formatOwner, formatProjectDescription } from '../templateDisplay';
 
@@ -41,14 +41,7 @@ function buildSecurityRules(brief: ProjectBrief): string {
 }
 
 function buildToolFiles(brief: ProjectBrief): string[] {
-  const files = ['PROJECT.md'];
-  if (hasAiTool(brief.tech, 'claude_code')) {
-    files.push('CLAUDE.md');
-  }
-  if (hasAiTool(brief.tech, 'gemini_cli')) {
-    files.push('GEMINI.md');
-  }
-  return files;
+  return ['PROJECT.md', ...getToolWrapperFiles(brief.tech)];
 }
 
 function buildSingleStructure(brief: ProjectBrief): string {
@@ -192,7 +185,7 @@ ${buildSecurityRules(brief)}
 
 ### 4. Session Protocol
 - Read \`PROJECT.md\` first.
-- Read the tool-specific wrapper (for example \`CLAUDE.md\` or \`GEMINI.md\`) if your tool uses one.
+- Read the tool-specific wrapper${buildToolWrapperExampleClause(brief.tech)} if your tool uses one.
 - Read \`docs/ACTIVE_CONTEXT.md\`.
 - Read \`../GLOBAL_CONTEXT.md\` when changes cross repository boundaries.
 - Summarize current state before taking any action.
@@ -241,7 +234,7 @@ ${buildSecurityRules(brief)}
 
 ### 4. Session Protocol
 - Read \`PROJECT.md\` first.
-- Read the tool-specific wrapper (for example \`CLAUDE.md\` or \`GEMINI.md\`) if your tool uses one.
+- Read the tool-specific wrapper${buildToolWrapperExampleClause(brief.tech)} if your tool uses one.
 - Read \`GLOBAL_CONTEXT.md\`.
 - Read the target repository's \`PROJECT.md\` and \`docs/ACTIVE_CONTEXT.md\` before editing it.
 
@@ -286,7 +279,7 @@ ${buildSecurityRules(brief)}
 
 ### 4. Session Protocol
 - Read \`PROJECT.md\` first.
-- Read the tool-specific wrapper (for example \`CLAUDE.md\` or \`GEMINI.md\`) if your tool uses one.
+- Read the tool-specific wrapper${buildToolWrapperExampleClause(brief.tech)} if your tool uses one.
 - Read \`docs/ACTIVE_CONTEXT.md\` and \`docs/REQUIREMENTS.md\` before taking action.
 - Summarize current state before taking any action.
 

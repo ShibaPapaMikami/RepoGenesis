@@ -28,6 +28,7 @@ export const LANGUAGE_LABELS: Record<PrimaryLanguage, string> = {
 
 export const AI_TOOLS = ['codex', 'claude_code', 'gemini_cli', 'other'] as const;
 export type AiTool = typeof AI_TOOLS[number];
+type SupportedAiTool = Exclude<AiTool, 'other'>;
 
 export const AI_TOOL_LABELS: Record<AiTool, string> = {
   codex: 'Codex',
@@ -35,6 +36,30 @@ export const AI_TOOL_LABELS: Record<AiTool, string> = {
   gemini_cli: 'Gemini CLI',
   other: 'その他',
 };
+
+export const AI_TOOL_WRAPPER_FILES: Record<SupportedAiTool, string> = {
+  codex: 'AGENTS.md',
+  claude_code: 'CLAUDE.md',
+  gemini_cli: 'GEMINI.md',
+};
+
+const AI_TOOL_ORDER: SupportedAiTool[] = ['codex', 'claude_code', 'gemini_cli'];
+
+export function getEnabledAiTools(aiTools: AiTool[]): SupportedAiTool[] {
+  return AI_TOOL_ORDER.filter((tool) => aiTools.includes(tool));
+}
+
+export function formatAiToolNames(aiTools: AiTool[]): string {
+  return getEnabledAiTools(aiTools).map((tool) => AI_TOOL_LABELS[tool]).join(' / ');
+}
+
+export function getAiToolWrapperFiles(aiTools: AiTool[]): string[] {
+  return getEnabledAiTools(aiTools).map((tool) => AI_TOOL_WRAPPER_FILES[tool]);
+}
+
+export function formatAiToolWrapperFiles(aiTools: AiTool[]): string {
+  return getAiToolWrapperFiles(aiTools).join(' / ');
+}
 
 export const SECURITY_LEVELS = ['low', 'medium', 'high'] as const;
 export type SecurityLevel = typeof SECURITY_LEVELS[number];

@@ -1,6 +1,7 @@
 import type { ProjectBrief, ProjectSpec, SpecVersion } from './schema';
-import { hasAiTool } from './aiTools';
+import { getToolWrapperFiles, normalizeAiTools } from './aiTools';
 import { generateProjectMd } from './templates/projectMd';
+import { generateAgentsMd } from './templates/agentsMd';
 import { generateClaudeMd } from './templates/claudeMd';
 import { generateGeminiMd } from './templates/geminiMd';
 import { generateActiveContext } from './templates/activeContext';
@@ -103,10 +104,21 @@ function buildToolWrapperEntries(
   const prefix = options.prefix ?? '';
   const entries: Array<[string, string]> = [];
 
-  if (hasAiTool(brief.tech, 'claude_code')) {
-    entries.push([`${prefix}CLAUDE.md`, generateClaudeMd(brief, options)]);
-  }
-  if (hasAiTool(brief.tech, 'gemini_cli')) {
+  for (const tool of normalizeAiTools(brief.tech)) {
+    if (tool === 'other') {
+      continue;
+    }
+
+    if (tool === 'codex') {
+      entries.push([`${prefix}AGENTS.md`, generateAgentsMd(brief, options)]);
+      continue;
+    }
+
+    if (tool === 'claude_code') {
+      entries.push([`${prefix}CLAUDE.md`, generateClaudeMd(brief, options)]);
+      continue;
+    }
+
     entries.push([`${prefix}GEMINI.md`, generateGeminiMd(brief, options)]);
   }
 
@@ -120,8 +132,7 @@ function repoActiveContext(brief: ProjectBrief, repo: RepoEntry): string {
     : '- No dependencies';
   const toolFiles = [
     '`PROJECT.md`',
-    hasAiTool(brief.tech, 'claude_code') ? '`CLAUDE.md`' : null,
-    hasAiTool(brief.tech, 'gemini_cli') ? '`GEMINI.md`' : null,
+    ...getToolWrapperFiles(brief.tech).map((file) => `\`${file}\``),
   ].filter(Boolean).join('\n- ');
 
   return `# ACTIVE_CONTEXT.md — ${repo.name}

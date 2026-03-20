@@ -1,7 +1,7 @@
 {
   "name": "@gugenka/repogenesis",
   "version": "0.1.0",
-  "description": "AI-ready repository structure generator — generates claude.md, docs, and folder structures from project_brief.json",
+  "description": "AI-ready repository structure generator — generates PROJECT.md, tool-specific guidance, docs, and folder structures from ProjectSpec JSON",
   "license": "MIT",
   "repository": {
     "type": "git",

@@ -1,7 +1,7 @@
 # ROADMAP_STATUS.md — Current Position
 
 ## Last Updated
-2026-03-19
+2026-03-20
 
 ## Roadmap Position
 Phase 6 / Hardening
@@ -36,6 +36,11 @@ Phase 6 / Hardening
 - Intake / generator の planning model が追加され、技術判断と外部依存を `Adopted / Candidate / Open / Rejected` として保持できるようになった。
 - `docs/TECH_DECISIONS.md` と `docs/EXTERNAL_DEPENDENCIES.md` が標準生成され、adopted な API / model / service / OSS は `PROJECT.md`、`docs/ARCHITECTURE.md`、`.env.example` に反映されるようになった。
 - `RepoGenesis入力候補` の key-value ヒントから planning 候補を組み立てる parser / state / generator の回帰テストが追加された。
+- tool-specific guidance template が shared renderer に寄せられ、Codex 選択時は `AGENTS.md` も thin overlay として生成されるようになった。
+- generator CLI に `doctor --project <path>` が追加され、core files / tool wrappers / installed skill artifacts の整合性を機械検査できるようになった。
+- `doctor` は planning-aware docs から adopted summary / env vars を復元し、`PROJECT.md` / `ARCHITECTURE.md` / `.env.example` との意味的整合も検査するようになった。
+- app 側の Skill guidance / installer handoff も active AI tools と `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` を表示するように揃え、favicon も RepoGenesis 用 SVG に差し替えた。
+- app の Playwright E2E は現行の intro-first wizard 導線に合わせて更新し、local で再度 pass を確認した。
 
 ## What This Phase Still Needs
 - Verify the latest planning-aware generation flow on production and confirm generated docs stay coherent across browser export and remote ZIP generation.
@@ -47,7 +52,7 @@ Phase 6 / Hardening
 1. Verify production on the latest planning-aware public wizard commit and confirm `TECH_DECISIONS` / `EXTERNAL_DEPENDENCIES` / `.env.example` stay aligned.
 2. Decide persistent storage for feedback and generation support data.
 3. Split pending large changes into separate tracks:
-   - AI tool independence (`PROJECT.md` / `CLAUDE.md` / `GEMINI.md`)
+   - AI tool independence (`PROJECT.md` / `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`)
    - skill layer deeper automation
    - CI / docs
 

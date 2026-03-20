@@ -1,7 +1,7 @@
 # ACTIVE_CONTEXT.md — Current Project State
 
 ## Last Updated
-2026-03-19
+2026-03-20
 
 ## Current Phase
 Phase 6 — AI-Assisted Spec Authoring (Hardening)
@@ -104,6 +104,14 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - intake / generator に planning model を追加し、技術判断と外部依存を `Adopted / Candidate / Open / Rejected` で保持できるようにした
   - `docs/TECH_DECISIONS.md` と `docs/EXTERNAL_DEPENDENCIES.md` を標準生成し、adopted な API / model / service / OSS を `PROJECT.md` / `docs/ARCHITECTURE.md` / `.env.example` に反映するようにした (`d19f447`)
   - `RepoGenesis入力候補` の key-value ヒントから planning 候補を作る parser / state / generator の回帰テストを追加した
+  - tool-specific guidance template を shared renderer に寄せ、Codex 選択時は `AGENTS.md` を `CLAUDE.md` / `GEMINI.md` と同じ thin overlay として生成するようにした
+  - Codex guidance 生成について generator unit test / e2e test を追加した
+  - generator CLI に `doctor --project <path>` を追加し、single / multi repo の core files、tool wrappers、installed skill artifact を検査できるようにした
+  - `doctor` について generator unit test / e2e test を追加した
+  - `doctor` は planning-aware docs から adopted decisions / adopted dependencies / env vars を復元し、`PROJECT.md` / `docs/ARCHITECTURE.md` / `.env.example` の意味的整合も確認するようにした
+  - app 側の Skill guidance / installer handoff も active AI tools と `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` を表示するように揃えた
+  - app の favicon を `repogenesis-favicon.svg` へ差し替え、Vite 既定アイコン依存を外した
+  - app の Playwright E2E を現行の intro-first wizard 導線に合わせて更新し、local で再度 pass を確認した
 
 ## What Is Being Done Now
 - いまの主要テーマ:
@@ -130,11 +138,12 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 
 ## What Is Blocked
 - 技術的 blocker は解消済み。
-- 残る blocker は構造整理と運用整備:
+  - 残る blocker は構造整理と運用整備:
   - feedback 保存がローカルファイルで永続性に欠ける
   - remote ZIP timeout は request id で追える状態。再試行成功済みのため、当面は Render 側の再発監視を継続
-  - AI tool 非依存化 (`PROJECT.md + CLAUDE.md + GEMINI.md`) は未反映
+  - AI tool 非依存化は tool wrapper の shared renderer、`AGENTS.md` 生成、app/export guidance 表示まで反映。残りは production/browser 経路での実地確認と docs 整理
   - skill layer は provider-aware contract / installer / Web selection / remote ZIP 同梱まで反映。自動インストールと local ZIP 同梱は未反映
+  - `doctor` は core file / wrapper / installed skill artifact / planning docs / `.env.example` の整合検査まで実装済み。残りは browser export や production ZIP 生成後の実地確認
   - production での最新 public wizard (`04a9281`) の実地確認はこれから
   - planning-aware な public wizard / remote ZIP の実地確認はこれから
   - feedback 永続保存と公開向け docs 整理は継続

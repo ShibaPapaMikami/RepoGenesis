@@ -29,6 +29,23 @@ function run(fixtureName: string, caseName: string): { stdout: string; stderr: s
   }
 }
 
+function runDoctor(projectPath: string): { stdout: string; stderr: string; exitCode: number } {
+  try {
+    const stdout = execSync(
+      `node ${DIST_INDEX} doctor --project ${projectPath}`,
+      { encoding: 'utf-8', cwd: ROOT, timeout: 10000 },
+    );
+    return { stdout, stderr: '', exitCode: 0 };
+  } catch (err: unknown) {
+    const e = err as { stdout?: string; stderr?: string; status?: number };
+    return {
+      stdout: e.stdout ?? '',
+      stderr: e.stderr ?? '',
+      exitCode: e.status ?? 1,
+    };
+  }
+}
+
 beforeAll(() => {
   // Ensure dist/index.js exists (run `npm run build` before tests)
   if (!fs.existsSync(DIST_INDEX)) {
@@ -180,6 +197,35 @@ describe('E2E — app export', { timeout: 20000 }, () => {
       expect(fs.existsSync(fullPath), `Missing: ${file}`).toBe(true);
       expect(fs.readFileSync(fullPath, 'utf-8').length, `Empty: ${file}`).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('E2E — codex wrapper', { timeout: 20000 }, () => {
+  const SLUG = 'e2e-codex-test';
+
+  it('should generate AGENTS.md for Codex projects', () => {
+    const result = run('test_brief_codex.json', 'codex');
+    expect(result.exitCode, `CLI failed.\nstdout: ${result.stdout}\nstderr: ${result.stderr}`).toBe(0);
+    expect(result.stdout).toContain('24 files');
+
+    const base = path.join(TMP_OUTPUT, 'codex', SLUG);
+    expect(fs.existsSync(path.join(base, 'AGENTS.md'))).toBe(true);
+    expect(fs.existsSync(path.join(base, 'CLAUDE.md'))).toBe(false);
+
+    const agents = fs.readFileSync(path.join(base, 'AGENTS.md'), 'utf-8');
+    const project = fs.readFileSync(path.join(base, 'PROJECT.md'), 'utf-8');
+
+    expect(agents).toContain('## Codex rules');
+    expect(project).toContain('`AGENTS.md`');
+  });
+
+  it('should validate generated Codex projects with doctor', () => {
+    run('test_brief_codex.json', 'codex');
+    const base = path.join(TMP_OUTPUT, 'codex', SLUG);
+    const result = runDoctor(base);
+
+    expect(result.exitCode, `Doctor failed.\nstdout: ${result.stdout}\nstderr: ${result.stderr}`).toBe(0);
+    expect(result.stdout).toContain('Doctor OK');
   });
 });
 

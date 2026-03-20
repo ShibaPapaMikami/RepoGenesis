@@ -5,6 +5,9 @@ export {
   SUPPORTED_SPEC_VERSIONS,
 } from './schema';
 export {
+  doctor,
+} from './doctor';
+export {
   createEmptySkillsManifest,
 } from './skillsManifest';
 export {

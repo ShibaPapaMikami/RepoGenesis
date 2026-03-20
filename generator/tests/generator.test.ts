@@ -127,6 +127,16 @@ const MULTI_BRIEF = {
   },
 };
 
+const CODEX_SINGLE_BRIEF = {
+  ...SINGLE_BRIEF,
+  tech: {
+    ...SINGLE_BRIEF.tech,
+    ai_tools: ['codex'],
+    ai_tool: 'other' as const,
+    ai_tool_detail: '',
+  },
+};
+
 let tmpDir: string;
 
 beforeEach(() => {
@@ -293,6 +303,24 @@ describe('generator — single-repo', () => {
     expect(architecture).toContain('## Key Components');
     expect(architecture).toContain('## Data Flow');
     expect(architecture).toContain('## Infrastructure');
+  });
+
+  it('should generate AGENTS.md for Codex projects and reference it from starter docs', () => {
+    const inputPath = writeInputFile(CODEX_SINGLE_BRIEF);
+    const result = generate({ inputPath, outputPath: tmpDir, force: true });
+
+    const agents = fs.readFileSync(path.join(result.outputDir, 'AGENTS.md'), 'utf-8');
+    const projectMd = fs.readFileSync(path.join(result.outputDir, 'PROJECT.md'), 'utf-8');
+    const activeContext = fs.readFileSync(path.join(result.outputDir, 'docs/ACTIVE_CONTEXT.md'), 'utf-8');
+    const restart = fs.readFileSync(path.join(result.outputDir, 'prompts/restart.md'), 'utf-8');
+
+    expect(fs.existsSync(path.join(result.outputDir, 'AGENTS.md'))).toBe(true);
+    expect(fs.existsSync(path.join(result.outputDir, 'CLAUDE.md'))).toBe(false);
+    expect(agents).toContain('## Codex rules');
+    expect(agents).toContain('`AGENTS.md` is only the Codex-specific overlay');
+    expect(projectMd).toContain('`AGENTS.md`');
+    expect(activeContext).toContain('`AGENTS.md`');
+    expect(restart).toContain('AGENTS.md');
   });
 });
 
@@ -475,10 +503,33 @@ describe('generateFromSpec — pure function', () => {
     expect(files.has('.repogenesis/manifest.json')).toBe(true);
   });
 
+  it('should include Codex wrappers when codex is enabled', () => {
+    const brief = parseBrief({
+      ...MULTI_BRIEF,
+      tech: {
+        ...MULTI_BRIEF.tech,
+        ai_tools: ['codex', 'gemini_cli'],
+        ai_tool: 'other',
+        ai_tool_detail: '',
+      },
+    });
+    const files = generateFromSpec(brief);
+
+    expect(files.has('AGENTS.md')).toBe(true);
+    expect(files.has('GEMINI.md')).toBe(true);
+    expect(files.has('frontend/AGENTS.md')).toBe(true);
+    expect(files.has('frontend/GEMINI.md')).toBe(true);
+    expect(files.has('backend/AGENTS.md')).toBe(true);
+    expect(files.has('backend/GEMINI.md')).toBe(true);
+  });
+
   it('should produce identical output for same input (deterministic)', () => {
     const brief = parseBrief(SINGLE_BRIEF);
-    const files1 = generateFromSpec(brief);
-    const files2 = generateFromSpec(brief);
+    const options = {
+      generatedAt: '2026-01-01T00:00:00.000Z',
+    };
+    const files1 = generateFromSpec(brief, options);
+    const files2 = generateFromSpec(brief, options);
     expect(files1.size).toBe(files2.size);
     for (const [path, content] of files1) {
       expect(files2.get(path)).toBe(content);
