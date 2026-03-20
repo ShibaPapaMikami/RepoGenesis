@@ -41,6 +41,8 @@ Phase 6 / Hardening
 - `doctor` は planning-aware docs から adopted summary / env vars を復元し、`PROJECT.md` / `ARCHITECTURE.md` / `.env.example` との意味的整合も検査するようになった。
 - app 側の Skill guidance / installer handoff も active AI tools と `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` を表示するように揃え、favicon も RepoGenesis 用 SVG に差し替えた。
 - app の Playwright E2E は現行の intro-first wizard 導線に合わせて更新し、local で再度 pass を確認した。
+- `app` の local ZIP 生成は `generator/dist` から作った vendor bundle を参照するようになり、Vercel production build が `../generator` import なしで通るようになった。
+- Vercel production を `c3626f1` で再 deploy し、公開 UI 表示が `v0.1.1 (c3626f1)` へ更新された。
 
 ## What This Phase Still Needs
 - Verify the latest planning-aware generation flow on production and confirm generated docs stay coherent across browser export and remote ZIP generation.

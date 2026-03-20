@@ -1,8 +1,29 @@
 import type { FormState } from '../state/actions.ts';
 import { buildProjectSpec } from './buildProjectSpec.ts';
 import { createZipBlob } from './simpleZip.ts';
-import { generateFromSpec } from '../../../generator/src/generateFromSpec.ts';
 import type { SkillCatalogItem } from '../data/skillCatalog.ts';
+import type { ProjectSpec } from '../types/projectBrief.ts';
+import bundledGenerator from '../vendor/generateFromSpec.js';
+
+interface SelectedSkillMeta {
+  id: string;
+  name: string;
+  version: string;
+  sourceType: SkillCatalogItem['sourceType'];
+  providers: SkillCatalogItem['providers'];
+}
+
+type GenerateFromSpecFn = (
+  input: ProjectSpec,
+  options: {
+    source: 'projectSpec';
+    specVersion: ProjectSpec['specVersion'];
+    generatorVersion: string;
+    selectedSkills: SelectedSkillMeta[];
+  },
+) => Map<string, string>;
+
+const generateFromSpec = bundledGenerator.generateFromSpec as GenerateFromSpecFn;
 
 export interface GenerateRepositoryZipResult {
   blob: Blob;
@@ -12,8 +33,7 @@ export interface GenerateRepositoryZipResult {
 
 export function generateRepositoryZip(state: FormState, selectedSkills: SkillCatalogItem[] = []): GenerateRepositoryZipResult {
   const spec = buildProjectSpec(state);
-  const input = spec as unknown as Parameters<typeof generateFromSpec>[0];
-  const files = generateFromSpec(input, {
+  const files = generateFromSpec(spec, {
     source: 'projectSpec',
     specVersion: spec.specVersion,
     generatorVersion: 'web-form',

@@ -57,10 +57,11 @@ npm run test:e2e
 
 ## ZIP 生成フロー
 
-`Generate Repository (ZIP)` は `app` から `generator/src/generateFromSpec.ts` を直接呼び出し、生成ファイルを ZIP 化してダウンロードする。
+`Generate Repository (ZIP)` は `generator/dist/generateFromSpec.js` から作った vendor bundle を `app/src/vendor/generateFromSpec.js` として参照し、生成ファイルを ZIP 化してダウンロードする。
 
 - バックエンド不要
 - 生成ロジックの再実装なし（単一実装）
+- generator 側を更新したら `npm run sync:generator-bundle` で vendor bundle を更新する
 - ZIP 検証手順: `docs/ZIP_MANUAL_CHECKLIST.md`
 
 ## Remote Generation Mode (Web Service)

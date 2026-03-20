@@ -112,6 +112,8 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - app 側の Skill guidance / installer handoff も active AI tools と `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` を表示するように揃えた
   - app の favicon を `repogenesis-favicon.svg` へ差し替え、Vite 既定アイコン依存を外した
   - app の Playwright E2E を現行の intro-first wizard 導線に合わせて更新し、local で再度 pass を確認した
+  - `app` の local ZIP 生成は `generator/dist` から作った vendor bundle を参照するように切り替え、Vercel production build が `../generator` import 解決エラーで落ちないようにした
+  - Vercel production を `c3626f1` で再 deploy し、公開 UI 表示が `v0.1.1 (c3626f1)` になることを headless browser で確認した
 
 ## What Is Being Done Now
 - いまの主要テーマ:
@@ -176,6 +178,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 - AI tool 非依存の `PROJECT.md` / `GEMINI.md` 分離が未反映
 - feedback 保存先が Render ローカルファイル
 - planning 候補の語彙はまだルールベースで、AI API / OSS / notification provider の表現揺れを今後追加で吸収する必要がある
+- local ZIP 用 vendor bundle は `npm run sync:generator-bundle` で手動同期が必要
 
 ## Files That Exist
 - `claude.md`
