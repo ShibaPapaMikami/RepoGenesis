@@ -21,6 +21,24 @@
 2. `projectBrief` (`specVersion` なし) は移行用レガシー入力としてのみ許可する。
 3. レガシー入力時は warning を出力し、manifest の `source` は `legacyBrief` にする。
 
+## Migration Strategy
+
+1. 旧 `projectBrief` を保持している場合は、まず `repogenesis migrate-spec --input <legacy.json> --output <project_spec.json>` を実行する。
+2. 既存の `ProjectSpec` を key order / shape 正規化だけしたい場合も同じコマンドを使う。
+3. 既存ファイルを上書きする場合は `--force` を明示する。
+4. 移行後の canonical input は `specVersion` を持つ `ProjectSpec` とし、新規入力経路はこれ以外を増やさない。
+5. 未対応 `specVersion` は移行対象ではなくエラーとして止める。
+
+### Examples
+
+```bash
+# legacy projectBrief -> project_spec.json
+repogenesis migrate-spec --input ./legacy-project.json --output ./project_spec.json
+
+# 既存 ProjectSpec を in-place 正規化
+repogenesis migrate-spec --input ./project_spec.json --output ./project_spec.json --force
+```
+
 ## Generated Manifest
 
 各生成結果には `.repogenesis/manifest.json` を必ず含める。

@@ -4,6 +4,12 @@ import {
   type ConsultationPromptVariant,
   type IntakeDraft,
 } from '../../utils/intakeParser';
+import { formatIntakeProviderLabel } from '../../utils/intakeProvider.ts';
+import {
+  EXTERNAL_PROMPT_PROVIDERS,
+  EXTERNAL_PROMPT_PROVIDER_LABELS,
+  type ExternalPromptProvider,
+} from '../../utils/providerPrompt.ts';
 import { CONSULTATION_TEST_TEMPLATES } from '../../data/consultationTestTemplates.ts';
 
 interface ConsultationSectionProps {
@@ -11,6 +17,8 @@ interface ConsultationSectionProps {
   showTestTools: boolean;
   promptVariant: ConsultationPromptVariant;
   onChangePromptVariant: (value: ConsultationPromptVariant) => void;
+  promptProvider: ExternalPromptProvider;
+  onChangePromptProvider: (value: ExternalPromptProvider) => void;
   selectedTestTemplateId: string;
   onChangeTestTemplateId: (value: string) => void;
   onApplyTestTemplate: () => void;
@@ -30,6 +38,8 @@ export function ConsultationSection({
   showTestTools,
   promptVariant,
   onChangePromptVariant,
+  promptProvider,
+  onChangePromptProvider,
   selectedTestTemplateId,
   onChangeTestTemplateId,
   onApplyTestTemplate,
@@ -44,6 +54,7 @@ export function ConsultationSection({
   message,
 }: ConsultationSectionProps) {
   const reviewHints = getConsultationReviewHints(promptVariant);
+  const promptProviderLabel = EXTERNAL_PROMPT_PROVIDER_LABELS[promptProvider];
 
   if (mode === 'draft' && draft) {
     return (
@@ -98,6 +109,7 @@ export function ConsultationSection({
         </div>
 
         <div className="consultation-summary">
+          <p><strong>相談に使ったAI:</strong> {formatIntakeProviderLabel(draft.provider)}</p>
           <p><strong>プロジェクト名候補:</strong> {draft.suggestedState.project.name || '未確定'}</p>
           <p><strong>説明候補:</strong> {draft.suggestedState.project.description || '未確定'}</p>
           <p><strong>技術ドメイン候補:</strong> {draft.suggestedState.tech.domains.join(', ') || '未確定'}</p>
@@ -122,9 +134,9 @@ export function ConsultationSection({
         相談用プロンプトをコピーし、ChatGPT / Claude / Gemini などで整理した内容をここへ貼り付けます。見出しが少し崩れていても、まずはここから draft 化できます。
       </p>
 
-      <div className="consultation-prompt-picker">
-        <div className="form-row">
-          <label htmlFor="consultationPromptVariant">相談の種類</label>
+        <div className="consultation-prompt-picker">
+          <div className="form-row">
+            <label htmlFor="consultationPromptVariant">相談の種類</label>
           <select
             id="consultationPromptVariant"
             value={promptVariant}
@@ -136,10 +148,27 @@ export function ConsultationSection({
               </option>
             ))}
           </select>
-          <p className="hint consultation-variant-hint">
-            {CONSULTATION_PROMPT_OPTIONS.find((option) => option.id === promptVariant)?.description}
-          </p>
-        </div>
+            <p className="hint consultation-variant-hint">
+              {CONSULTATION_PROMPT_OPTIONS.find((option) => option.id === promptVariant)?.description}
+            </p>
+          </div>
+          <div className="form-row">
+            <label htmlFor="consultationPromptProvider">相談に使うAI</label>
+            <select
+              id="consultationPromptProvider"
+              value={promptProvider}
+              onChange={(e) => onChangePromptProvider(e.target.value as ExternalPromptProvider)}
+            >
+              {EXTERNAL_PROMPT_PROVIDERS.map((provider) => (
+                <option key={provider} value={provider}>
+                  {EXTERNAL_PROMPT_PROVIDER_LABELS[provider]}
+                </option>
+              ))}
+            </select>
+            <p className="hint consultation-variant-hint">
+              見出し構造は共通で、{promptProviderLabel} 向けの使い方だけを薄く上に重ねます。
+            </p>
+          </div>
         {showTestTools && (
           <div className="form-row test-mode-box">
             <label htmlFor="consultationTestTemplate">固定テスト文章</label>
@@ -174,7 +203,7 @@ export function ConsultationSection({
 
       <div className="output-actions">
         <button type="button" onClick={onCopyPrompt} className="btn-secondary">
-          {promptCopied ? 'コピーしました' : '相談用プロンプトをコピー'}
+          {promptCopied ? 'コピーしました' : `${promptProviderLabel}向け相談用プロンプトをコピー`}
         </button>
       </div>
 

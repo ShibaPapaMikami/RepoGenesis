@@ -1,7 +1,7 @@
 # ACTIVE_CONTEXT.md — Current Project State
 
 ## Last Updated
-2026-03-20
+2026-03-22
 
 ## Current Phase
 Phase 6 — AI-Assisted Spec Authoring (Hardening)
@@ -114,13 +114,52 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - app の Playwright E2E を現行の intro-first wizard 導線に合わせて更新し、local で再度 pass を確認した
   - `app` の local ZIP 生成は `generator/dist` から作った vendor bundle を参照するように切り替え、Vercel production build が `../generator` import 解決エラーで落ちないようにした
   - Vercel production を `c3626f1` で再 deploy し、公開 UI 表示が `v0.1.1 (c3626f1)` になることを headless browser で確認した
+  - generated project 側で先に試した operational hardening のうち汎用化できる部分だけを RepoGenesis 本体へ戻し、標準 runbook bundle (`production-bootstrap` / `production-cutover` / `production-checks` / `rollback` / `incident-response`) を generator defaults に追加した
+  - `doctor` と generator/e2e/orchestration test も新しい runbook bundle を前提に更新した
+  - app の vendored generator bundle も同期し、local ZIP 生成が generator CLI と同じ runbook bundle を返す状態まで揃えた
+  - app 側には `generateRepositoryZip` の contract test を追加し、local ZIP の file count と runbook bundle 同梱を固定した
+  - app の Playwright E2E には mocked remote ZIP download check を追加し、browser 経路でも operational runbook bundle が崩れないことを確認した
+  - runbook bundle の path/entry 定義は `generator/src/runbookBundle.ts` へ集約し、generator / doctor / tests の重複定義を減らした
+  - `docs/ROADMAP.md` は current hardening tracks ベースに整理し、Phase 6 / Phase 8 の完了済み項目も現状に合わせて更新した
+  - feedback / generation audit は `SUPPORT_DATA_DB_PATH` で指定する SQLite support store へ集約し、後続の admin view / searchable history の下地を追加した
+  - `GET /api/v1/support/feedback` / `GET /api/v1/support/audit` を追加し、SQLite support store を読む最初の searchable admin surface を read-only API として用意した
+  - app 側にも same-origin BFF (`/api/orchestration/support/feedback` / `/api/orchestration/support/audit`) と read-only support panel を追加し、cookie-session 環境では feedback / generation audit を直接確認できるようにした
+  - generation audit は `projectSlug` / `artifactFilename` / `authProvider` / `authMode` / `selectedSkillIds` を持つ structured event へ広げ、support panel からも「誰が・どの経路で・何を生成したか」を追いやすくした
+  - orchestration API には in-memory rate limit を追加し、`generate` / `feedback` / `support read` を route 別に制限できるようにした
+  - auth は domain-first の generate 権限に加えて optional な `support_read` role segmentation を持つようになり、専用 allowlist で read-only support viewer を許可できるようにした
+  - `.github/workflows/deployed-smoke.yml` を追加し、deployed smoke (`smoke:api` + `smoke:deploy`) を manual dispatch または production deployment success で回せるようにした
+  - `.github/workflows/stack-health.yml` を追加し、同じ smoke を毎時 23 分 UTC に定期実行して failure 時は GitHub issue を起票/更新、復旧時は自動 close する alerting path を固定した
+  - `scripts/check-workflows.sh` と CI job `workflow-config` を追加し、workflow YAML / smoke shell script の構文崩れを PR 時点で止められるようにした
+  - orchestration API の `GET /healthz` は support store の path/status も返すようになり、`smoke:api` でも `REQUIRE_DURABLE_SUPPORT_STORE=true` 付きで default path 残りを検出できるようにした
+  - app 側にも `npm run smoke:deploy` を追加し、public shell / BFF generate route / support proxy が `500` で壊れていないかを未ログイン状態で検査できるようにした
+  - linked Vercel project `app` を production deploy し直し、`https://app-eight-liart-88.vercel.app` に最新 app を反映した
+  - `APP_URL=https://app-eight-liart-88.vercel.app npm run smoke:deploy` を実行し、current blocker が `ORCHESTRATION_API_URL is not configured` だと確認した
+  - `manual_bearer` support は codebase から削除し、remote mode は `cookie_session` + same-origin BFF 前提に統一した
+  - local loopback host の auth / support debug path は `LOCAL_ADMIN_MODE=enabled` がないと `403` を返すようにし、localhost-only debug access を explicit admin mode に切り出した
+  - draft / 最終確認の両方から provider-neutral な要件整理プロンプトを copy / markdown export できるようにし、外部 AI での再相談導線を追加した
+  - 相談用 prompt と要件再整理 prompt の両方で ChatGPT / Claude / Gemini を切り替えられるようにし、provider-specific guidance は薄い wrapper として扱うようにした
+  - options step に AI recommendation の `未確認 / 採用 / 上書き済み` を追加し、repo 構成 / security 水準 / 段階数について user-confirmed override を review まで保持できるようにした
+  - `createIntakeEnvelope` を draft 作成導線まで通し、選んだ ChatGPT / Claude / Gemini を provider metadata として `IntakeDraft` に保持するようにした
+  - generated output の provider-neutral AI tooling contract として `docs/AI_TOOLING.md` を追加し、single repo / workspace / per-repo の `PROJECT.md`・`ACTIVE_CONTEXT.md`・`prompts/restart.md` から参照するようにした
+  - generator CLI / local ZIP / mocked remote ZIP の回帰を更新し、`docs/AI_TOOLING.md` を含む output bundle が崩れないことをローカルで確認した
+  - generator dist と app vendored bundle の output 互換チェックを `app/scripts/check-generated-output-compat.mjs` と CI に追加し、fixture 単位で drift を検出できるようにした
+  - `docs/AI_INTAKE_ROADMAP.md` / `docs/AI_INTAKE_CONTRACT.md` に Phase 6 boundary を追記し、intake abstraction と後段 AI assistance の責務を分離した
+  - `docs/TEMPLATE_VERSIONING.md` / `docs/TEMPLATE_RELEASE_CHECKLIST.md` を追加し、template change の versioning と release gate を docs 化した
+  - root `README.md` に deployed smoke 導線を追加し、current smoke flow と deploy docs の導線を揃えた
+  - `docs/MODULAR_LAYER_POLICY.md` を追加し、rules / skills / provider-specific helper を optional layer として導入する方針を固定した
+  - `skills status` を generator CLI に追加し、install 済み skill の version / registry 差分 / missing artifact を一覧できるようにした
+  - `skills update` は `--all` 付きで bulk path を持つようになり、outdated または missing artifact の install 済み skill をまとめて明示更新できるようにした
+  - `doctor --registry <path>` を追加し、install 済み skill の registry drift (`update_available`, `missing_from_registry`) も warning として検出できるようにした
+  - `repogenesis migrate-spec --input <legacy.json> --output <project_spec.json>` を追加し、legacy `projectBrief` を canonical な `ProjectSpec` へ正規化できるようにした
+  - `docs/SPEC_VERSIONING.md` に `migrate-spec` 前提の migration strategy を追加し、Phase 8 の `specVersion` migration policy を固定した
 
 ## What Is Being Done Now
 - いまの主要テーマ:
   - Phase 6 入口の contract hardening
-    - provider 非依存 intake contract の更新
-    - parser 実装とのズレ整理
-    - deterministic `draft -> spec` 境界の固定
+    - provider 非依存 intake contract は `IntakeEnvelope` / `IntakeDraft.provider` まで反映済み
+    - parser 実装とのズレ整理は継続
+    - deterministic `draft -> spec` 境界は固定済み
+    - recommendation は user-confirmed override まで反映済み
   - provider-aware skill layer hardening
     - `official` / `curated` / `internal` source を含む registry contract
     - Codex / Claude Code / Gemini CLI の artifact 差を manifest で追跡
@@ -129,9 +168,9 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
     - timeout 時の運用切り分けを runbook 化済み
     - remote ZIP timeout の再発監視
   - 次の大きい変更を分離
-    - AI tool 非依存化
     - optional skill layer
     - CI/docs
+  - g-contract 系生成物の本番化はこのスレッドの active scope から外し、そこで得た知見は RepoGenesis 本体へ戻す対象だけを扱う
   - 参照設計 docs:
     - `docs/AI_INTAKE_ROADMAP.md`
     - `docs/AI_INTAKE_CONTRACT.md`
@@ -141,14 +180,24 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 ## What Is Blocked
 - 技術的 blocker は解消済み。
   - 残る blocker は構造整理と運用整備:
-  - feedback 保存がローカルファイルで永続性に欠ける
+  - support store は SQLite に寄せたが、production で durable volume に向ける作業はまだ
   - remote ZIP timeout は request id で追える状態。再試行成功済みのため、当面は Render 側の再発監視を継続
-  - AI tool 非依存化は tool wrapper の shared renderer、`AGENTS.md` 生成、app/export guidance 表示まで反映。残りは production/browser 経路での実地確認と docs 整理
+  - AI tool 非依存化は `docs/AI_TOOLING.md` を provider-neutral contract とする形で generator / app / tests まで反映済み。残りは deployed public wizard / real remote ZIP 経路での実地確認
+  - Phase 6 の境界整理は docs に反映済み。残りはその境界に沿った AI provider integration の実装判断
   - skill layer は provider-aware contract / installer / Web selection / remote ZIP 同梱まで反映。自動インストールと local ZIP 同梱は未反映
   - `doctor` は core file / wrapper / installed skill artifact / planning docs / `.env.example` の整合検査まで実装済み。残りは browser export や production ZIP 生成後の実地確認
   - production での最新 public wizard (`04a9281`) の実地確認はこれから
-  - planning-aware な public wizard / remote ZIP の実地確認はこれから
-  - feedback 永続保存と公開向け docs 整理は継続
+  - planning-aware な public wizard / remote ZIP の production 実地確認はこれから
+  - support store の production 永続化と deployed support panel の実地確認は継続
+  - deployed `healthz` / `smoke:api` で `usingDefaultPath=false` を確認する作業が残っている
+  - deployed `smoke:deploy` で Vercel 側 env/bff misconfiguration がないことを確認する作業が残っている
+  - ただし現時点の Vercel project `app` では `vercel env ls production` が空で、live BFF は `ORCHESTRATION_API_URL` 未設定のまま
+  - upstream target は URL 自体は repo に残っていなかったので、repo root の `render.yaml` で Render Blueprint baseline を固定した。残りは dashboard sync と secret 投入
+  - Blueprint baseline は `generator/tests/renderBlueprint.test.ts` で drift を検知できるようにした
+  - deployed verification は repo root の `scripts/smoke-deployed-stack.sh` で upstream smoke と app smoke をまとめて回せるようにした
+  - deployed cookie-session support panel の確認用に、Playwright `app/e2e/support-panel.remote.spec.ts` を追加した
+  - app 側の vendored generator bundle drift は `app/scripts/check-generator-bundle-sync.mjs` と CI の bundle-sync job で検知できるようにした
+  - generator dist と app vendored bundle の出力互換は fixture 比較で CI に固定した
 
 ## Key Decisions Made
 - React + Vite (SPA)。Next.jsは後回し。(ADR-0001)
@@ -174,11 +223,15 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 - interactive CLIなし（対話的プロンプト未対応）
 - skill injectionなし（テンプレートの外部差し込み未対応）
 - 選択 Skill の自動インストールなし（remote ZIP では同梱されるが、実行時セットアップは自動化していない）
-- template versioningなし（テンプレートのバージョン管理未対応）
-- AI tool 非依存の `PROJECT.md` / `GEMINI.md` 分離が未反映
-- feedback 保存先が Render ローカルファイル
+- support store は SQLite になったが、production で durable volume 未接続だと依然として非永続
 - planning 候補の語彙はまだルールベースで、AI API / OSS / notification provider の表現揺れを今後追加で吸収する必要がある
 - local ZIP 用 vendor bundle は `npm run sync:generator-bundle` で手動同期が必要
+- 標準 runbook bundle は generic baseline であり、実際の deploy command / dashboard URL / owner 名は project ごとに追記が必要
+- support panel は remote mode の internal path にだけ出る。local ZIP では表示しない
+- `healthz` は support path を返すが、mounted storage そのものの durability までは判定しない
+- `smoke:deploy` は未ログイン smoke なので、cookie-session の成功導線そのものまでは確認しない
+- 現行 production (`app-eight-liart-88.vercel.app`) は public shell こそ返すが、BFF / support proxy は upstream 未設定で `500` を返す
+- checked-in `render.yaml` は orchestration API を `repogenesis-orchestration-api` として Render に立てる baseline だが、まだ sync 前なので live URL は未確定
 
 ## Files That Exist
 - `claude.md`
@@ -192,7 +245,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 - `generator/` — Phase 2 ジェネレータCLI
   - `src/schema.ts`, `src/args.ts`, `src/generator.ts`, `src/index.ts`
   - `src/utils/fileWriter.ts`
-  - `src/templates/` — 12テンプレート関数
+  - `src/templates/` — constitutions / runbooks / provider-neutral guidance templates
   - `tests/schema.test.ts`, `tests/generator.test.ts`
 
 ## Next Phase
@@ -204,7 +257,11 @@ Phase 6 — AI-Assisted Spec Authoring
 ## Upcoming Focus
 Immediate next:
 - Phase 6 に向けて intake contract の境界を整理する
-- feedback の永続保存先を決める
-- AI tool 非依存化と optional skill layer を別差分で整理する
+- support store を production の durable mounted storage に向ける
+- checked-in `render.yaml` を sync して upstream orchestration API target を用意し、Vercel `ORCHESTRATION_API_URL` を設定する
+- deployed cookie-session support panel が real support data を読めることを確認する
+- deployed `healthz` / `smoke:api` で `usingDefaultPath=false` と support reads を確認する
+- deployed `smoke:deploy` で BFF / support proxy が `500` で壊れていないことを確認する
+- optional skill layer の deeper automation と CI/docs の残差分を別トラックで整理する
 - generated install script と provider-specific guidance の運用を整える
-- production で `v0.1.1 (c4b2c8a)` の skill catalog 表示と選択動作を再確認する
+- production/browser export で新しい runbook bundle と `docs/AI_TOOLING.md` を含む planning-aware ZIP が崩れないことを確認する

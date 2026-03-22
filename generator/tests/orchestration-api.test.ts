@@ -1,6 +1,8 @@
 import { afterEach, describe, it, expect } from 'vitest';
 import { handleGenerateApiDownloadRequest, handleGenerateApiRequest } from '../src/orchestration/api';
 
+const SINGLE_REPO_FILE_COUNT = 30;
+
 const VALID_SPEC = {
   specVersion: '1.0',
   project: {
@@ -101,7 +103,7 @@ describe('orchestration api', () => {
       expect(res.body.requestId).toBe('req-123');
       expect(res.body.specVersion).toBe('1.0');
       expect(res.body.repoType).toBe('single');
-      expect(res.body.fileCount).toBe(24);
+      expect(res.body.fileCount).toBe(SINGLE_REPO_FILE_COUNT);
       expect(res.body.artifact.filename).toBe('orchestration-test.zip');
       expect(res.body.artifact.contentType).toBe('application/zip');
     }
@@ -116,6 +118,8 @@ describe('orchestration api', () => {
     expect(res.status).toBe(200);
     if (res.status === 200) {
       expect(res.body.requestId).toBe('req-zip');
+      expect(res.body.projectSlug).toBe('orchestration-test');
+      expect(res.body.selectedSkillIds).toEqual([]);
       expect(res.body.artifact.filename).toBe('orchestration-test.zip');
       expect(res.body.zipBuffer.length).toBeGreaterThan(0);
       expect(res.body.zipBuffer.readUInt32LE(0)).toBe(0x04034b50);
@@ -142,7 +146,8 @@ describe('orchestration api', () => {
 
     expect(res.status).toBe(200);
     if (res.status === 200) {
-      expect(res.body.fileCount).toBeGreaterThan(24);
+      expect(res.body.fileCount).toBeGreaterThan(SINGLE_REPO_FILE_COUNT);
+      expect(res.body.selectedSkillIds).toEqual(['repo-readiness-review']);
       expect(res.body.zipBuffer.toString('utf8')).toContain('.claude/skills/repo-readiness-review/SKILL.md');
       expect(res.body.zipBuffer.toString('utf8')).not.toContain('scripts/install-selected-skills.sh');
     }

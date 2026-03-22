@@ -1,21 +1,22 @@
 // Generated from generator/dist/generateFromSpec.js. Run `npm run sync:generator-bundle` from app/ to refresh.
-var c=(e,t)=>()=>(t||e((t={exports:{}}).exports,t),t.exports);var g=c(p=>{"use strict";Object.defineProperty(p,"__esModule",{value:!0});p.LEGACY_AI_TOOLS=p.AI_TOOLS=void 0;p.normalizeAiTools=w;p.deriveLegacyAiTool=At;p.deriveLegacyAiToolDetail=vt;p.hasAiTool=Ee;p.getToolWrapperFile=ye;p.getToolWrapperFiles=Te;p.formatToolWrapperFiles=Re;p.buildToolWrapperExampleClause=$t;p.formatAiTools=Ct;p.AI_TOOLS=["codex","claude_code","gemini_cli","other"];p.LEGACY_AI_TOOLS=["claude_cli","other"];var fe={codex:"Codex",claude_code:"Claude Code",gemini_cli:"Gemini CLI"},_t={codex:"AGENTS.md",claude_code:"CLAUDE.md",gemini_cli:"GEMINI.md"},St=["codex","claude_code","gemini_cli"];function w(e){let t=Array.from(new Set(e.ai_tools??[])).filter(n=>p.AI_TOOLS.includes(n));return t.length>0?t:e.ai_tool==="claude_cli"?["claude_code"]:e.ai_tool==="other"?["other"]:[]}function At(e){return e.includes("claude_code")?"claude_cli":"other"}function vt(e,t){let n=e.filter(o=>o!=="claude_code"&&o!=="other").map(o=>fe[o]);return e.includes("other")&&t?.trim()&&n.push(t.trim()),Array.from(new Set(n)).join(", ")}function Ee(e,t){return w(e).includes(t)}function ye(e){return _t[e]}function Te(e){return St.filter(t=>Ee(e,t)).map(t=>ye(t))}function Re(e){let t=Te(e).map(n=>`\`${n}\``);return t.length===0?"":t.length===1?t[0]:t.length===2?`${t[0]} or ${t[1]}`:`${t.slice(0,-1).join(", ")}, or ${t[t.length-1]}`}function $t(e){let t=Re(e);return t?` (for example ${t})`:""}function Ct(e){return w(e).map(t=>t==="other"?e.ai_tool_detail?.trim()||"Other":fe[t]).join(", ")}});var f=c(h=>{"use strict";Object.defineProperty(h,"__esModule",{value:!0});h.formatPlanningStatus=Ot;h.formatDependencyCategory=O;h.getTechDecisionsByStatus=P;h.getDependenciesByStatus=A;h.getAdoptedEnvVars=Pt;h.getAdoptedTechSummaryLines=Dt;h.getAdoptedDependencySummaryLines=kt;h.getAdoptedTechBulletLines=Nt;h.getAdoptedDependencyBulletLines=jt;var It={adopted:"Adopted",candidate:"Candidate",open:"Open",rejected:"Rejected"},wt={ai_api:"AI API",model:"Model",external_service:"External Service",oss:"OSS",github_repo:"GitHub Repository",npm_package:"npm Package",auth:"Authentication",database:"Database",storage:"Storage",notification:"Notification",ocr:"OCR / Document Analysis",batch:"Batch / Scheduler",other:"Other"};function _e(e){return e.planning??{tech_decisions:[],external_dependencies:[]}}function Ot(e){return It[e]}function O(e){return wt[e]}function P(e,t){return _e(e).tech_decisions.filter(n=>n.status===t&&n.topic.trim()&&n.choice.trim())}function A(e,t){return _e(e).external_dependencies.filter(n=>n.status===t&&n.name.trim())}function Pt(e){return Array.from(new Set(A(e,"adopted").flatMap(t=>t.env_vars.map(n=>n.trim()).filter(Boolean))))}function Dt(e){return P(e,"adopted").map(t=>`${t.topic}: ${t.choice}`)}function kt(e){return A(e,"adopted").map(t=>`${t.name} (${O(t.category)})${t.env_vars.length>0?` / env: ${t.env_vars.join(", ")}`:""}`)}function Nt(e){return P(e,"adopted").map(t=>`- ${t.topic}: ${t.choice}${t.rationale?` \u2014 ${t.rationale}`:""}`)}function jt(e){return A(e,"adopted").map(t=>{let n=t.env_vars.length>0?` / env: ${t.env_vars.join(", ")}`:"",o=t.purpose?` \u2014 ${t.purpose}`:"";return`- ${t.name} (${O(t.category)})${o}${n}`})}});var y=c(S=>{"use strict";Object.defineProperty(S,"__esModule",{value:!0});S.formatOwner=bt;S.formatDomains=Lt;S.formatProjectDescription=xt;function bt(e){return e.trim()||"TBD"}function Lt(e){return e.length>0?e.join(", "):"unspecified"}function xt(e){let t=e.split(`
-`).map(r=>r.trim()).filter(Boolean);if(t.length===0)return"TBD";let n=t.map(r=>r.replace(/^[-*]\s*/,"").replace(/^\d+[.)]\s*/,"").trim());return t.every(r=>/^[-*]\s*/.test(r)||/^\d+[.)]\s*/.test(r))?n.join(" / "):n.join(" ")}});var Ae=c(N=>{"use strict";Object.defineProperty(N,"__esModule",{value:!0});N.generateProjectMd=Ut;var T=g(),Se=f(),_=y();function D(e){let{security:t}=e,n=`### 2. Security
+var a=(e,t)=>()=>(t||e((t={exports:{}}).exports,t),t.exports);var f=a(u=>{"use strict";Object.defineProperty(u,"__esModule",{value:!0});u.LEGACY_AI_TOOLS=u.AI_TOOLS=void 0;u.normalizeAiTools=C;u.deriveLegacyAiTool=Mt;u.deriveLegacyAiToolDetail=Gt;u.hasAiTool=we;u.getToolWrapperFile=Ie;u.getToolWrapperFiles=Oe;u.formatToolWrapperFiles=ke;u.buildToolWrapperExampleClause=Ut;u.formatAiTools=qt;u.AI_TOOLS=["codex","claude_code","gemini_cli","other"];u.LEGACY_AI_TOOLS=["claude_cli","other"];var Se={codex:"Codex",claude_code:"Claude Code",gemini_cli:"Gemini CLI"},Lt={codex:"AGENTS.md",claude_code:"CLAUDE.md",gemini_cli:"GEMINI.md"},xt=["codex","claude_code","gemini_cli"];function C(e){let t=Array.from(new Set(e.ai_tools??[])).filter(o=>u.AI_TOOLS.includes(o));return t.length>0?t:e.ai_tool==="claude_cli"?["claude_code"]:e.ai_tool==="other"?["other"]:[]}function Mt(e){return e.includes("claude_code")?"claude_cli":"other"}function Gt(e,t){let o=e.filter(n=>n!=="claude_code"&&n!=="other").map(n=>Se[n]);return e.includes("other")&&t?.trim()&&o.push(t.trim()),Array.from(new Set(o)).join(", ")}function we(e,t){return C(e).includes(t)}function Ie(e){return Lt[e]}function Oe(e){return xt.filter(t=>we(e,t)).map(t=>Ie(t))}function ke(e){let t=Oe(e).map(o=>`\`${o}\``);return t.length===0?"":t.length===1?t[0]:t.length===2?`${t[0]} or ${t[1]}`:`${t.slice(0,-1).join(", ")}, or ${t[t.length-1]}`}function Ut(e){let t=ke(e);return t?` (for example ${t})`:""}function qt(e){return C(e).map(t=>t==="other"?e.ai_tool_detail?.trim()||"Other":Se[t]).join(", ")}});var y=a(g=>{"use strict";Object.defineProperty(g,"__esModule",{value:!0});g.formatPlanningStatus=Ft;g.formatDependencyCategory=$;g.getTechDecisionsByStatus=P;g.getDependenciesByStatus=A;g.getAdoptedEnvVars=Wt;g.getAdoptedTechSummaryLines=Xt;g.getAdoptedDependencySummaryLines=Ht;g.getAdoptedTechBulletLines=Jt;g.getAdoptedDependencyBulletLines=Yt;var Bt={adopted:"Adopted",candidate:"Candidate",open:"Open",rejected:"Rejected"},Vt={ai_api:"AI API",model:"Model",external_service:"External Service",oss:"OSS",github_repo:"GitHub Repository",npm_package:"npm Package",auth:"Authentication",database:"Database",storage:"Storage",notification:"Notification",ocr:"OCR / Document Analysis",batch:"Batch / Scheduler",other:"Other"};function Ce(e){return e.planning??{tech_decisions:[],external_dependencies:[]}}function Ft(e){return Bt[e]}function $(e){return Vt[e]}function P(e,t){return Ce(e).tech_decisions.filter(o=>o.status===t&&o.topic.trim()&&o.choice.trim())}function A(e,t){return Ce(e).external_dependencies.filter(o=>o.status===t&&o.name.trim())}function Wt(e){return Array.from(new Set(A(e,"adopted").flatMap(t=>t.env_vars.map(o=>o.trim()).filter(Boolean))))}function Xt(e){return P(e,"adopted").map(t=>`${t.topic}: ${t.choice}`)}function Ht(e){return A(e,"adopted").map(t=>`${t.name} (${$(t.category)})${t.env_vars.length>0?` / env: ${t.env_vars.join(", ")}`:""}`)}function Jt(e){return P(e,"adopted").map(t=>`- ${t.topic}: ${t.choice}${t.rationale?` \u2014 ${t.rationale}`:""}`)}function Yt(e){return A(e,"adopted").map(t=>{let o=t.env_vars.length>0?` / env: ${t.env_vars.join(", ")}`:"",n=t.purpose?` \u2014 ${t.purpose}`:"";return`- ${t.name} (${$(t.category)})${n}${o}`})}});var T=a(v=>{"use strict";Object.defineProperty(v,"__esModule",{value:!0});v.formatOwner=Kt;v.formatDomains=zt;v.formatProjectDescription=Qt;function Kt(e){return e.trim()||"TBD"}function zt(e){return e.length>0?e.join(", "):"unspecified"}function Qt(e){let t=e.split(`
+`).map(r=>r.trim()).filter(Boolean);if(t.length===0)return"TBD";let o=t.map(r=>r.replace(/^[-*]\s*/,"").replace(/^\d+[.)]\s*/,"").trim());return t.every(r=>/^[-*]\s*/.test(r)||/^\d+[.)]\s*/.test(r))?o.join(" / "):o.join(" ")}});var Pe=a(N=>{"use strict";Object.defineProperty(N,"__esModule",{value:!0});N.generateProjectMd=no;var S=f(),$e=y(),_=T();function D(e){let{security:t}=e,o=`### 2. Security
 - Never output real API keys, tokens, or credentials.
 - Never store secrets in markdown or JSON.
 - Always use placeholders: \`YOUR_API_KEY_HERE\`, \`YOUR_SECRET_HERE\`.
 - Never echo back credentials if user pastes them.
 - Never suggest committing .env or secret files.
-- .env must always be in .gitignore.`;return t.has_payment_data&&(n+=`
+- .env must always be in .gitignore.`;return t.has_payment_data&&(o+=`
 - NEVER include payment data, card numbers, or financial credentials in code, comments, or documentation.
-- All payment-related logic must reference PCI DSS compliance requirements.`),t.has_ip_sensitive&&(n+=`
+- All payment-related logic must reference PCI DSS compliance requirements.`),t.has_ip_sensitive&&(o+=`
 - NEVER include client-confidential information, proprietary algorithms, or NDA-protected content in code comments or documentation.
-- All references to client projects must use codenames or anonymized identifiers.`),n}function k(e){return["PROJECT.md",...(0,T.getToolWrapperFiles)(e.tech)]}function Mt(e){let t=k(e).map(n=>`\u251C\u2500\u2500 ${n}`).join(`
+- All references to client projects must use codenames or anonymized identifiers.`),o}function b(e){return["PROJECT.md",...(0,S.getToolWrapperFiles)(e.tech)]}function Zt(e){let t=b(e).map(o=>`\u251C\u2500\u2500 ${o}`).join(`
 `);return`\`\`\`
 ${e.project.slug}/
 ${t}
 \u251C\u2500\u2500 docs/
 \u2502   \u251C\u2500\u2500 ACTIVE_CONTEXT.md
+\u2502   \u251C\u2500\u2500 AI_TOOLING.md
 \u2502   \u251C\u2500\u2500 TECH_DECISIONS.md
 \u2502   \u251C\u2500\u2500 EXTERNAL_DEPENDENCIES.md
 \u2502   \u251C\u2500\u2500 REQUIREMENTS.md
@@ -31,8 +32,8 @@ ${t}
 \u251C\u2500\u2500 SECURITY.md
 \u251C\u2500\u2500 .env.example
 \u2514\u2500\u2500 .gitignore
-\`\`\``}function Gt(e){let t=k(e).map(o=>`\u251C\u2500\u2500 ${o}`).join(`
-`),n=e.structure.repos.map(o=>`\u251C\u2500\u2500 ${o.name}/`).join(`
+\`\`\``}function eo(e){let t=b(e).map(n=>`\u251C\u2500\u2500 ${n}`).join(`
+`),o=e.structure.repos.map(n=>`\u251C\u2500\u2500 ${n.name}/`).join(`
 `);return`\`\`\`
 ${e.project.slug}/
 ${t}
@@ -41,6 +42,7 @@ ${t}
 \u251C\u2500\u2500 SECURITY.md
 \u251C\u2500\u2500 VERSIONING_STANDARD.md
 \u251C\u2500\u2500 docs/
+\u2502   \u251C\u2500\u2500 AI_TOOLING.md
 \u2502   \u251C\u2500\u2500 TECH_DECISIONS.md
 \u2502   \u251C\u2500\u2500 EXTERNAL_DEPENDENCIES.md
 \u2502   \u2514\u2500\u2500 runbooks/
@@ -49,11 +51,11 @@ ${t}
 \u251C\u2500\u2500 prompts/
 \u2502   \u2514\u2500\u2500 restart.md
 \u251C\u2500\u2500 .gitignore
-${n}
-\`\`\``}function qt(e,t){let n=k(e).map(o=>`\u251C\u2500\u2500 ${o}`).join(`
+${o}
+\`\`\``}function to(e,t){let o=b(e).map(n=>`\u251C\u2500\u2500 ${n}`).join(`
 `);return`\`\`\`
 ${t.name}/
-${n}
+${o}
 \u251C\u2500\u2500 docs/
 \u2502   \u251C\u2500\u2500 ACTIVE_CONTEXT.md
 \u2502   \u251C\u2500\u2500 ARCHITECTURE.md
@@ -67,28 +69,28 @@ ${n}
 \u2502   \u2514\u2500\u2500 restart.md
 \u251C\u2500\u2500 .env.example
 \u2514\u2500\u2500 .gitignore
-\`\`\``}function Bt(e){let t=(0,Se.getAdoptedTechBulletLines)(e),n=(0,Se.getAdoptedDependencyBulletLines)(e);if(t.length===0&&n.length===0)return"";let o=[];return t.length>0&&o.push(`- Adopted Decisions:
+\`\`\``}function oo(e){let t=(0,$e.getAdoptedTechBulletLines)(e),o=(0,$e.getAdoptedDependencyBulletLines)(e);if(t.length===0&&o.length===0)return"";let n=[];return t.length>0&&n.push(`- Adopted Decisions:
 ${t.map(r=>`  ${r}`).join(`
-`)}`),n.length>0&&o.push(`- Adopted External Dependencies:
-${n.map(r=>`  ${r}`).join(`
-`)}`),`${o.join(`
+`)}`),o.length>0&&n.push(`- Adopted External Dependencies:
+${o.map(r=>`  ${r}`).join(`
+`)}`),`${n.join(`
 `)}
-`}function Ut(e,t={}){let n=t.scope??(e.structure.repo_type==="multi"?"workspace":"single"),o=t.repo,r=Bt(e),s=e.tech.frameworks.length>0?`- Frameworks: ${e.tech.frameworks.join(", ")}
-`:"";if(n==="repo"&&o){let i=o.depends_on.length>0?`- Dependencies: ${o.depends_on.join(", ")}
-`:"";return`# ${o.name} \u2014 Repository Constitution
+`}function no(e,t={}){let o=t.scope??(e.structure.repo_type==="multi"?"workspace":"single"),n=t.repo,r=oo(e),s=e.tech.frameworks.length>0?`- Frameworks: ${e.tech.frameworks.join(", ")}
+`:"";if(o==="repo"&&n){let i=n.depends_on.length>0?`- Dependencies: ${n.depends_on.join(", ")}
+`:"";return`# ${n.name} \u2014 Repository Constitution
 
 ## Part of
 ${e.project.name} (workspace: ${e.project.slug})
 
 ## Repository Info
-- Name: ${o.name}
-- Type: ${o.type}
-- Description: ${o.description}
-- Owner: ${(0,_.formatOwner)(o.owner)}
+- Name: ${n.name}
+- Type: ${n.type}
+- Description: ${n.description}
+- Owner: ${(0,_.formatOwner)(n.owner)}
 ${i}## Tech Stack
 - Domains: ${(0,_.formatDomains)(e.tech.domains)}
 - Primary Language: ${e.tech.primary_language}
-${s}- AI Tools: ${(0,T.formatAiTools)(e.tech)}
+${s}- AI Tooling Policy: \`../docs/AI_TOOLING.md\`
 ${r}
 
 ## Absolute Rules
@@ -104,20 +106,22 @@ ${D(e)}
 - \`docs/ROADMAP.md\` tracks phase progression for this repository.
 - \`docs/ARCHITECTURE.md\` defines this repository's technical boundaries.
 - \`docs/VERSIONING_STANDARD.md\` defines runtime traceability rules.
+- \`../docs/AI_TOOLING.md\` defines the provider-neutral AI tooling policy for the workspace.
 - \`../docs/TECH_DECISIONS.md\` tracks workspace-level adopted, candidate, and open technical decisions.
 - \`../docs/EXTERNAL_DEPENDENCIES.md\` tracks workspace-level external dependencies and their status.
 - \`../GLOBAL_CONTEXT.md\` is the workspace-level source of truth for cross-repo context.
 
 ### 4. Session Protocol
 - Read \`PROJECT.md\` first.
-- Read the tool-specific wrapper${(0,T.buildToolWrapperExampleClause)(e.tech)} if your tool uses one.
+- Read \`../docs/AI_TOOLING.md\`.
+- Read the tool-specific wrapper${(0,S.buildToolWrapperExampleClause)(e.tech)} if your tool uses one.
 - Read \`docs/ACTIVE_CONTEXT.md\`.
 - Read \`../GLOBAL_CONTEXT.md\` when changes cross repository boundaries.
 - Summarize current state before taking any action.
 
 ## Repository Structure
-${qt(e,o)}
-`}if(n==="workspace"){let i=e.structure.repos.map(d=>{let a=d.depends_on.length>0?` (depends on: ${d.depends_on.join(", ")})`:"";return`- ${d.name}: ${d.description}${a}`}).join(`
+${to(e,n)}
+`}if(o==="workspace"){let i=e.structure.repos.map(d=>{let c=d.depends_on.length>0?` (depends on: ${d.depends_on.join(", ")})`:"";return`- ${d.name}: ${d.description}${c}`}).join(`
 `);return`# ${e.project.name} \u2014 Workspace Constitution
 
 ## What is this workspace?
@@ -126,7 +130,7 @@ ${(0,_.formatProjectDescription)(e.project.description)}
 ## Tech Stack
 - Domains: ${(0,_.formatDomains)(e.tech.domains)}
 - Primary Language: ${e.tech.primary_language}
-${s}- AI Tools: ${(0,T.formatAiTools)(e.tech)}
+${s}- AI Tooling Policy: \`docs/AI_TOOLING.md\`
 ${r}
 
 ## Workspace Repositories
@@ -144,6 +148,7 @@ ${D(e)}
 - \`GLOBAL_CONTEXT.md\` is the single source of truth for workspace-level current state.
 - \`REQUIREMENTS.md\` is the single source of truth for workspace-level requirements.
 - \`SECURITY.md\` defines shared security rules.
+- \`docs/AI_TOOLING.md\` defines the provider-neutral AI tooling policy.
 - \`docs/TECH_DECISIONS.md\` tracks adopted, candidate, and open technical decisions.
 - \`docs/EXTERNAL_DEPENDENCIES.md\` tracks adopted, candidate, and open external dependencies.
 - Each repository's \`PROJECT.md\` defines repository-local rules.
@@ -151,12 +156,13 @@ ${D(e)}
 
 ### 4. Session Protocol
 - Read \`PROJECT.md\` first.
-- Read the tool-specific wrapper${(0,T.buildToolWrapperExampleClause)(e.tech)} if your tool uses one.
+- Read \`docs/AI_TOOLING.md\`.
+- Read the tool-specific wrapper${(0,S.buildToolWrapperExampleClause)(e.tech)} if your tool uses one.
 - Read \`GLOBAL_CONTEXT.md\`.
 - Read the target repository's \`PROJECT.md\` and \`docs/ACTIVE_CONTEXT.md\` before editing it.
 
 ## Repository Structure
-${Gt(e)}
+${eo(e)}
 `}return`# ${e.project.name} \u2014 Project Constitution
 
 ## What is this project?
@@ -165,11 +171,12 @@ ${(0,_.formatProjectDescription)(e.project.description)}
 ## Tech Stack
 - Domains: ${(0,_.formatDomains)(e.tech.domains)}
 - Primary Language: ${e.tech.primary_language}
-${s}- AI Tools: ${(0,T.formatAiTools)(e.tech)}
+${s}- AI Tooling Policy: \`docs/AI_TOOLING.md\`
 ${r}
 
 ## Development Workflow
 - Use the tool-specific wrapper that matches your environment when present.
+- Use \`docs/AI_TOOLING.md\` as the provider-neutral entry point for AI tooling rules.
 - Keep shared project knowledge in \`PROJECT.md\` and \`docs/\`.
 - Use tool-specific files only for tool behavior, not for project truth.
 
@@ -186,6 +193,7 @@ ${D(e)}
 - \`docs/ACTIVE_CONTEXT.md\` is the single source of truth for current project state.
 - \`docs/ROADMAP.md\` is the single source of truth for phase progression.
 - \`docs/REQUIREMENTS.md\` is the single source of truth for what the system must do.
+- \`docs/AI_TOOLING.md\` defines the provider-neutral AI tooling policy and wrapper expectations.
 - \`docs/TECH_DECISIONS.md\` tracks adopted, candidate, and open technical decisions.
 - \`docs/EXTERNAL_DEPENDENCIES.md\` tracks adopted, candidate, and open external dependencies.
 - \`docs/VERSIONING_STANDARD.md\` defines release/version traceability rules.
@@ -193,24 +201,25 @@ ${D(e)}
 
 ### 4. Session Protocol
 - Read \`PROJECT.md\` first.
-- Read the tool-specific wrapper${(0,T.buildToolWrapperExampleClause)(e.tech)} if your tool uses one.
+- Read \`docs/AI_TOOLING.md\`.
+- Read the tool-specific wrapper${(0,S.buildToolWrapperExampleClause)(e.tech)} if your tool uses one.
 - Read \`docs/ACTIVE_CONTEXT.md\` and \`docs/REQUIREMENTS.md\` before taking action.
 - Summarize current state before taking any action.
 
 ## Repository Structure
-${Mt(e)}
-`}});var v=c(j=>{"use strict";Object.defineProperty(j,"__esModule",{value:!0});j.generateToolGuidance=Ft;var Vt=g(),Wt={codex:"Codex",claude_code:"Claude Code",gemini_cli:"Gemini CLI"},Xt={codex:"- Prefer repository-local Codex skills or guidance artifacts when they exist.",claude_code:"- Prefer repository-local Claude Code skills when they exist.",gemini_cli:"- Prefer repository-local Gemini commands or context artifacts when they exist."};function Ft(e,t,n={}){let o=n.scope??"single",r=Wt[t],s=(0,Vt.getToolWrapperFile)(t),i=Xt[t];return o==="workspace"?`# Read PROJECT.md first.
+${Zt(e)}
+`}});var w=a(j=>{"use strict";Object.defineProperty(j,"__esModule",{value:!0});j.generateToolGuidance=ao;var ro=f(),so={codex:"Codex",claude_code:"Claude Code",gemini_cli:"Gemini CLI"},io={codex:"- Prefer repository-local Codex skills or guidance artifacts when they exist.",claude_code:"- Prefer repository-local Claude Code skills when they exist.",gemini_cli:"- Prefer repository-local Gemini commands or context artifacts when they exist."};function ao(e,t,o={}){let n=o.scope??"single",r=so[t],s=(0,ro.getToolWrapperFile)(t),i=io[t];return n==="workspace"?`# Read PROJECT.md first.
 
 ## ${r} rules
-- On session start, read: \`PROJECT.md\` -> \`GLOBAL_CONTEXT.md\` -> \`REQUIREMENTS.md\`.
+- On session start, read: \`PROJECT.md\` -> \`docs/AI_TOOLING.md\` -> \`GLOBAL_CONTEXT.md\` -> \`REQUIREMENTS.md\`.
 - Before editing a repository, also read that repository's \`PROJECT.md\` and \`docs/ACTIVE_CONTEXT.md\`.
 - Keep project truth in \`PROJECT.md\` and \`docs/\`; \`${s}\` is only the ${r}-specific overlay.
 - Treat \`${s}\` as a thin adapter over the shared project constitution.
 ${i}
-`:o==="repo"&&n.repo?`# Read PROJECT.md first.
+`:n==="repo"&&o.repo?`# Read PROJECT.md first.
 
 ## ${r} rules
-- On session start, read: \`PROJECT.md\` -> \`docs/ACTIVE_CONTEXT.md\` -> \`../GLOBAL_CONTEXT.md\`.
+- On session start, read: \`PROJECT.md\` -> \`../docs/AI_TOOLING.md\` -> \`docs/ACTIVE_CONTEXT.md\` -> \`../GLOBAL_CONTEXT.md\`.
 - \`${s}\` contains ${r}-specific workflow only. Project truth lives in \`PROJECT.md\` and \`docs/\`.
 - Treat \`${s}\` as a thin adapter over the shared repository and workspace constitutions.
 - If work changes another repository, return to \`../GLOBAL_CONTEXT.md\` and update both repositories' context files.
@@ -218,18 +227,18 @@ ${i}
 `:`# Read PROJECT.md first.
 
 ## ${r} rules
-- On session start, read: \`PROJECT.md\` -> \`docs/ACTIVE_CONTEXT.md\` -> \`docs/REQUIREMENTS.md\` -> \`docs/ROADMAP.md\`.
+- On session start, read: \`PROJECT.md\` -> \`docs/AI_TOOLING.md\` -> \`docs/ACTIVE_CONTEXT.md\` -> \`docs/REQUIREMENTS.md\` -> \`docs/ROADMAP.md\`.
 - Keep project truth in \`PROJECT.md\` and \`docs/\`; \`${s}\` is only the ${r}-specific overlay.
 - Treat \`${s}\` as a thin adapter over the shared project constitution.
 ${i}
-`}});var ve=c(b=>{"use strict";Object.defineProperty(b,"__esModule",{value:!0});b.generateAgentsMd=Jt;var Ht=v();function Jt(e,t={}){return(0,Ht.generateToolGuidance)(e,"codex",t)}});var $e=c(L=>{"use strict";Object.defineProperty(L,"__esModule",{value:!0});L.generateClaudeMd=zt;var Yt=v();function zt(e,t={}){return(0,Yt.generateToolGuidance)(e,"claude_code",t)}});var Ce=c(x=>{"use strict";Object.defineProperty(x,"__esModule",{value:!0});x.generateGeminiMd=Qt;var Kt=v();function Qt(e,t={}){return(0,Kt.generateToolGuidance)(e,"gemini_cli",t)}});var we=c(M=>{"use strict";Object.defineProperty(M,"__esModule",{value:!0});M.generateActiveContext=tn;var Zt=g(),Ie=f(),en=y();function tn(e){let{project:t}=e,n=new Date().toISOString().split("T")[0],o=e.workflow.phases_count===1?"Phase 0 \u2014 Project Initialization":"Phase 1 \u2014 Planning",r=e.workflow.phases_count===1?"Phase 0 execution has started. Turn the generated starter into a concrete first delivery.":"Phase 1 planning is in progress. Convert generated docs into concrete requirements, architecture, and first tasks.",s=["`PROJECT.md`",...(0,Zt.getToolWrapperFiles)(e.tech).map(d=>`\`${d}\``)].join(`
-- `),i=[`- Project initialized: ${t.name} (${t.slug})`,`- Owner: ${(0,en.formatOwner)(t.owner)}`,...(0,Ie.getAdoptedTechSummaryLines)(e).map(d=>`- Adopted decision: ${d}`),...(0,Ie.getAdoptedDependencySummaryLines)(e).map(d=>`- Adopted dependency: ${d}`)];return`# ACTIVE_CONTEXT.md \u2014 Current Project State
+`}});var De=a(L=>{"use strict";Object.defineProperty(L,"__esModule",{value:!0});L.generateAgentsMd=lo;var co=w();function lo(e,t={}){return(0,co.generateToolGuidance)(e,"codex",t)}});var be=a(x=>{"use strict";Object.defineProperty(x,"__esModule",{value:!0});x.generateClaudeMd=uo;var po=w();function uo(e,t={}){return(0,po.generateToolGuidance)(e,"claude_code",t)}});var Ne=a(M=>{"use strict";Object.defineProperty(M,"__esModule",{value:!0});M.generateGeminiMd=ho;var mo=w();function ho(e,t={}){return(0,mo.generateToolGuidance)(e,"gemini_cli",t)}});var Le=a(G=>{"use strict";Object.defineProperty(G,"__esModule",{value:!0});G.generateActiveContext=yo;var go=f(),je=y(),fo=T();function yo(e){let{project:t}=e,o=new Date().toISOString().split("T")[0],n=e.workflow.phases_count===1?"Phase 0 \u2014 Project Initialization":"Phase 1 \u2014 Planning",r=e.workflow.phases_count===1?"Phase 0 execution has started. Turn the generated starter into a concrete first delivery.":"Phase 1 planning is in progress. Convert generated docs into concrete requirements, architecture, and first tasks.",s=["`PROJECT.md`",...(0,go.getToolWrapperFiles)(e.tech).map(d=>`\`${d}\``)].join(`
+- `),i=[`- Project initialized: ${t.name} (${t.slug})`,`- Owner: ${(0,fo.formatOwner)(t.owner)}`,...(0,je.getAdoptedTechSummaryLines)(e).map(d=>`- Adopted decision: ${d}`),...(0,je.getAdoptedDependencySummaryLines)(e).map(d=>`- Adopted dependency: ${d}`)];return`# ACTIVE_CONTEXT.md \u2014 Current Project State
 
 ## Last Updated
-${n}
+${o}
 
 ## Current Phase
-${o}
+${n}
 
 ## What Has Been Done
 - Project structure generated by RepoGenesis.
@@ -251,6 +260,7 @@ ${i.join(`
 ## Files That Exist
 - ${s}
 - \`docs/ACTIVE_CONTEXT.md\` (this file)
+- \`docs/AI_TOOLING.md\`
 - \`docs/TECH_DECISIONS.md\`
 - \`docs/EXTERNAL_DEPENDENCIES.md\`
 - \`docs/REQUIREMENTS.md\`
@@ -271,16 +281,43 @@ ${i.join(`
 
 ## Next Step
 Turn the generated docs into concrete Phase 1 decisions before starting implementation.
-`}});var Pe=c(G=>{"use strict";Object.defineProperty(G,"__esModule",{value:!0});G.generateTechDecisions=nn;var Oe=f();function $(e,t,n,o){let r=(0,Oe.getTechDecisionsByStatus)(e,t);return r.length===0?`## ${n}
-${o}`:`## ${n}
+`}});var xe=a(q=>{"use strict";Object.defineProperty(q,"__esModule",{value:!0});q.generateAiTooling=Eo;var U=f();function Eo(e){let t=(0,U.getToolWrapperFiles)(e.tech),o=(0,U.formatAiTools)(e.tech)||"None",n=t.length>0?t.map(s=>`\`${s}\``).join(" / "):"None",r=t.length>0?`- Thin wrapper files: ${(0,U.formatToolWrapperFiles)(e.tech)}`:"- Thin wrapper files are not generated for this project.";return`# AI_TOOLING.md \u2014 AI Tooling Contract
+
+## Purpose
+Keep AI-tool-specific workflow guidance separate from project truth for ${e.project.name}.
+
+## Enabled Tooling
+- Enabled AI tools: ${o}
+- Wrapper files generated: ${n}
+- Optional AI work guides are tracked in \`skills/README.md\` and \`repogenesis.skills.json\`.
+
+## Rules
+- \`PROJECT.md\` and \`docs/\` remain the source of truth for project state, requirements, and architecture.
+${r}
+- Wrapper files may define provider-specific workflow preferences, but they must not replace project truth.
+- If the current AI tool has no wrapper file, follow \`PROJECT.md\`, \`docs/ACTIVE_CONTEXT.md\`, and \`docs/REQUIREMENTS.md\` directly.
+- Optional AI work guides should stay reviewable in the repository and must be pinned in \`repogenesis.skills.json\`.
+
+## Session Start Order
+1. Read \`PROJECT.md\`.
+2. Read \`docs/AI_TOOLING.md\`.
+3. Read the matching wrapper file when one exists.
+4. Read \`docs/ACTIVE_CONTEXT.md\` and the planning docs before making changes.
+
+## Update Policy
+- Add or remove wrapper files only when the selected AI tools change.
+- Keep wrapper-specific instructions thin and move shared rules back into \`PROJECT.md\` or \`docs/\`.
+- Update \`skills/README.md\` and \`repogenesis.skills.json\` together when optional AI work guides change.
+`}});var Ge=a(B=>{"use strict";Object.defineProperty(B,"__esModule",{value:!0});B.generateTechDecisions=To;var Me=y();function I(e,t,o,n){let r=(0,Me.getTechDecisionsByStatus)(e,t);return r.length===0?`## ${o}
+${n}`:`## ${o}
 ${r.map(s=>`### ${s.topic}
 - **Choice**: ${s.choice}
-- **Status**: ${(0,Oe.formatPlanningStatus)(s.status)}
+- **Status**: ${(0,Me.formatPlanningStatus)(s.status)}
 - **Rationale**: ${s.rationale||"TBD"}
 - **Decision Date**: ${s.decision_date||"TBD"}
 - **Notes**: ${s.notes||"None"}
 `).join(`
-`)}`}function nn(e){return`# TECH_DECISIONS.md \u2014 Technology Decisions
+`)}`}function To(e){return`# TECH_DECISIONS.md \u2014 Technology Decisions
 
 ## Purpose
 Track technology choices separately from product requirements so the team can see what is adopted, what is only a candidate, and what is still open.
@@ -291,18 +328,18 @@ Track technology choices separately from product requirements so the team can se
 - **Open**: still unresolved and needs a decision.
 - **Rejected**: explicitly not chosen for now.
 
-${$(e,"adopted","Adopted Decisions","No adopted technology decisions were captured at generation time.")}
+${I(e,"adopted","Adopted Decisions","No adopted technology decisions were captured at generation time.")}
 
-${$(e,"candidate","Candidate Decisions","No candidate technology decisions were captured at generation time.")}
+${I(e,"candidate","Candidate Decisions","No candidate technology decisions were captured at generation time.")}
 
-${$(e,"open","Open Decisions","No open technology decisions were captured at generation time.")}
+${I(e,"open","Open Decisions","No open technology decisions were captured at generation time.")}
 
-${$(e,"rejected","Rejected Decisions","No rejected technology decisions were captured at generation time.")}
-`}});var De=c(B=>{"use strict";Object.defineProperty(B,"__esModule",{value:!0});B.generateExternalDependencies=on;var q=f();function C(e,t,n,o){let r=(0,q.getDependenciesByStatus)(e,t);return r.length===0?`## ${n}
-${o}`:`## ${n}
+${I(e,"rejected","Rejected Decisions","No rejected technology decisions were captured at generation time.")}
+`}});var Ue=a(F=>{"use strict";Object.defineProperty(F,"__esModule",{value:!0});F.generateExternalDependencies=Ro;var V=y();function O(e,t,o,n){let r=(0,V.getDependenciesByStatus)(e,t);return r.length===0?`## ${o}
+${n}`:`## ${o}
 ${r.map(s=>`### ${s.name}
-- **Category**: ${(0,q.formatDependencyCategory)(s.category)}
-- **Status**: ${(0,q.formatPlanningStatus)(s.status)}
+- **Category**: ${(0,V.formatDependencyCategory)(s.category)}
+- **Status**: ${(0,V.formatPlanningStatus)(s.status)}
 - **Purpose**: ${s.purpose||"TBD"}
 - **Owner**: ${s.owner||"TBD"}
 - **Source**: ${s.source||"TBD"}
@@ -311,7 +348,7 @@ ${r.map(s=>`### ${s.name}
 - **Data Outbound**: ${s.data_outbound?"Yes":"No"}
 - **Notes**: ${s.notes||"None"}
 `).join(`
-`)}`}function on(e){return`# EXTERNAL_DEPENDENCIES.md \u2014 External Dependencies
+`)}`}function Ro(e){return`# EXTERNAL_DEPENDENCIES.md \u2014 External Dependencies
 
 ## Purpose
 Track external APIs, services, OSS, GitHub repositories, and packages used by the project.
@@ -322,15 +359,15 @@ Track external APIs, services, OSS, GitHub repositories, and packages used by th
 - **Open**: unresolved.
 - **Rejected**: evaluated and not selected for now.
 
-${C(e,"adopted","Adopted Dependencies","No adopted external dependencies were captured at generation time.")}
+${O(e,"adopted","Adopted Dependencies","No adopted external dependencies were captured at generation time.")}
 
-${C(e,"candidate","Candidate Dependencies","No candidate external dependencies were captured at generation time.")}
+${O(e,"candidate","Candidate Dependencies","No candidate external dependencies were captured at generation time.")}
 
-${C(e,"open","Open Dependencies","No open external dependencies were captured at generation time.")}
+${O(e,"open","Open Dependencies","No open external dependencies were captured at generation time.")}
 
-${C(e,"rejected","Rejected Dependencies","No rejected external dependencies were captured at generation time.")}
-`}});var ke=c(U=>{"use strict";Object.defineProperty(U,"__esModule",{value:!0});U.generateRequirements=sn;var rn=g(),I=y();function sn(e){let{project:t,tech:n,security:o,structure:r}=e,s=n.frameworks.length>0?`- Frameworks: ${n.frameworks.join(", ")}
-`:"",i=["### R1: Deliver the primary workflow",`- Description: ${t.name} must support the first useful user outcome described in the overview: ${(0,I.formatProjectDescription)(t.description)}.`,"- Acceptance Criteria:",`  - [ ] A user can complete the first end-to-end workflow for ${t.name}.`,"  - [ ] The main inputs and outputs for that workflow are explicitly handled in code or documented in the repository.","  - [ ] The first workflow is small enough to deliver within the current planning horizon without broadening scope unnecessarily.","  - [ ] The exact boundary of the initial scope is written down, including what is included now and what is explicitly deferred.","","### R2: Keep the project operable and traceable from day one",`- Description: ${t.name} must remain easy to start, safe to configure, and easy to inspect while the product scope is still evolving.`,"- Acceptance Criteria:","  - [ ] Local setup expectations and required environment placeholders are documented.",`  - [ ] Security expectations for level \`${o.level}\` are reflected in implementation and deployment decisions.`,"  - [ ] Release version and commit identity can be surfaced by the running service, API, or CLI when applicable."];if(r.repo_type==="multi"){let a=r.repos.map(u=>u.name).join(", ");i.push("","### R3: Keep repository boundaries explicit",`- Description: The workspace must keep responsibilities clear across the initial repositories: ${a}.`,"- Acceptance Criteria:","  - [ ] Each repository has a clearly named responsibility and owner.","  - [ ] Cross-repository dependencies are documented before implementation work starts.","  - [ ] Shared decisions stay in workspace-level docs and do not drift into repo-local copies.")}let d=[t.owner.trim()?null:"- Project owner is still TBD.",n.domains.length>0?null:"- Technical domain is still TBD.",n.frameworks.length>0?null:"- Framework choice is still TBD."].filter(Boolean);return`# REQUIREMENTS.md \u2014 Functional Requirements
+${O(e,"rejected","Rejected Dependencies","No rejected external dependencies were captured at generation time.")}
+`}});var qe=a(W=>{"use strict";Object.defineProperty(W,"__esModule",{value:!0});W.generateRequirements=_o;var k=T();function _o(e){let{project:t,tech:o,security:n,structure:r}=e,s=o.frameworks.length>0?`- Frameworks: ${o.frameworks.join(", ")}
+`:"",i=["### R1: Deliver the primary workflow",`- Description: ${t.name} must support the first useful user outcome described in the overview: ${(0,k.formatProjectDescription)(t.description)}.`,"- Acceptance Criteria:",`  - [ ] A user can complete the first end-to-end workflow for ${t.name}.`,"  - [ ] The main inputs and outputs for that workflow are explicitly handled in code or documented in the repository.","  - [ ] The first workflow is small enough to deliver within the current planning horizon without broadening scope unnecessarily.","  - [ ] The exact boundary of the initial scope is written down, including what is included now and what is explicitly deferred.","","### R2: Keep the project operable and traceable from day one",`- Description: ${t.name} must remain easy to start, safe to configure, and easy to inspect while the product scope is still evolving.`,"- Acceptance Criteria:","  - [ ] Local setup expectations and required environment placeholders are documented.",`  - [ ] Security expectations for level \`${n.level}\` are reflected in implementation and deployment decisions.`,"  - [ ] Release version and commit identity can be surfaced by the running service, API, or CLI when applicable."];if(r.repo_type==="multi"){let c=r.repos.map(p=>p.name).join(", ");i.push("","### R3: Keep repository boundaries explicit",`- Description: The workspace must keep responsibilities clear across the initial repositories: ${c}.`,"- Acceptance Criteria:","  - [ ] Each repository has a clearly named responsibility and owner.","  - [ ] Cross-repository dependencies are documented before implementation work starts.","  - [ ] Shared decisions stay in workspace-level docs and do not drift into repo-local copies.")}let d=[t.owner.trim()?null:"- Project owner is still TBD.",o.domains.length>0?null:"- Technical domain is still TBD.",o.frameworks.length>0?null:"- Framework choice is still TBD."].filter(Boolean);return`# REQUIREMENTS.md \u2014 Functional Requirements
 
 ## Purpose
 Define what ${t.name} must do. This is the single source of truth for functional requirements.
@@ -338,13 +375,13 @@ Define what ${t.name} must do. This is the single source of truth for functional
 ## Project Overview
 - **Name**: ${t.name}
 - **Slug**: ${t.slug}
-- **Description**: ${(0,I.formatProjectDescription)(t.description)}
-- **Owner**: ${(0,I.formatOwner)(t.owner)}
+- **Description**: ${(0,k.formatProjectDescription)(t.description)}
+- **Owner**: ${(0,k.formatOwner)(t.owner)}
 
 ## Technical Context
-- Domains: ${(0,I.formatDomains)(n.domains)}
-- Primary Language: ${n.primary_language}
-${s}- AI Tools: ${(0,rn.formatAiTools)(n)}
+- Domains: ${(0,k.formatDomains)(o.domains)}
+- Primary Language: ${o.primary_language}
+${s}- AI Tooling Policy: \`docs/AI_TOOLING.md\`
 
 ## Core Requirements
 ${i.join(`
@@ -364,18 +401,18 @@ ${d.length>0?d.join(`
 - Running services must expose release version and commit SHA.
 - APIs should expose deploy identity through health/version surfaces or logs.
 - CLI tools should support version output.
-`}});var je=c(W=>{"use strict";Object.defineProperty(W,"__esModule",{value:!0});W.generateArchitecture=an;var Ne=f(),V=y();function an(e){let{project:t,tech:n,structure:o}=e,r=(0,Ne.getAdoptedTechBulletLines)(e),s=(0,Ne.getAdoptedDependencyBulletLines)(e),i=n.frameworks.length>0?`- Frameworks: ${n.frameworks.join(", ")}
-`:"",d;if(o.repo_type==="single")d=`## Repository Structure
-Single repository: \`${t.slug}\``;else{let E=o.repos.map(R=>{let Rt=R.depends_on.length>0?` (depends on: ${R.depends_on.join(", ")})`:"";return`- **${R.name}** (${R.type}): ${R.description}${Rt} \u2014 Owner: ${(0,V.formatOwner)(R.owner)}`}).join(`
+`}});var Ve=a(H=>{"use strict";Object.defineProperty(H,"__esModule",{value:!0});H.generateArchitecture=vo;var Be=y(),X=T();function vo(e){let{project:t,tech:o,structure:n}=e,r=(0,Be.getAdoptedTechBulletLines)(e),s=(0,Be.getAdoptedDependencyBulletLines)(e),i=o.frameworks.length>0?`- Frameworks: ${o.frameworks.join(", ")}
+`:"",d;if(n.repo_type==="single")d=`## Repository Structure
+Single repository: \`${t.slug}\``;else{let E=n.repos.map(R=>{let jt=R.depends_on.length>0?` (depends on: ${R.depends_on.join(", ")})`:"";return`- **${R.name}** (${R.type}): ${R.description}${jt} \u2014 Owner: ${(0,X.formatOwner)(R.owner)}`}).join(`
 `);d=`## Repository Structure
 Multi-repository workspace: \`${t.slug}\`
 
 ### Repositories
-${E}`}let a=o.repo_type==="single"?`${t.name} starts as a single-repository project focused on the first usable workflow. The architecture should keep product logic, planning docs, security rules, and release traceability close together until the system proves it needs further separation.`:`${t.name} starts as a multi-repository workspace so each major responsibility can evolve with a clear boundary. Workspace-level docs define shared rules, while repository-level docs define local architecture and execution details.`,u=o.repo_type==="single"?[`- **Core product workflow**: the main implementation for ${t.name}, built in \`${n.primary_language}\` and expanded from the generated starter repository.`,"- **Documentation and planning layer**: `PROJECT.md`, `docs/REQUIREMENTS.md`, `docs/ACTIVE_CONTEXT.md`, and `docs/ROADMAP.md` hold current truth and execution context.","- **Security and configuration layer**: `SECURITY.md` and `.env.example` define setup boundaries and secret-handling expectations.","- **Version traceability layer**: `docs/VERSIONING_STANDARD.md` and `.repogenesis/manifest.json` define how release and commit identity should be exposed."].join(`
-`):["- **Workspace governance layer**: `PROJECT.md`, `GLOBAL_CONTEXT.md`, `REQUIREMENTS.md`, and `SECURITY.md` define shared rules.",...o.repos.map(E=>`- **${E.name}**: ${E.description} \u2014 Owner: ${(0,V.formatOwner)(E.owner)}.`),"- **Version traceability layer**: workspace and repository outputs should expose release and commit identity consistently."].join(`
-`),l=o.repo_type==="single"?[`1. A user or operator starts the primary workflow described for ${t.name}.`,`2. The application validates and transforms inputs using the core ${n.primary_language} codebase.`,"3. Domain-specific processing runs inside the same repository with shared docs and security rules nearby.","4. Outputs are returned to the user, persisted by the application, or documented for the next phase of work."].join(`
+${E}`}let c=n.repo_type==="single"?`${t.name} starts as a single-repository project focused on the first usable workflow. The architecture should keep product logic, planning docs, security rules, and release traceability close together until the system proves it needs further separation.`:`${t.name} starts as a multi-repository workspace so each major responsibility can evolve with a clear boundary. Workspace-level docs define shared rules, while repository-level docs define local architecture and execution details.`,p=n.repo_type==="single"?[`- **Core product workflow**: the main implementation for ${t.name}, built in \`${o.primary_language}\` and expanded from the generated starter repository.`,"- **Documentation and planning layer**: `PROJECT.md`, `docs/REQUIREMENTS.md`, `docs/ACTIVE_CONTEXT.md`, and `docs/ROADMAP.md` hold current truth and execution context.","- **Security and configuration layer**: `SECURITY.md` and `.env.example` define setup boundaries and secret-handling expectations.","- **Version traceability layer**: `docs/VERSIONING_STANDARD.md` and `.repogenesis/manifest.json` define how release and commit identity should be exposed."].join(`
+`):["- **Workspace governance layer**: `PROJECT.md`, `GLOBAL_CONTEXT.md`, `REQUIREMENTS.md`, and `SECURITY.md` define shared rules.",...n.repos.map(E=>`- **${E.name}**: ${E.description} \u2014 Owner: ${(0,X.formatOwner)(E.owner)}.`),"- **Version traceability layer**: workspace and repository outputs should expose release and commit identity consistently."].join(`
+`),l=n.repo_type==="single"?[`1. A user or operator starts the primary workflow described for ${t.name}.`,`2. The application validates and transforms inputs using the core ${o.primary_language} codebase.`,"3. Domain-specific processing runs inside the same repository with shared docs and security rules nearby.","4. Outputs are returned to the user, persisted by the application, or documented for the next phase of work."].join(`
 `):[`1. Inputs enter through one or more workspace repositories for ${t.name}.`,"2. Each repository handles its own bounded responsibility and uses declared dependencies for cross-repo interactions.","3. Shared decisions and architectural changes are reflected back into workspace-level docs.","4. Outputs are coordinated across repositories while keeping ownership and release boundaries explicit."].join(`
-`),m=o.repo_type==="single"?[`- Start from one deployable repository: \`${t.slug}\`.`,`- Use security level \`${e.security.level}\` as the minimum operational baseline.`,"- Keep environment-specific values outside the repository and use placeholders in `.env.example`.","- Add hosting or runtime topology only after Phase 1 planning clarifies the deployment target."].join(`
+`),m=n.repo_type==="single"?[`- Start from one deployable repository: \`${t.slug}\`.`,`- Use security level \`${e.security.level}\` as the minimum operational baseline.`,"- Keep environment-specific values outside the repository and use placeholders in `.env.example`.","- Add hosting or runtime topology only after Phase 1 planning clarifies the deployment target."].join(`
 `):[`- Start from the workspace \`${t.slug}\` and deploy repositories independently as needed.`,`- Use security level \`${e.security.level}\` as the minimum shared baseline across repositories.`,"- Keep shared secrets and deployment conventions documented at the workspace layer before repo-level divergence.","- Document repository-specific hosting targets only when the delivery plan requires them."].join(`
 `);return`# ARCHITECTURE.md \u2014 System Architecture
 
@@ -383,8 +420,8 @@ ${E}`}let a=o.repo_type==="single"?`${t.name} starts as a single-repository proj
 ${t.name} \u2014 ${t.description}
 
 ## Tech Stack
-- Domains: ${(0,V.formatDomains)(n.domains)}
-- Primary Language: ${n.primary_language}
+- Domains: ${(0,X.formatDomains)(o.domains)}
+- Primary Language: ${o.primary_language}
 ${i}
 ${d}
 
@@ -397,23 +434,23 @@ ${s.length>0?s.join(`
 `):"- No adopted external dependencies were captured at generation time."}
 
 ## Architecture Overview
-${a}
+${c}
 
 ## Key Components
-${u}
+${p}
 
 ## Data Flow
 ${l}
 
 ## Infrastructure
 ${m}
-`}});var be=c(X=>{"use strict";Object.defineProperty(X,"__esModule",{value:!0});X.generateRoadmap=dn;var cn=["Project Setup & Foundation","Primary Workflow Delivery","Integration & Hardening","Review, QA & Release","Expansion & Automation","Stabilization & Documentation","Release Preparation","Post-Launch Iteration","Scale & Governance","Long-Term Maintenance"];function dn(e){let{project:t,workflow:n}=e,o=[];for(let r=0;r<n.phases_count;r++){let s=r,i=cn[r]??`Iteration ${s}`,d=n.phases_count===1?"In Progress":r===0?"Complete":r===1?"In Progress":"Not Started",a=d==="Complete"?"x":" ",u=r===0?["Create the starter repository structure and baseline docs.","Lock project rules, security handling, and version traceability conventions."]:r===1?["Turn the generated starter into a concrete execution plan.","Define the first end-to-end workflow and the smallest useful release scope."]:["Define concrete goals for this phase before implementation starts."],l=r===0?["Starter repository committed and readable by the team.","Current docs aligned enough for Phase 1 planning."]:r===1?["Filled requirements, architecture, and implementation plan for the first workflow."]:["Phase deliverables clarified before work begins."];o.push(`### Phase ${s}: ${i}
+`}});var Fe=a(J=>{"use strict";Object.defineProperty(J,"__esModule",{value:!0});J.generateRoadmap=So;var Ao=["Project Setup & Foundation","Primary Workflow Delivery","Integration & Hardening","Review, QA & Release","Expansion & Automation","Stabilization & Documentation","Release Preparation","Post-Launch Iteration","Scale & Governance","Long-Term Maintenance"];function So(e){let{project:t,workflow:o}=e,n=[];for(let r=0;r<o.phases_count;r++){let s=r,i=Ao[r]??`Iteration ${s}`,d=o.phases_count===1?"In Progress":r===0?"Complete":r===1?"In Progress":"Not Started",c=d==="Complete"?"x":" ",p=r===0?["Create the starter repository structure and baseline docs.","Lock project rules, security handling, and version traceability conventions."]:r===1?["Turn the generated starter into a concrete execution plan.","Define the first end-to-end workflow and the smallest useful release scope."]:["Define concrete goals for this phase before implementation starts."],l=r===0?["Starter repository committed and readable by the team.","Current docs aligned enough for Phase 1 planning."]:r===1?["Filled requirements, architecture, and implementation plan for the first workflow."]:["Phase deliverables clarified before work begins."];n.push(`### Phase ${s}: ${i}
 - **Status**: ${d}
 - **Goals**:
-${u.map(m=>`  - [${a}] ${m}`).join(`
+${p.map(m=>`  - [${c}] ${m}`).join(`
 `)}
 - **Deliverables**:
-${l.map(m=>`  - [${a}] ${m}`).join(`
+${l.map(m=>`  - [${c}] ${m}`).join(`
 `)}
 `)}return`# ROADMAP.md \u2014 Phase Plan
 
@@ -421,15 +458,15 @@ ${l.map(m=>`  - [${a}] ${m}`).join(`
 ${t.name}
 
 ## Phase Overview
-Total phases: ${n.phases_count}
+Total phases: ${o.phases_count}
 
-${o.join(`
+${n.join(`
 `)}
 ## Completion Criteria
 - [ ] All phases completed
 - [ ] All deliverables met
 - [ ] Documentation up to date
-`}});var Le=c(F=>{"use strict";Object.defineProperty(F,"__esModule",{value:!0});F.generateAdrTemplate=ln;function ln(e){return`# ADR-XXXX: [Title]
+`}});var We=a(Y=>{"use strict";Object.defineProperty(Y,"__esModule",{value:!0});Y.generateAdrTemplate=wo;function wo(e){return`# ADR-XXXX: [Title]
 
 ## Status
 Proposed | Accepted | Deprecated | Superseded
@@ -452,7 +489,7 @@ What is the change that we're proposing and/or doing?
 
 ## Alternatives Considered
 - ...
-`}});var xe=c(H=>{"use strict";Object.defineProperty(H,"__esModule",{value:!0});H.generatePlansTemplate=un;function un(e){return`# Plan: [Task Title]
+`}});var Xe=a(K=>{"use strict";Object.defineProperty(K,"__esModule",{value:!0});K.generatePlansTemplate=Io;function Io(e){return`# Plan: [Task Title]
 
 ## Objective
 What is the goal of this task?
@@ -474,20 +511,21 @@ Why is this task needed? What context is relevant?
 
 ## Notes
 - Any additional context or constraints
-`}});var Me=c(J=>{"use strict";Object.defineProperty(J,"__esModule",{value:!0});J.generateRestart=mn;var pn=g();function mn(e){return`# Session Restart Protocol
+`}});var He=a(z=>{"use strict";Object.defineProperty(z,"__esModule",{value:!0});z.generateRestart=ko;var Oo=f();function ko(e,t={}){let o=t.scope??(e.structure.repo_type==="multi"?"workspace":"single"),n=o==="repo"?"../docs/AI_TOOLING.md":"docs/AI_TOOLING.md",r=o==="repo"?"../GLOBAL_CONTEXT.md":"GLOBAL_CONTEXT.md";return`# Session Restart Protocol
 
 When starting a new session or restarting, follow these steps:
 
 ## Step 1: Read Constitution
 \`\`\`
 Read PROJECT.md
-Read the tool-specific wrapper if present${(0,pn.buildToolWrapperExampleClause)(e.tech)}
+Read ${n} if it exists
+Read the tool-specific wrapper if present${(0,Oo.buildToolWrapperExampleClause)(e.tech)}
 \`\`\`
 
 ## Step 2: Read Current State
 \`\`\`
 Read docs/ACTIVE_CONTEXT.md if it exists
-Read GLOBAL_CONTEXT.md or ../GLOBAL_CONTEXT.md if it exists
+Read ${r} or ../GLOBAL_CONTEXT.md if it exists
 \`\`\`
 
 ## Step 3: Summarize
@@ -505,12 +543,12 @@ State your summary and wait for user confirmation before proceeding.
 - Do not infer or guess project state.
 - If ACTIVE_CONTEXT.md conflicts with conversation, the file wins.
 - Always re-read files \u2014 do not rely on memory from previous sessions.
-`}});var Ge=c(Y=>{"use strict";Object.defineProperty(Y,"__esModule",{value:!0});Y.generateSecurity=hn;function hn(e){let{project:t,security:n}=e,o="## Secret Management\n- All secrets must be stored in environment variables.\n- `.env` files must never be committed to version control.\n- `.env` is listed in `.gitignore`.\n- Use `.env.example` with placeholder values for documentation.";(n.level==="medium"||n.level==="high")&&(o+=`
+`}});var Je=a(Q=>{"use strict";Object.defineProperty(Q,"__esModule",{value:!0});Q.generateSecurity=Co;function Co(e){let{project:t,security:o}=e,n="## Secret Management\n- All secrets must be stored in environment variables.\n- `.env` files must never be committed to version control.\n- `.env` is listed in `.gitignore`.\n- Use `.env.example` with placeholder values for documentation.";(o.level==="medium"||o.level==="high")&&(n+=`
 
 ## Logging & Output
 - Never log secrets, tokens, or credentials to stdout, stderr, or log files.
 - Environment variables must be loaded through a controlled loader; never read directly in business logic.
-- Pre-commit hooks are recommended to prevent secret leaks (e.g., git-secrets, detect-secrets).`),n.level==="high"&&(o+=`
+- Pre-commit hooks are recommended to prevent secret leaks (e.g., git-secrets, detect-secrets).`),o.level==="high"&&(n+=`
 
 ## Secret Rotation Policy
 - All API keys and credentials must have a defined rotation schedule.
@@ -525,31 +563,31 @@ State your summary and wait for user confirmation before proceeding.
 ## Incident Response
 - If a secret is leaked, rotate immediately.
 - Document the incident in an ADR.
-- Review and update security policies after any incident.`);let r="";return n.has_api_keys&&(r+=`
+- Review and update security policies after any incident.`);let r="";return o.has_api_keys&&(r+=`
 
 ## API Key Handling
 - Store all API keys in \`.env\` \u2014 never hardcode.
 - Use secret scanning tools (e.g., GitHub secret scanning, git-secrets) in CI.
-- Rotate API keys regularly.`),n.has_user_data&&(r+=`
+- Rotate API keys regularly.`),o.has_user_data&&(r+=`
 
 ## Personal Data Policy
 - Comply with applicable data protection regulations (e.g., GDPR, APPI).
 - Never log personally identifiable information (PII).
 - Encrypt user data at rest and in transit.
-- Document data retention and deletion policies.`),n.has_payment_data&&(r+=`
+- Document data retention and deletion policies.`),o.has_payment_data&&(r+=`
 
 ## Payment Data Policy
 - Reference PCI DSS requirements for all payment-related logic.
 - Never store raw card numbers, CVVs, or PINs.
 - Use tokenization for payment data handling.
 - Payment processing must go through PCI-compliant service providers.
-- Audit payment-related code changes with heightened scrutiny.`),n.has_ip_sensitive&&(r+=`
+- Audit payment-related code changes with heightened scrutiny.`),o.has_ip_sensitive&&(r+=`
 
 ## IP Confidentiality
 - This project contains NDA-protected or IP-sensitive information.
 - Never include client-specific details in commit messages, comments, or documentation.
 - Use codenames or anonymized identifiers for client references.
-- Ensure all team members have signed applicable NDAs.`),n.has_credentials&&(r+=`
+- Ensure all team members have signed applicable NDAs.`),o.has_credentials&&(r+=`
 
 ## Credential Management
 - Store certificate paths and key files in \`.env\` \u2014 never in the repository.
@@ -561,29 +599,29 @@ State your summary and wait for user confirmation before proceeding.
 ${t.name}
 
 ## Security Level
-**${n.level.toUpperCase()}**
+**${o.level.toUpperCase()}**
 
-${o}${r}
-`}});var qe=c(z=>{"use strict";Object.defineProperty(z,"__esModule",{value:!0});z.generateEnvExample=fn;var gn=f();function fn(e){let{security:t}=e,n=(0,gn.getAdoptedEnvVars)(e),o=`# Environment Variables
+${n}${r}
+`}});var Ye=a(Z=>{"use strict";Object.defineProperty(Z,"__esModule",{value:!0});Z.generateEnvExample=Po;var $o=y();function Po(e){let{security:t}=e,o=(0,$o.getAdoptedEnvVars)(e),n=`# Environment Variables
 # Copy this file to .env and fill in real values.
 # NEVER commit .env to version control.
 
 # Application
 NODE_ENV=development
-PORT=3000`;if(n.length>0){o+=`
+PORT=3000`;if(o.length>0){n+=`
 
-# Adopted External Services`;for(let r of n)o+=`
-${r}=YOUR_${r}_HERE`}else t.has_api_keys&&(o+=`
+# Adopted External Services`;for(let r of o)n+=`
+${r}=YOUR_${r}_HERE`}else t.has_api_keys&&(n+=`
 
 # API Keys
 API_KEY=YOUR_API_KEY_HERE
-API_SECRET=YOUR_SECRET_HERE`);return t.has_credentials&&(o+=`
+API_SECRET=YOUR_SECRET_HERE`);return t.has_credentials&&(n+=`
 
 # Certificates & Credentials
 SSL_CERT_PATH=/path/to/cert.pem
 SSL_KEY_PATH=/path/to/key.pem
-CA_CERT_PATH=/path/to/ca.pem`),o+=`
-`,o}});var Be=c(K=>{"use strict";Object.defineProperty(K,"__esModule",{value:!0});K.generateGitignore=En;function En(e){let{tech:t,security:n}=e,o=`# Dependencies
+CA_CERT_PATH=/path/to/ca.pem`),n+=`
+`,n}});var Ke=a(ee=>{"use strict";Object.defineProperty(ee,"__esModule",{value:!0});ee.generateGitignore=Do;function Do(e){let{tech:t,security:o}=e,n=`# Dependencies
 node_modules/
 vendor/
 
@@ -605,7 +643,7 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
-*.swo`;return t.domains.includes("unity")&&(o+=`
+*.swo`;return t.domains.includes("unity")&&(n+=`
 
 # Unity
 Library/
@@ -616,51 +654,51 @@ UserSettings/
 *.csproj
 *.sln
 *.pidb
-*.userprefs`),t.domains.includes("mobile")&&(o+=`
+*.userprefs`),t.domains.includes("mobile")&&(n+=`
 
 # Mobile
 *.apk
 *.ipa
 *.dSYM.zip
-*.dSYM`),t.domains.includes("xr")&&(o+=`
+*.dSYM`),t.domains.includes("xr")&&(n+=`
 
 # XR
 *.unitypackage
-StreamingAssets/`),n.has_credentials&&(o+=`
+StreamingAssets/`),o.has_credentials&&(n+=`
 
 # Certificates & Credentials
 *.pem
 *.key
 *.cert
 *.p12
-*.pfx`),n.has_ip_sensitive&&(o+=`
+*.pfx`),o.has_ip_sensitive&&(n+=`
 
 # Confidential / IP-sensitive
 confidential/
 nda/
-*.confidential.*`),o+=`
-`,o}});var We=c(Q=>{"use strict";Object.defineProperty(Q,"__esModule",{value:!0});Q.generateGlobalContext=Tn;var yn=g(),Ue=f(),Ve=y();function Tn(e){let{project:t,structure:n}=e,o=(0,Ue.getAdoptedTechSummaryLines)(e),r=(0,Ue.getAdoptedDependencySummaryLines)(e),s=n.repos.map(l=>{let m=l.depends_on.length>0?` \u2192 depends on: ${l.depends_on.join(", ")}`:"";return`- **${l.name}** (${l.type}): ${l.description} \u2014 Owner: ${(0,Ve.formatOwner)(l.owner)}${m}`}).join(`
-`),i=n.repos.filter(l=>l.depends_on.length>0),d="";i.length>0&&(d=`
+*.confidential.*`),n+=`
+`,n}});var Ze=a(te=>{"use strict";Object.defineProperty(te,"__esModule",{value:!0});te.generateGlobalContext=No;var bo=f(),ze=y(),Qe=T();function No(e){let{project:t,structure:o}=e,n=(0,ze.getAdoptedTechSummaryLines)(e),r=(0,ze.getAdoptedDependencySummaryLines)(e),s=o.repos.map(l=>{let m=l.depends_on.length>0?` \u2192 depends on: ${l.depends_on.join(", ")}`:"";return`- **${l.name}** (${l.type}): ${l.description} \u2014 Owner: ${(0,Qe.formatOwner)(l.owner)}${m}`}).join(`
+`),i=o.repos.filter(l=>l.depends_on.length>0),d="";i.length>0&&(d=`
 
 ## Dependency Graph
 \`\`\`
       ${i.map(m=>m.depends_on.map(E=>`  ${m.name} \u2192 ${E}`).join(`
 `)).join(`
 `)}
-\`\`\``);let a=(0,yn.formatToolWrapperFiles)(e.tech),u=a?`- Tool-specific wrappers such as ${a} are thin adapters only.`:"- Tool-specific wrappers are thin adapters only.";return`# GLOBAL_CONTEXT.md \u2014 Multi-Repository Workspace
+\`\`\``);let c=(0,bo.formatToolWrapperFiles)(e.tech),p=c?`- Tool-specific wrappers such as ${c} are thin adapters only.`:"- Tool-specific wrappers are thin adapters only.";return`# GLOBAL_CONTEXT.md \u2014 Multi-Repository Workspace
 
 ## Project
 ${t.name} \u2014 ${t.description}
 
 ## Owner
-${(0,Ve.formatOwner)(t.owner)}
+${(0,Qe.formatOwner)(t.owner)}
 
 ## Repositories
 ${s}
 ${d}
 
 ## Shared Decisions
-${o.length>0?o.map(l=>`- ${l}`).join(`
+${n.length>0?n.map(l=>`- ${l}`).join(`
 `):"- No adopted technology decisions were captured at generation time."}
 
 ## Shared External Dependencies
@@ -669,13 +707,14 @@ ${r.length>0?r.map(l=>`- ${l}`).join(`
 
 ## Cross-Repo Conventions
 - Each repository has its own \`PROJECT.md\` with repository-specific rules.
-${u}
+${p}
 - Shared decisions are documented in this file.
+- Workspace-level AI tooling policy lives in \`docs/AI_TOOLING.md\`.
 - Workspace-level technology decisions live in \`docs/TECH_DECISIONS.md\`.
 - Workspace-level external dependencies live in \`docs/EXTERNAL_DEPENDENCIES.md\`.
 - Dependencies between repos should be managed explicitly.
 - When a change in one repo affects another, update both repos' \`ACTIVE_CONTEXT.md\`.
-`}});var Xe=c(Z=>{"use strict";Object.defineProperty(Z,"__esModule",{value:!0});Z.generateContributing=Rn;function Rn(e){return`# Contributing to ${e.project.name}
+`}});var et=a(oe=>{"use strict";Object.defineProperty(oe,"__esModule",{value:!0});oe.generateContributing=jo;function jo(e){return`# Contributing to ${e.project.name}
 
 ## Branch Naming
 
@@ -745,7 +784,7 @@ vX.Y.Z
 - **Y**: \u5F8C\u65B9\u4E92\u63DB\u306E\u6A5F\u80FD\u8FFD\u52A0
 - **Z**: \u30D0\u30B0\u4FEE\u6B63
 - tag push \u3067 CI/CD \u304C\u767A\u706B\u3059\u308B\u524D\u63D0
-`}});var Fe=c(ee=>{"use strict";Object.defineProperty(ee,"__esModule",{value:!0});ee.generatePrTemplate=_n;function _n(e){return`## Purpose
+`}});var tt=a(ne=>{"use strict";Object.defineProperty(ne,"__esModule",{value:!0});ne.generatePrTemplate=Lo;function Lo(e){return`## Purpose
 <!-- \u306A\u305C\u3053\u306E\u5909\u66F4\u304C\u5FC5\u8981\u304B\u30021\u301C2\u6587\u3067\u3002 -->
 
 ## Changes
@@ -765,7 +804,7 @@ vX.Y.Z
 
 ## Related Issues
 <!-- \u95A2\u9023Issue: closes #XX -->
-`}});var He=c(te=>{"use strict";Object.defineProperty(te,"__esModule",{value:!0});te.generateIssueBugReport=Sn;function Sn(e){return`---
+`}});var ot=a(re=>{"use strict";Object.defineProperty(re,"__esModule",{value:!0});re.generateIssueBugReport=xo;function xo(e){return`---
 name: Bug Report
 about: \u30D0\u30B0\u3092\u5831\u544A\u3059\u308B
 title: "fix: "
@@ -793,7 +832,7 @@ labels: bug
 
 ## \u30B9\u30AF\u30EA\u30FC\u30F3\u30B7\u30E7\u30C3\u30C8
 <!-- \u3042\u308C\u3070\u6DFB\u4ED8\u3002 -->
-`}});var Je=c(ne=>{"use strict";Object.defineProperty(ne,"__esModule",{value:!0});ne.generateIssueFeatureRequest=An;function An(e){return`---
+`}});var nt=a(se=>{"use strict";Object.defineProperty(se,"__esModule",{value:!0});se.generateIssueFeatureRequest=Mo;function Mo(e){return`---
 name: Feature Request
 about: \u65B0\u6A5F\u80FD\u306E\u63D0\u6848
 title: "feat: "
@@ -814,7 +853,7 @@ labels: enhancement
 
 ## \u8FFD\u52A0\u60C5\u5831
 <!-- \u53C2\u8003\u30EA\u30F3\u30AF\u3001\u30B9\u30AF\u30EA\u30FC\u30F3\u30B7\u30E7\u30C3\u30C8\u7B49\u3002 -->
-`}});var Ye=c(oe=>{"use strict";Object.defineProperty(oe,"__esModule",{value:!0});oe.generateVersioningStandard=vn;function vn(e){return`# VERSIONING_STANDARD.md
+`}});var rt=a(ie=>{"use strict";Object.defineProperty(ie,"__esModule",{value:!0});ie.generateVersioningStandard=Go;function Go(e){return`# VERSIONING_STANDARD.md
 
 ## Purpose
 Define how ${e.project.name} should expose release identity and runtime traceability.
@@ -859,25 +898,268 @@ Define how ${e.project.name} should expose release identity and runtime traceabi
   - What release is running?
   - What commit is running?
   - Which environment is affected?
-`}});var ze=c(re=>{"use strict";Object.defineProperty(re,"__esModule",{value:!0});re.createEmptySkillsManifest=$n;function $n(){return{version:1,source:"repogenesis",installed:[]}}});var Ke=c(se=>{"use strict";Object.defineProperty(se,"__esModule",{value:!0});se.generateRunbookReadme=Cn;function Cn(e){return`# Runbooks
+`}});var st=a(ae=>{"use strict";Object.defineProperty(ae,"__esModule",{value:!0});ae.createEmptySkillsManifest=Uo;function Uo(){return{version:1,source:"repogenesis",installed:[]}}});var it=a(ce=>{"use strict";Object.defineProperty(ce,"__esModule",{value:!0});ce.generateSkillsReadme=qo;function qo(e,t=[],o){let n=o?.bundledAtGeneration??!1,r=t.length>0?`Selected AI work guides at generation time: ${t.map(i=>`${i.name} (${i.id})`).join(", ")}.`:"No AI work guides were pre-selected at generation time.",s=n?"The selected AI work guides are already bundled in this repository and recorded in `repogenesis.skills.json`.":"No AI work guides are installed by default.";return`# skills/README.md
+
+## Purpose
+This directory is reserved for optional AI work guides used by ${e.project.name}.
+
+RepoGenesis does not place project knowledge directly into generator core.
+Instead, optional AI work guides can be added here when the project explicitly opts in.
+
+## Rules
+- Treat AI work guides as an optional layer, not part of the core repository constitution.
+- Record every installed guide and its pinned version in \`repogenesis.skills.json\`.
+- Do not auto-update guides without project review.
+- Prefer \`copy + pin\` so the installed files remain reviewable in this repository.
+- Use provider-specific artifacts when needed:
+  - Codex / Claude Code: skill instructions
+  - Gemini CLI: commands, context files, or extensions
+- Keep the source type (\`official\`, \`curated\`, \`internal\`) traceable in the manifest.
+- Bundled guides do not run automatically. They help when you work with this repository in the supported AI tool.
+
+## Expected Future Flow
+1. A curated registry lists approved AI work guides.
+2. This project opts into specific guides and providers.
+3. Installed provider-specific artifacts are copied into this repository.
+4. \`repogenesis.skills.json\` is updated with the installed versions and artifact paths.
+
+## Current State
+${s}
+${r}
+
+${t.length>0&&!n?"Use `scripts/install-selected-skills.sh` after ZIP extraction to add the selected AI work guides.":""}
+`}});var le=a(de=>{"use strict";Object.defineProperty(de,"__esModule",{value:!0});de.buildSelectedSkillInstallCommands=Wo;var Bo=f();function Vo(e){let t=(0,Bo.normalizeAiTools)(e.tech),o=new Set;return t.includes("codex")&&o.add("codex"),t.includes("claude_code")&&o.add("claude_code"),t.includes("gemini_cli")&&o.add("gemini_cli"),o}function Fo(e,t){let o=Vo(e),n=t.providers.filter(r=>r!=="tool_agnostic"&&o.has(r));return n.length>0?n:t.providers.includes("tool_agnostic")?["tool_agnostic"]:t.providers.filter(r=>r!=="tool_agnostic")}function Wo(e,t,o='"$PROJECT_ROOT"',n='"$REGISTRY_ROOT"'){return t.map(r=>{let i=Fo(e,r).map(d=>` --provider ${d}`).join("");return`node dist/index.js skills add --project ${o} --registry ${n} --skill "${r.id}"${i}`})}});var at=a(pe=>{"use strict";Object.defineProperty(pe,"__esModule",{value:!0});pe.generateInstallSelectedSkillsScript=Ho;var Xo=le();function Ho(e,t){return`#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPOGENESIS_ROOT="\${REPOGENESIS_ROOT:-/path/to/RepoGenesis}"
+GENERATOR_DIR="$REPOGENESIS_ROOT/generator"
+REGISTRY_ROOT="$REPOGENESIS_ROOT/skills/registry"
+
+if [ ! -d "$GENERATOR_DIR" ]; then
+  echo "generator directory not found: $GENERATOR_DIR" >&2
+  echo "Set REPOGENESIS_ROOT to your RepoGenesis checkout before running this script." >&2
+  exit 1
+fi
+
+cd "$GENERATOR_DIR"
+npm run build
+
+${(0,Xo.buildSelectedSkillInstallCommands)(e,t).join(`
+`)}
+`}});var ct=a(ue=>{"use strict";Object.defineProperty(ue,"__esModule",{value:!0});ue.generateRunbookReadme=Jo;function Jo(e){return`# Runbooks
 
 ## Purpose
 Store operational procedures for ${e.project.name}.
 
-## What belongs here
-- deploy / rollback steps
-- incident response procedures
-- credential rotation procedures
-- on-call troubleshooting notes
-- routine maintenance checklists
+## Generated baseline
+- \`production-bootstrap.md\`: production target, ownership, and secret inventory before first deploy
+- \`production-cutover.md\`: first deployment checklist and stop conditions
+- \`production-checks.md\`: repeatable pre/post-deploy verification checklist
+- \`rollback.md\`: release rollback steps and data integrity notes
+- \`incident-response.md\`: severity, containment, recovery, and follow-up flow
+- \`skill-install.md\`: selected skill installation handoff for AI tooling
 
-## Suggested files
-- deploy.md
-- rollback.md
-- incident-response.md
-- credential-rotation.md
-`}});var ae=c(ie=>{"use strict";Object.defineProperty(ie,"__esModule",{value:!0});ie.buildSelectedSkillInstallCommands=Pn;var In=g();function wn(e){let t=(0,In.normalizeAiTools)(e.tech),n=new Set;return t.includes("codex")&&n.add("codex"),t.includes("claude_code")&&n.add("claude_code"),t.includes("gemini_cli")&&n.add("gemini_cli"),n}function On(e,t){let n=wn(e),o=t.providers.filter(r=>r!=="tool_agnostic"&&n.has(r));return o.length>0?o:t.providers.includes("tool_agnostic")?["tool_agnostic"]:t.providers.filter(r=>r!=="tool_agnostic")}function Pn(e,t,n='"$PROJECT_ROOT"',o='"$REGISTRY_ROOT"'){return t.map(r=>{let i=On(e,r).map(d=>` --provider ${d}`).join("");return`node dist/index.js skills add --project ${n} --registry ${o} --skill "${r.id}"${i}`})}});var Qe=c(ce=>{"use strict";Object.defineProperty(ce,"__esModule",{value:!0});ce.generateSkillInstallRunbook=kn;var Dn=ae();function kn(e,t=[],n){let o=n?.bundledAtGeneration??!1,r=t.length>0?(0,Dn.buildSelectedSkillInstallCommands)(e,t,'"$PROJECT_ROOT"','"$REGISTRY_ROOT"').join(`
-`):"",s=t.length>0&&o?`
+## How to maintain these runbooks
+- Keep them aligned with \`docs/TECH_DECISIONS.md\`, \`docs/EXTERNAL_DEPENDENCIES.md\`, \`.env.example\`, and \`SECURITY.md\`.
+- Replace placeholders with concrete deploy commands, URLs, owners, and dashboards before production use.
+- Re-run \`repogenesis doctor --project <project-root>\` after major structural edits so generated docs stay coherent.
+`}});var dt=a(me=>{"use strict";Object.defineProperty(me,"__esModule",{value:!0});me.generateProductionBootstrapRunbook=Yo;function Yo(e){let t=e.structure.repo_type==="multi"?"workspace root and each deployable repository":"repository root";return`# production-bootstrap.md
+
+## Purpose
+Prepare ${e.project.name} for its first real deployment before any cutover work starts.
+
+## Inputs to confirm
+- \`PROJECT.md\`
+- \`docs/TECH_DECISIONS.md\`
+- \`docs/EXTERNAL_DEPENDENCIES.md\`
+- \`.env.example\`
+- \`SECURITY.md\`
+- tool wrapper files (\`AGENTS.md\` / \`CLAUDE.md\` / \`GEMINI.md\`) when present
+
+## Bootstrap checklist
+1. Confirm the deployment scope for this project.
+   - Expected scope: ${t}
+   - Record the environment names to support: development / staging / production.
+2. Assign owners.
+   - Product owner
+   - Technical owner
+   - Operations owner
+   - Security contact
+3. Provision required external services.
+   - Cross-check adopted dependencies in \`docs/EXTERNAL_DEPENDENCIES.md\`.
+   - Record which service is the system of record for data, auth, storage, queues, notifications, and observability.
+4. Create the environment variable inventory.
+   - Start from \`.env.example\`.
+   - Record where each secret lives and who can rotate it.
+5. Define access control.
+   - Decide who can deploy, who can change secrets, and who can approve production rollout.
+   - If this project handles user data, credentials, or regulated data, map those controls back to \`SECURITY.md\`.
+6. Decide monitoring and alerting.
+   - Runtime health check
+   - Error reporting
+   - Audit trail location
+   - On-call or primary responder
+7. Decide backup and restore expectations.
+   - Data backup schedule
+   - Restore owner
+   - Recovery point / recovery time expectations
+
+## Exit criteria
+- All adopted external dependencies have named owners.
+- All required env vars have a real secret source.
+- Production access and approval roles are defined.
+- Monitoring, rollback owner, and incident contact are documented.
+`}});var lt=a(he=>{"use strict";Object.defineProperty(he,"__esModule",{value:!0});he.generateProductionCutoverRunbook=Ko;function Ko(e){let t=e.structure.repo_type==="multi"?`- Repeat the deployment and verification steps for each production-facing repository in the workspace.
+`:"";return`# production-cutover.md
+
+## Purpose
+Run the first production deployment for ${e.project.name} in a controlled way.
+
+## Preconditions
+- \`docs/runbooks/production-bootstrap.md\` is complete.
+- The current generated docs still match the intended release.
+- \`repogenesis doctor --project <project-root>\` passes on the release candidate.
+- All adopted env vars from \`.env.example\` are provisioned in the target environment.
+- Any required migrations, seed data, or infrastructure changes are prepared and reviewed.
+
+## Cutover steps
+1. Freeze the release candidate.
+   - Record the commit SHA, build artifact, and deploy operator.
+2. Confirm environment readiness.
+   - Secrets present
+   - External dependencies reachable
+   - Monitoring destination enabled
+3. Apply schema or infrastructure changes in the approved order.
+4. Deploy the application release.
+${t}5. Run smoke checks.
+   - Public entrypoint responds
+   - Auth path responds, if auth exists
+   - Primary write path or mutation path succeeds
+   - Logging and alerting receive fresh events
+6. Verify the first operational workflow end to end.
+   - Choose one representative workflow from \`docs/REQUIREMENTS.md\`.
+7. Announce cutover completion with known limitations and rollback owner.
+
+## Stop conditions
+- Required secrets are missing.
+- A migration is only partially applied.
+- Primary workflow smoke checks fail.
+- Monitoring is blind during deploy.
+
+## Evidence to capture
+- Deployed version / commit
+- Time of deploy
+- Operator
+- Smoke test result
+- Any partial failures or mitigations
+`}});var pt=a(ge=>{"use strict";Object.defineProperty(ge,"__esModule",{value:!0});ge.generateProductionChecksRunbook=zo;function zo(e){let t=e.structure.repo_type==="multi"?"workspace root plus each deployable repository":"repository root";return`# production-checks.md
+
+## Purpose
+Provide a repeatable verification checklist for ${e.project.name} after deploys and during support work.
+
+## Before deploy
+- Run \`repogenesis doctor --project <project-root>\`.
+- Confirm generated docs under ${t} still reflect the intended release.
+- Confirm adopted dependencies in \`docs/EXTERNAL_DEPENDENCIES.md\` are reachable.
+- Confirm all required env vars from \`.env.example\` exist in the target environment.
+- Confirm rollback target is known before starting.
+
+## After deploy
+- Entry URL returns the expected status code.
+- Authentication flow works, if present.
+- A representative read path succeeds.
+- A representative write path succeeds.
+- Background jobs, queues, cron, or notifications run as expected, if present.
+- Logs, metrics, and error tracking receive fresh traffic.
+- Any external dependency with outbound data flow is verified once.
+
+## Operational evidence
+- Release version / commit
+- Time window checked
+- Operator
+- Links to logs, dashboards, or incident notes
+
+## When to escalate
+- Primary workflow fails after deploy.
+- Auth or permissions behave differently from the documented expectations.
+- Error rate spikes or logs stop arriving.
+- Data integrity is unclear after a deploy or migration.
+`}});var ut=a(fe=>{"use strict";Object.defineProperty(fe,"__esModule",{value:!0});fe.generateRollbackRunbook=Qo;function Qo(e){return`# rollback.md
+
+## Purpose
+Restore ${e.project.name} to the last known good production state when a release is not safe to keep running.
+
+## Rollback triggers
+- Primary workflow is unavailable or corrupt after release.
+- Authentication, authorization, or billing behavior regresses.
+- Error rate or latency exceeds the agreed operational threshold.
+- A migration or integration change cannot be completed safely.
+
+## Rollback procedure
+1. Declare rollback ownership.
+   - Name the incident lead and communication owner.
+2. Freeze further deploys and config changes.
+3. Identify the last known good release.
+   - Commit SHA
+   - Artifact or image tag
+   - Required matching config version
+4. Revert application and infrastructure changes in the approved order.
+5. If migrations are involved, decide whether rollback is safe or whether forward-fix is safer.
+6. Run the checks in \`docs/runbooks/production-checks.md\`.
+7. Announce rollback completion and remaining risk.
+
+## Data integrity notes
+- Record whether any writes happened during the failed release window.
+- Record whether third-party side effects already occurred.
+- If secrets or credentials may have been exposed, rotate them immediately after service is stable.
+
+## Follow-up
+- Open a post-incident review.
+- Capture the exact rollback trigger.
+- Update deployment and cutover docs before the next production release.
+`}});var mt=a(ye=>{"use strict";Object.defineProperty(ye,"__esModule",{value:!0});ye.generateIncidentResponseRunbook=Zo;function Zo(e){return`# incident-response.md
+
+## Purpose
+Coordinate response work when ${e.project.name} has an operational or security incident.
+
+## Severity guide
+- SEV-1: Broad outage, data loss risk, or active security event.
+- SEV-2: Major feature degraded, workaround exists, or repeated customer impact.
+- SEV-3: Limited impact, internal-only degradation, or support issue without sustained outage.
+
+## First response
+1. Name the incident lead.
+2. Record start time, affected surface, and current symptoms.
+3. Decide severity and communication channel.
+4. Preserve evidence.
+   - Error logs
+   - Audit trail
+   - Recent deploy or config change
+   - External dependency status
+
+## Containment
+- Stop or limit the blast radius.
+- Disable the failing feature, revert the deploy, or isolate the dependency if needed.
+- If credentials may be compromised, rotate them and invalidate sessions.
+
+## Recovery
+- Restore the primary workflow first.
+- Use \`docs/runbooks/rollback.md\` when rollback is the safest path.
+- Run \`docs/runbooks/production-checks.md\` before declaring recovery complete.
+
+## Communication
+- Keep an incident timeline with decisions and owners.
+- Record customer-facing updates separately from internal debugging notes.
+- Capture which dependency owners or vendors were contacted.
+
+## Aftercare
+- Publish a brief incident summary.
+- Open follow-up tasks for monitoring, tests, docs, or architecture changes.
+- Review whether \`SECURITY.md\`, \`.env.example\`, or the planning docs should change.
+`}});var ht=a(Ee=>{"use strict";Object.defineProperty(Ee,"__esModule",{value:!0});Ee.generateSkillInstallRunbook=tn;var en=le();function tn(e,t=[],o){let n=o?.bundledAtGeneration??!1,r=t.length>0?(0,en.buildSelectedSkillInstallCommands)(e,t,'"$PROJECT_ROOT"','"$REGISTRY_ROOT"').join(`
+`):"",s=t.length>0&&n?`
 ## Bundled In This Repository
 ${t.map(i=>`- ${i.name} (\`${i.id}\`, ${i.sourceType}, ${i.version})`).join(`
 `)}
@@ -944,61 +1226,11 @@ This runbook explains how to add optional AI work guides to ${e.project.name}.
 - Project-specific scripts, hooks, and editor settings should not be treated as curated skills by default.
 - Gemini CLI artifacts may be commands, context files, or extensions instead of a single \`SKILL.md\`.
 ${s}
-`}});var Ze=c(de=>{"use strict";Object.defineProperty(de,"__esModule",{value:!0});de.generateSkillsReadme=Nn;function Nn(e,t=[],n){let o=n?.bundledAtGeneration??!1,r=t.length>0?`Selected AI work guides at generation time: ${t.map(i=>`${i.name} (${i.id})`).join(", ")}.`:"No AI work guides were pre-selected at generation time.",s=o?"The selected AI work guides are already bundled in this repository and recorded in `repogenesis.skills.json`.":"No AI work guides are installed by default.";return`# skills/README.md
-
-## Purpose
-This directory is reserved for optional AI work guides used by ${e.project.name}.
-
-RepoGenesis does not place project knowledge directly into generator core.
-Instead, optional AI work guides can be added here when the project explicitly opts in.
-
-## Rules
-- Treat AI work guides as an optional layer, not part of the core repository constitution.
-- Record every installed guide and its pinned version in \`repogenesis.skills.json\`.
-- Do not auto-update guides without project review.
-- Prefer \`copy + pin\` so the installed files remain reviewable in this repository.
-- Use provider-specific artifacts when needed:
-  - Codex / Claude Code: skill instructions
-  - Gemini CLI: commands, context files, or extensions
-- Keep the source type (\`official\`, \`curated\`, \`internal\`) traceable in the manifest.
-- Bundled guides do not run automatically. They help when you work with this repository in the supported AI tool.
-
-## Expected Future Flow
-1. A curated registry lists approved AI work guides.
-2. This project opts into specific guides and providers.
-3. Installed provider-specific artifacts are copied into this repository.
-4. \`repogenesis.skills.json\` is updated with the installed versions and artifact paths.
-
-## Current State
-${s}
-${r}
-
-${t.length>0&&!o?"Use `scripts/install-selected-skills.sh` after ZIP extraction to add the selected AI work guides.":""}
-`}});var et=c(le=>{"use strict";Object.defineProperty(le,"__esModule",{value:!0});le.generateInstallSelectedSkillsScript=bn;var jn=ae();function bn(e,t){return`#!/usr/bin/env bash
-set -euo pipefail
-
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-REPOGENESIS_ROOT="\${REPOGENESIS_ROOT:-/path/to/RepoGenesis}"
-GENERATOR_DIR="$REPOGENESIS_ROOT/generator"
-REGISTRY_ROOT="$REPOGENESIS_ROOT/skills/registry"
-
-if [ ! -d "$GENERATOR_DIR" ]; then
-  echo "generator directory not found: $GENERATOR_DIR" >&2
-  echo "Set REPOGENESIS_ROOT to your RepoGenesis checkout before running this script." >&2
-  exit 1
-fi
-
-cd "$GENERATOR_DIR"
-npm run build
-
-${(0,jn.buildSelectedSkillInstallCommands)(e,t).join(`
-`)}
-`}});var Qn=c(ge=>{Object.defineProperty(ge,"__esModule",{value:!0});ge.generateFromSpec=Kn;var tt=g(),ue=Ae(),Ln=ve(),xn=$e(),Mn=Ce(),Gn=we(),nt=Pe(),ot=De(),rt=ke(),qn=je(),st=be(),it=Le(),at=xe(),ct=Me(),dt=Ge(),lt=qe(),pe=Be(),Bn=We(),ut=Xe(),pt=Fe(),mt=He(),ht=Je(),me=Ye(),gt=ze(),ft=Ke(),Et=Qe(),yt=Ze(),Tt=et(),Un=y(),Vn="1.0";function Wn(e,t){return"specVersion"in e?e.specVersion:t?.specVersion??Vn}function Xn(e){if("specVersion"in e){let{specVersion:t,...n}=e;return n}return e}function Fn(e,t,n,o,r){return{specVersion:o,generatorVersion:n?.generatorVersion??"dev",generatedAt:n?.generatedAt??new Date().toISOString(),source:n?.source??r,projectSlug:e.project.slug,repoType:e.structure.repo_type,fileCount:t,selectedSkills:n?.selectedSkills??[]}}function he(e,t){let n=t.prefix??"",o=[];for(let r of(0,tt.normalizeAiTools)(e.tech))if(r!=="other"){if(r==="codex"){o.push([`${n}AGENTS.md`,(0,Ln.generateAgentsMd)(e,t)]);continue}if(r==="claude_code"){o.push([`${n}CLAUDE.md`,(0,xn.generateClaudeMd)(e,t)]);continue}o.push([`${n}GEMINI.md`,(0,Mn.generateGeminiMd)(e,t)])}return o}function Hn(e,t){let n=new Date().toISOString().split("T")[0],o=t.depends_on.length>0?`- Depends on: ${t.depends_on.join(", ")}`:"- No dependencies",r=["`PROJECT.md`",...(0,tt.getToolWrapperFiles)(e.tech).map(s=>`\`${s}\``)].filter(Boolean).join(`
+`}});var gt=a(h=>{"use strict";Object.defineProperty(h,"__esModule",{value:!0});h.DEFAULT_RUNBOOK_PATHS=void 0;h.buildDefaultRunbookEntries=ln;var on=ct(),nn=dt(),rn=lt(),sn=pt(),an=ut(),cn=mt(),dn=ht();h.DEFAULT_RUNBOOK_PATHS=["docs/runbooks/README.md","docs/runbooks/production-bootstrap.md","docs/runbooks/production-cutover.md","docs/runbooks/production-checks.md","docs/runbooks/rollback.md","docs/runbooks/incident-response.md","docs/runbooks/skill-install.md"];function ln(e,t,o){return[[h.DEFAULT_RUNBOOK_PATHS[0],(0,on.generateRunbookReadme)(e)],[h.DEFAULT_RUNBOOK_PATHS[1],(0,nn.generateProductionBootstrapRunbook)(e)],[h.DEFAULT_RUNBOOK_PATHS[2],(0,rn.generateProductionCutoverRunbook)(e)],[h.DEFAULT_RUNBOOK_PATHS[3],(0,sn.generateProductionChecksRunbook)(e)],[h.DEFAULT_RUNBOOK_PATHS[4],(0,an.generateRollbackRunbook)(e)],[h.DEFAULT_RUNBOOK_PATHS[5],(0,cn.generateIncidentResponseRunbook)(e)],[h.DEFAULT_RUNBOOK_PATHS[6],(0,dn.generateSkillInstallRunbook)(e,t,o)]]}});var On=a(Ae=>{Object.defineProperty(Ae,"__esModule",{value:!0});Ae.generateFromSpec=In;var ft=f(),Te=Pe(),pn=De(),un=be(),mn=Ne(),hn=Le(),yt=xe(),Et=Ge(),Tt=Ue(),Rt=qe(),gn=Ve(),_t=Fe(),vt=We(),At=Xe(),St=He(),wt=Je(),It=Ye(),Re=Ke(),fn=Ze(),Ot=et(),kt=tt(),Ct=ot(),$t=nt(),_e=rt(),Pt=st(),Dt=it(),bt=at(),yn=T(),Nt=gt(),En="1.0";function Tn(e,t){return"specVersion"in e?e.specVersion:t?.specVersion??En}function Rn(e){if("specVersion"in e){let{specVersion:t,...o}=e;return o}return e}function _n(e,t,o,n,r){return{specVersion:n,generatorVersion:o?.generatorVersion??"dev",generatedAt:o?.generatedAt??new Date().toISOString(),source:o?.source??r,projectSlug:e.project.slug,repoType:e.structure.repo_type,fileCount:t,selectedSkills:o?.selectedSkills??[]}}function ve(e,t){let o=t.prefix??"",n=[];for(let r of(0,ft.normalizeAiTools)(e.tech))if(r!=="other"){if(r==="codex"){n.push([`${o}AGENTS.md`,(0,pn.generateAgentsMd)(e,t)]);continue}if(r==="claude_code"){n.push([`${o}CLAUDE.md`,(0,un.generateClaudeMd)(e,t)]);continue}n.push([`${o}GEMINI.md`,(0,mn.generateGeminiMd)(e,t)])}return n}function vn(e,t){let o=new Date().toISOString().split("T")[0],n=t.depends_on.length>0?`- Depends on: ${t.depends_on.join(", ")}`:"- No dependencies",r=["`PROJECT.md`",...(0,ft.getToolWrapperFiles)(e.tech).map(s=>`\`${s}\``)].filter(Boolean).join(`
 - `);return`# ACTIVE_CONTEXT.md \u2014 ${t.name}
 
 ## Last Updated
-${n}
+${o}
 
 ## Current Phase
 Phase 0 \u2014 Repository Initialization
@@ -1007,7 +1239,7 @@ Phase 0 \u2014 Repository Initialization
 - Repository structure generated by RepoGenesis.
 - Common constitution created in PROJECT.md.
 - Tool-specific wrapper files created when enabled.
-${o}
+${n}
 
 ## What Is Being Done Now
 - Ready for Phase 1 planning.
@@ -1021,6 +1253,7 @@ ${o}
 - \`docs/ARCHITECTURE.md\`
 - \`docs/ROADMAP.md\`
 - \`docs/VERSIONING_STANDARD.md\`
+- \`../docs/AI_TOOLING.md\`
 - \`../docs/TECH_DECISIONS.md\`
 - \`../docs/EXTERNAL_DEPENDENCIES.md\`
 - \`docs/ADR/0000-template.md\`
@@ -1029,20 +1262,20 @@ ${o}
 
 ## Next Step
 Begin Phase 1 planning for ${t.name}.
-`}function Jn(e,t){let n=t.depends_on.length>0?`
+`}function An(e,t){let o=t.depends_on.length>0?`
 ### Dependencies
-${t.depends_on.map(o=>`- ${o}`).join(`
+${t.depends_on.map(n=>`- ${n}`).join(`
 `)}`:"";return`# ARCHITECTURE.md \u2014 ${t.name}
 
 ## Repository
 - **Name**: ${t.name}
 - **Type**: ${t.type}
 - **Description**: ${t.description}
-- **Owner**: ${(0,Un.formatOwner)(t.owner)}
+- **Owner**: ${(0,yn.formatOwner)(t.owner)}
 
 ## Part of
 ${e.project.name} (workspace: ${e.project.slug})
-${n}
+${o}
 
 ## Architecture Overview
 [Describe the architecture for this ${t.type} repository]
@@ -1052,7 +1285,7 @@ ${n}
 
 ## Data Flow
 [Describe data flow within this repository and with dependencies]
-`}function Yn(e,t){let n=new Map,o=t?.selectedSkills??[],r=t?.selectedSkillsBundled??!1,s=t?.selectedSkillsManifest??(0,gt.createEmptySkillsManifest)(),i=t?.selectedSkillFiles??[],d=[["PROJECT.md",(0,ue.generateProjectMd)(e,{scope:"single"})],...he(e,{scope:"single"}),["docs/ACTIVE_CONTEXT.md",(0,Gn.generateActiveContext)(e)],["docs/TECH_DECISIONS.md",(0,nt.generateTechDecisions)(e)],["docs/EXTERNAL_DEPENDENCIES.md",(0,ot.generateExternalDependencies)(e)],["docs/REQUIREMENTS.md",(0,rt.generateRequirements)(e)],["docs/ARCHITECTURE.md",(0,qn.generateArchitecture)(e)],["docs/ROADMAP.md",(0,st.generateRoadmap)(e)],["docs/VERSIONING_STANDARD.md",(0,me.generateVersioningStandard)(e)],["docs/ADR/0000-template.md",(0,it.generateAdrTemplate)(e)],["docs/runbooks/README.md",(0,ft.generateRunbookReadme)(e)],["docs/runbooks/skill-install.md",(0,Et.generateSkillInstallRunbook)(e,o,{bundledAtGeneration:r})],["plans/template.md",(0,at.generatePlansTemplate)(e)],["prompts/restart.md",(0,ct.generateRestart)(e)],["SECURITY.md",(0,dt.generateSecurity)(e)],[".env.example",(0,lt.generateEnvExample)(e)],[".gitignore",(0,pe.generateGitignore)(e)],["skills/README.md",(0,yt.generateSkillsReadme)(e,o,{bundledAtGeneration:r})],["repogenesis.skills.json",`${JSON.stringify(s,null,2)}
-`],["CONTRIBUTING.md",(0,ut.generateContributing)(e)],[".github/PULL_REQUEST_TEMPLATE.md",(0,pt.generatePrTemplate)(e)],[".github/ISSUE_TEMPLATE/bug_report.md",(0,mt.generateIssueBugReport)(e)],[".github/ISSUE_TEMPLATE/feature_request.md",(0,ht.generateIssueFeatureRequest)(e)]];for(let[a,u]of d)n.set(a,u);o.length>0&&!r&&n.set("scripts/install-selected-skills.sh",(0,Tt.generateInstallSelectedSkillsScript)(e,o));for(let[a,u]of i)n.set(a,u);return n}function zn(e,t){let n=new Map,o=t?.selectedSkills??[],r=t?.selectedSkillsBundled??!1,s=t?.selectedSkillsManifest??(0,gt.createEmptySkillsManifest)(),i=t?.selectedSkillFiles??[],d=[["PROJECT.md",(0,ue.generateProjectMd)(e,{scope:"workspace"})],...he(e,{scope:"workspace"}),["GLOBAL_CONTEXT.md",(0,Bn.generateGlobalContext)(e)],["docs/TECH_DECISIONS.md",(0,nt.generateTechDecisions)(e)],["docs/EXTERNAL_DEPENDENCIES.md",(0,ot.generateExternalDependencies)(e)],["REQUIREMENTS.md",(0,rt.generateRequirements)(e)],["SECURITY.md",(0,dt.generateSecurity)(e)],["VERSIONING_STANDARD.md",(0,me.generateVersioningStandard)(e)],["docs/runbooks/README.md",(0,ft.generateRunbookReadme)(e)],["docs/runbooks/skill-install.md",(0,Et.generateSkillInstallRunbook)(e,o,{bundledAtGeneration:r})],[".gitignore",(0,pe.generateGitignore)(e)],["skills/README.md",(0,yt.generateSkillsReadme)(e,o,{bundledAtGeneration:r})],["repogenesis.skills.json",`${JSON.stringify(s,null,2)}
-`],["CONTRIBUTING.md",(0,ut.generateContributing)(e)],[".github/PULL_REQUEST_TEMPLATE.md",(0,pt.generatePrTemplate)(e)],[".github/ISSUE_TEMPLATE/bug_report.md",(0,mt.generateIssueBugReport)(e)],[".github/ISSUE_TEMPLATE/feature_request.md",(0,ht.generateIssueFeatureRequest)(e)]];for(let[a,u]of d)n.set(a,u);o.length>0&&!r&&n.set("scripts/install-selected-skills.sh",(0,Tt.generateInstallSelectedSkillsScript)(e,o));for(let[a,u]of i)n.set(a,u);for(let a of e.structure.repos){let u=[[`${a.name}/PROJECT.md`,(0,ue.generateProjectMd)(e,{scope:"repo",repo:a})],...he(e,{prefix:`${a.name}/`,scope:"repo",repo:a}),[`${a.name}/docs/ACTIVE_CONTEXT.md`,Hn(e,a)],[`${a.name}/docs/ARCHITECTURE.md`,Jn(e,a)],[`${a.name}/docs/ROADMAP.md`,(0,st.generateRoadmap)(e)],[`${a.name}/docs/VERSIONING_STANDARD.md`,(0,me.generateVersioningStandard)(e)],[`${a.name}/docs/ADR/0000-template.md`,(0,it.generateAdrTemplate)(e)],[`${a.name}/plans/template.md`,(0,at.generatePlansTemplate)(e)],[`${a.name}/prompts/restart.md`,(0,ct.generateRestart)(e)],[`${a.name}/.env.example`,(0,lt.generateEnvExample)(e)],[`${a.name}/.gitignore`,(0,pe.generateGitignore)(e)]];for(let[l,m]of u)n.set(l,m)}return n}function Kn(e,t){let n="specVersion"in e?"projectSpec":"legacyBrief",o=Wn(e,t),r=Xn(e),s=r.structure.repo_type==="multi"?zn(r,t):Yn(r,t),i=Fn(r,s.size+1,t,o,n);return s.set(".repogenesis/manifest.json",`${JSON.stringify(i,null,2)}
-`),s}});export default Qn();
+`}function Sn(e,t){let o=new Map,n=t?.selectedSkills??[],r=t?.selectedSkillsBundled??!1,s=t?.selectedSkillsManifest??(0,Pt.createEmptySkillsManifest)(),i=t?.selectedSkillFiles??[],d=[["PROJECT.md",(0,Te.generateProjectMd)(e,{scope:"single"})],...ve(e,{scope:"single"}),["docs/ACTIVE_CONTEXT.md",(0,hn.generateActiveContext)(e)],["docs/AI_TOOLING.md",(0,yt.generateAiTooling)(e)],["docs/TECH_DECISIONS.md",(0,Et.generateTechDecisions)(e)],["docs/EXTERNAL_DEPENDENCIES.md",(0,Tt.generateExternalDependencies)(e)],["docs/REQUIREMENTS.md",(0,Rt.generateRequirements)(e)],["docs/ARCHITECTURE.md",(0,gn.generateArchitecture)(e)],["docs/ROADMAP.md",(0,_t.generateRoadmap)(e)],["docs/VERSIONING_STANDARD.md",(0,_e.generateVersioningStandard)(e)],["docs/ADR/0000-template.md",(0,vt.generateAdrTemplate)(e)],...(0,Nt.buildDefaultRunbookEntries)(e,n,{bundledAtGeneration:r}),["plans/template.md",(0,At.generatePlansTemplate)(e)],["prompts/restart.md",(0,St.generateRestart)(e,{scope:"single"})],["SECURITY.md",(0,wt.generateSecurity)(e)],[".env.example",(0,It.generateEnvExample)(e)],[".gitignore",(0,Re.generateGitignore)(e)],["skills/README.md",(0,Dt.generateSkillsReadme)(e,n,{bundledAtGeneration:r})],["repogenesis.skills.json",`${JSON.stringify(s,null,2)}
+`],["CONTRIBUTING.md",(0,Ot.generateContributing)(e)],[".github/PULL_REQUEST_TEMPLATE.md",(0,kt.generatePrTemplate)(e)],[".github/ISSUE_TEMPLATE/bug_report.md",(0,Ct.generateIssueBugReport)(e)],[".github/ISSUE_TEMPLATE/feature_request.md",(0,$t.generateIssueFeatureRequest)(e)]];for(let[c,p]of d)o.set(c,p);n.length>0&&!r&&o.set("scripts/install-selected-skills.sh",(0,bt.generateInstallSelectedSkillsScript)(e,n));for(let[c,p]of i)o.set(c,p);return o}function wn(e,t){let o=new Map,n=t?.selectedSkills??[],r=t?.selectedSkillsBundled??!1,s=t?.selectedSkillsManifest??(0,Pt.createEmptySkillsManifest)(),i=t?.selectedSkillFiles??[],d=[["PROJECT.md",(0,Te.generateProjectMd)(e,{scope:"workspace"})],...ve(e,{scope:"workspace"}),["GLOBAL_CONTEXT.md",(0,fn.generateGlobalContext)(e)],["docs/AI_TOOLING.md",(0,yt.generateAiTooling)(e)],["docs/TECH_DECISIONS.md",(0,Et.generateTechDecisions)(e)],["docs/EXTERNAL_DEPENDENCIES.md",(0,Tt.generateExternalDependencies)(e)],["REQUIREMENTS.md",(0,Rt.generateRequirements)(e)],["SECURITY.md",(0,wt.generateSecurity)(e)],["VERSIONING_STANDARD.md",(0,_e.generateVersioningStandard)(e)],...(0,Nt.buildDefaultRunbookEntries)(e,n,{bundledAtGeneration:r}),[".gitignore",(0,Re.generateGitignore)(e)],["skills/README.md",(0,Dt.generateSkillsReadme)(e,n,{bundledAtGeneration:r})],["repogenesis.skills.json",`${JSON.stringify(s,null,2)}
+`],["CONTRIBUTING.md",(0,Ot.generateContributing)(e)],[".github/PULL_REQUEST_TEMPLATE.md",(0,kt.generatePrTemplate)(e)],[".github/ISSUE_TEMPLATE/bug_report.md",(0,Ct.generateIssueBugReport)(e)],[".github/ISSUE_TEMPLATE/feature_request.md",(0,$t.generateIssueFeatureRequest)(e)]];for(let[c,p]of d)o.set(c,p);n.length>0&&!r&&o.set("scripts/install-selected-skills.sh",(0,bt.generateInstallSelectedSkillsScript)(e,n));for(let[c,p]of i)o.set(c,p);for(let c of e.structure.repos){let p=[[`${c.name}/PROJECT.md`,(0,Te.generateProjectMd)(e,{scope:"repo",repo:c})],...ve(e,{prefix:`${c.name}/`,scope:"repo",repo:c}),[`${c.name}/docs/ACTIVE_CONTEXT.md`,vn(e,c)],[`${c.name}/docs/ARCHITECTURE.md`,An(e,c)],[`${c.name}/docs/ROADMAP.md`,(0,_t.generateRoadmap)(e)],[`${c.name}/docs/VERSIONING_STANDARD.md`,(0,_e.generateVersioningStandard)(e)],[`${c.name}/docs/ADR/0000-template.md`,(0,vt.generateAdrTemplate)(e)],[`${c.name}/plans/template.md`,(0,At.generatePlansTemplate)(e)],[`${c.name}/prompts/restart.md`,(0,St.generateRestart)(e,{scope:"repo"})],[`${c.name}/.env.example`,(0,It.generateEnvExample)(e)],[`${c.name}/.gitignore`,(0,Re.generateGitignore)(e)]];for(let[l,m]of p)o.set(l,m)}return o}function In(e,t){let o="specVersion"in e?"projectSpec":"legacyBrief",n=Tn(e,t),r=Rn(e),s=r.structure.repo_type==="multi"?wn(r,t):Sn(r,t),i=_n(r,s.size+1,t,n,o);return s.set(".repogenesis/manifest.json",`${JSON.stringify(i,null,2)}
+`),s}});export default On();

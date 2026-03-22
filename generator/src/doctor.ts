@@ -2,6 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { z } from 'zod';
 import { projectSkillsManifestSchema } from './skillsManifestSchema';
+import { DEFAULT_RUNBOOK_PATHS } from './runbookBundle';
+import { getInstalledSkillStatuses } from './skillStatus';
 
 const WRAPPER_FILES = ['AGENTS.md', 'CLAUDE.md', 'GEMINI.md'] as const;
 
@@ -25,6 +27,7 @@ const repogenesisManifestSchema = z.object({
 const singleRepoRequiredFiles = [
   'PROJECT.md',
   'docs/ACTIVE_CONTEXT.md',
+  'docs/AI_TOOLING.md',
   'docs/TECH_DECISIONS.md',
   'docs/EXTERNAL_DEPENDENCIES.md',
   'docs/REQUIREMENTS.md',
@@ -32,8 +35,7 @@ const singleRepoRequiredFiles = [
   'docs/ROADMAP.md',
   'docs/VERSIONING_STANDARD.md',
   'docs/ADR/0000-template.md',
-  'docs/runbooks/README.md',
-  'docs/runbooks/skill-install.md',
+  ...DEFAULT_RUNBOOK_PATHS,
   'plans/template.md',
   'prompts/restart.md',
   'SECURITY.md',
@@ -50,10 +52,10 @@ const workspaceRequiredFiles = [
   'REQUIREMENTS.md',
   'SECURITY.md',
   'VERSIONING_STANDARD.md',
+  'docs/AI_TOOLING.md',
   'docs/TECH_DECISIONS.md',
   'docs/EXTERNAL_DEPENDENCIES.md',
-  'docs/runbooks/README.md',
-  'docs/runbooks/skill-install.md',
+  ...DEFAULT_RUNBOOK_PATHS,
   '.gitignore',
   'skills/README.md',
   'repogenesis.skills.json',
@@ -88,6 +90,7 @@ interface ParsedAdoptedDependency {
 
 export interface DoctorOptions {
   projectRoot: string;
+  registryRoot?: string;
 }
 
 export interface DoctorResult {
@@ -142,27 +145,22 @@ function collectFileCount(projectRoot: string): number {
   return count;
 }
 
-function parseExpectedWrappers(projectMd: string): string[] {
-  const line = projectMd.split('\n').find((entry) => entry.startsWith('- AI Tools: '));
-  if (!line) {
+function parseExpectedWrappers(content: string | null): string[] {
+  if (!content) {
     return [];
   }
 
   const wrappers: string[] = [];
-  if (line.includes('Codex')) {
-    wrappers.push('AGENTS.md');
-  }
-  if (line.includes('Claude Code')) {
-    wrappers.push('CLAUDE.md');
-  }
-  if (line.includes('Gemini CLI')) {
-    wrappers.push('GEMINI.md');
+  for (const wrapper of WRAPPER_FILES) {
+    if (content.includes(`\`${wrapper}\``) || content.includes(wrapper)) {
+      wrappers.push(wrapper);
+    }
   }
   return wrappers;
 }
 
-function validateWrappers(projectRoot: string, baseDir: string, projectMd: string, result: DoctorResult): void {
-  const expected = new Set(parseExpectedWrappers(projectMd));
+function validateWrappers(projectRoot: string, baseDir: string, aiToolingMd: string | null, result: DoctorResult): void {
+  const expected = new Set(parseExpectedWrappers(aiToolingMd));
 
   for (const wrapper of expected) {
     const relativePath = baseDir ? `${baseDir}/${wrapper}` : wrapper;
@@ -225,6 +223,30 @@ function validateSkillsManifest(projectRoot: string, result: DoctorResult): void
       if (!fs.existsSync(path.join(projectRoot, artifact.path))) {
         result.errors.push(`Missing installed skill artifact: ${artifact.path}`);
       }
+    }
+  }
+}
+
+function validateSkillRegistryDrift(projectRoot: string, registryRoot: string, result: DoctorResult): void {
+  addCheckedPath(result, 'repogenesis.skills.json');
+  const statuses = getInstalledSkillStatuses({
+    projectRoot,
+    registryRoot,
+  });
+
+  if (statuses.length === 0) {
+    return;
+  }
+
+  addCheckedPath(result, registryRoot);
+  for (const status of statuses) {
+    if (status.status === 'update_available' && status.registryVersion) {
+      result.warnings.push(
+        `Installed skill has update available: ${status.id} (${status.installedVersion} -> ${status.registryVersion})`,
+      );
+    }
+    if (status.status === 'missing_from_registry') {
+      result.warnings.push(`Installed skill is missing from registry: ${status.id}`);
     }
   }
 }
@@ -458,6 +480,7 @@ function validatePlanningDocs(
 
 export function doctor(options: DoctorOptions): DoctorResult {
   const projectRoot = path.resolve(options.projectRoot);
+  const registryRoot = options.registryRoot ? path.resolve(options.registryRoot) : undefined;
   const result: DoctorResult = {
     success: false,
     projectRoot,
@@ -491,19 +514,22 @@ export function doctor(options: DoctorOptions): DoctorResult {
   }
 
   validateSkillsManifest(projectRoot, result);
+  if (registryRoot) {
+    validateSkillRegistryDrift(projectRoot, registryRoot, result);
+  }
   let repoDirectories: string[] = [];
 
   if (manifestResult.data.repoType === 'single') {
     validateRequiredFiles(projectRoot, '', singleRepoRequiredFiles, result);
-    const projectMd = readExistingFile(projectRoot, 'PROJECT.md', result);
-    if (projectMd) {
-      validateWrappers(projectRoot, '', projectMd, result);
+    const aiToolingMd = readExistingFile(projectRoot, 'docs/AI_TOOLING.md', result);
+    if (aiToolingMd) {
+      validateWrappers(projectRoot, '', aiToolingMd, result);
     }
   } else {
     validateRequiredFiles(projectRoot, '', workspaceRequiredFiles, result);
-    const workspaceProjectMd = readExistingFile(projectRoot, 'PROJECT.md', result);
-    if (workspaceProjectMd) {
-      validateWrappers(projectRoot, '', workspaceProjectMd, result);
+    const workspaceAiToolingMd = readExistingFile(projectRoot, 'docs/AI_TOOLING.md', result);
+    if (workspaceAiToolingMd) {
+      validateWrappers(projectRoot, '', workspaceAiToolingMd, result);
     }
 
     repoDirectories = discoverRepoDirectories(projectRoot);
@@ -513,9 +539,8 @@ export function doctor(options: DoctorOptions): DoctorResult {
 
     for (const repoDir of repoDirectories) {
       validateRequiredFiles(projectRoot, repoDir, repoRequiredFiles, result);
-      const repoProjectMd = readExistingFile(projectRoot, `${repoDir}/PROJECT.md`, result);
-      if (repoProjectMd) {
-        validateWrappers(projectRoot, repoDir, repoProjectMd, result);
+      if (workspaceAiToolingMd) {
+        validateWrappers(projectRoot, repoDir, workspaceAiToolingMd, result);
       }
     }
   }

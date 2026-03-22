@@ -1,7 +1,6 @@
 import { buildProjectSpec } from './buildProjectSpec.ts';
-import { getGenerationMode, getOrchestrationApiBase, getRemoteAuthMode } from './generateRepository.ts';
+import { getGenerationMode, getOrchestrationApiBase } from './generateRepository.ts';
 import type { FormState } from '../state/actions.ts';
-const PROXY_BASE = '/api/orchestration';
 
 export type FeedbackType = 'bug' | 'request';
 
@@ -22,7 +21,6 @@ export interface SubmitFeedbackInput {
   email?: string;
   state: FormState;
   errorReport?: ErrorReportPayload | null;
-  authToken?: string;
 }
 
 export interface SubmitFeedbackResult {
@@ -55,10 +53,7 @@ export async function submitFeedback(input: SubmitFeedbackInput): Promise<Submit
     },
   };
 
-  const remoteAuthMode = getRemoteAuthMode();
-  const remoteApiBase = remoteAuthMode === 'cookie_session'
-    ? PROXY_BASE
-    : getOrchestrationApiBase();
+  const remoteApiBase = getOrchestrationApiBase();
 
   if (getGenerationMode() !== 'remote' || !remoteApiBase) {
     const fileLabel = input.type === 'bug' ? 'bug' : 'request';
@@ -68,16 +63,13 @@ export async function submitFeedback(input: SubmitFeedbackInput): Promise<Submit
 
   const apiBase = remoteApiBase;
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (remoteAuthMode === 'manual_bearer' && input.authToken?.trim()) {
-    headers.Authorization = `Bearer ${input.authToken.trim()}`;
-  }
 
   let response: Response;
   try {
     response = await fetch(`${apiBase}/feedback/${input.type}`, {
       method: 'POST',
       headers,
-      credentials: remoteAuthMode === 'cookie_session' ? 'include' : 'same-origin',
+      credentials: 'include',
       body: JSON.stringify(payload),
     });
   } catch {

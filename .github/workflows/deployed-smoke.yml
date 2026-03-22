@@ -1,0 +1,78 @@
+name: Deployed Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_url:
+        description: Optional override for the deployed app URL
+        required: false
+        type: string
+      api_base_url:
+        description: Optional override for the orchestration API base URL
+        required: false
+        type: string
+      auth_token:
+        description: Optional override for the upstream smoke auth token
+        required: false
+        type: string
+      require_durable_support_store:
+        description: Require a non-default durable support store path
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      skip_support_reads:
+        description: Skip support read checks against the upstream API
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+  deployment_status:
+
+jobs:
+  smoke:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'deployment_status' &&
+       github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'production')
+    runs-on: ubuntu-latest
+    env:
+      APP_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.app_url || secrets.DEPLOY_SMOKE_APP_URL }}
+      API_BASE_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.api_base_url || secrets.DEPLOY_SMOKE_API_BASE_URL }}
+      AUTH_TOKEN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.auth_token || secrets.DEPLOY_SMOKE_AUTH_TOKEN }}
+      REQUIRE_DURABLE_SUPPORT_STORE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.require_durable_support_store || vars.DEPLOY_SMOKE_REQUIRE_DURABLE_SUPPORT_STORE || 'true' }}
+      SKIP_SUPPORT_READS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.skip_support_reads || vars.DEPLOY_SMOKE_SKIP_SUPPORT_READS || 'false' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate smoke configuration
+        run: |
+          test -n "$APP_URL" || { echo "DEPLOY_SMOKE_APP_URL is required"; exit 1; }
+          test -n "$API_BASE_URL" || { echo "DEPLOY_SMOKE_API_BASE_URL is required"; exit 1; }
+          test -n "$AUTH_TOKEN" || { echo "DEPLOY_SMOKE_AUTH_TOKEN is required"; exit 1; }
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+          cache: npm
+          cache-dependency-path: |
+            app/package-lock.json
+            generator/package-lock.json
+
+      - name: Install generator dependencies
+        working-directory: generator
+        run: npm ci
+
+      - name: Install app dependencies
+        working-directory: app
+        run: npm ci
+
+      - name: Run deployed smoke checks
+        run: bash scripts/smoke-deployed-stack.sh

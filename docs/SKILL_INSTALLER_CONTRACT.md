@@ -5,7 +5,7 @@ provider-aware skill layer の次段として、
 installer が何を読み、何を保証し、何をまだ扱わないかを定義する。
 
 この文書の目的は、CLI installer と将来の Web selection UI が
-同じ install/remove/update/list 契約に従えるようにすることにある。
+同じ install/remove/update/list/status 契約に従えるようにすることにある。
 
 ## Input Surface
 installer が扱う入力は次の 3 つ。
@@ -37,6 +37,7 @@ Rules:
 
 - `list`
 - `add`
+- `status`
 - `remove`
 - `update`
 
@@ -70,6 +71,18 @@ Rules:
 - `reviewRequired=true` の場合は確認なし自動 install を禁止する
 - manifest は install 完了後にのみ更新する
 
+### `status`
+Purpose:
+- install 済み skill の pin / registry 差分 / artifact 欠損を表示する
+
+Minimum output:
+- `id`
+- installed version
+- registry version
+- `up_to_date | update_available | missing_from_registry`
+- installed providers
+- missing artifact warnings
+
 ### `remove`
 Purpose:
 - manifest と copied artifact を安全に外す
@@ -88,6 +101,7 @@ Rules:
 - auto-update 禁止
 - sourceType / provider / artifactKind の変更差分を表示する
 - update 前に current と target の artifact 一覧差分を出す
+- `--all` は clean な `up_to_date` を触らず、outdated または missing artifact の skill だけを対象にする
 
 ## Provider resolution rule
 provider と project state の対応は次に寄せる。
@@ -128,4 +142,5 @@ installer 完了後に最低限保証するもの:
 - `add` dry-run plan primitive: implemented
 - manifest write/remove dry-run primitive: implemented
 - actual file copy / manifest write to disk: implemented
-- CLI `skills list/add/remove`: implemented
+- CLI `skills list/add/status/remove/update`: implemented
+- CLI `skills update --all`: implemented

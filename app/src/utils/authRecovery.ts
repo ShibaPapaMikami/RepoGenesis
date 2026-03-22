@@ -1,9 +1,8 @@
 export function canRecoverCookieSession(
   status: number | undefined,
-  authMode: 'manual_bearer' | 'cookie_session',
   email: string | null | undefined,
 ): boolean {
-  return status === 401 && authMode === 'cookie_session' && typeof email === 'string' && email.trim().length > 0;
+  return status === 401 && typeof email === 'string' && email.trim().length > 0;
 }
 
 export async function refreshCookieSession(email: string): Promise<void> {

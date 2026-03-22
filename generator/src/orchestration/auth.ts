@@ -12,7 +12,8 @@ export interface AuthResult {
   error?: string;
 }
 
-const REQUIRED_ROLE = 'repogenesis:generate';
+const GENERATE_ROLE = 'repogenesis:generate';
+const SUPPORT_READ_ROLE = 'repogenesis:support_read';
 const DEFAULT_ALLOWED_DOMAIN = 'gugenka.jp';
 
 function getAuthProvider(): string {
@@ -23,36 +24,43 @@ function getSessionAudience(): string {
   return process.env.SESSION_AUDIENCE ?? 'repogenesis';
 }
 
-function getAllowedEmails(): Set<string> | null {
-  const raw = process.env.AUTH_ALLOWED_EMAILS;
+function parseConfiguredSet(rawValue: string | undefined): Set<string> | null {
+  const raw = rawValue;
   if (!raw) return null;
   const parsed = raw
     .split(',')
     .map((s) => s.trim().toLowerCase())
     .filter((s) => s.length > 0);
   return parsed.length > 0 ? new Set(parsed) : null;
+}
+
+function getAllowedEmails(): Set<string> | null {
+  return parseConfiguredSet(process.env.AUTH_ALLOWED_EMAILS);
 }
 
 function getAllowedDomains(): Set<string> | null {
-  const raw = process.env.AUTH_ALLOWED_DOMAINS;
-  if (!raw) return null;
-  const parsed = raw
-    .split(',')
-    .map((s) => s.trim().toLowerCase())
-    .filter((s) => s.length > 0);
-  return parsed.length > 0 ? new Set(parsed) : null;
+  return parseConfiguredSet(process.env.AUTH_ALLOWED_DOMAINS);
 }
 
-function hasAllowedGenerateAccess(email: string): boolean {
+function getSupportAllowedEmails(): Set<string> | null {
+  return parseConfiguredSet(process.env.SUPPORT_ALLOWED_EMAILS);
+}
+
+function getSupportAllowedDomains(): Set<string> | null {
+  return parseConfiguredSet(process.env.SUPPORT_ALLOWED_DOMAINS);
+}
+
+function hasAllowedAccess(
+  email: string,
+  allowedEmails: Set<string> | null,
+  allowedDomains: Set<string> | null,
+): boolean {
   const normalized = email.trim().toLowerCase();
   if (!normalized.includes('@')) return false;
-
-  const allowedEmails = getAllowedEmails();
   if (allowedEmails && allowedEmails.has(normalized)) {
     return true;
   }
 
-  const allowedDomains = getAllowedDomains();
   if (allowedDomains) {
     const domain = normalized.split('@')[1] ?? '';
     return allowedDomains.has(domain);
@@ -64,6 +72,19 @@ function hasAllowedGenerateAccess(email: string): boolean {
 
   const domain = normalized.split('@')[1] ?? '';
   return domain === DEFAULT_ALLOWED_DOMAIN;
+}
+
+function hasAllowedGenerateAccess(email: string): boolean {
+  return hasAllowedAccess(email, getAllowedEmails(), getAllowedDomains());
+}
+
+function hasAllowedSupportReadAccess(email: string): boolean {
+  const supportEmails = getSupportAllowedEmails();
+  const supportDomains = getSupportAllowedDomains();
+  if (!supportEmails && !supportDomains) {
+    return hasAllowedGenerateAccess(email);
+  }
+  return hasAllowedAccess(email, supportEmails, supportDomains);
 }
 
 function parseCookieHeader(cookieHeader: string | undefined): Map<string, string> {
@@ -106,7 +127,18 @@ export function authorizeBearerToken(authorizationHeader: string | undefined): A
       status: 200,
       context: {
         userId: 'dev-user',
-        roles: [REQUIRED_ROLE],
+        roles: [GENERATE_ROLE, SUPPORT_READ_ROLE],
+      },
+    };
+  }
+
+  if (token === 'support-token') {
+    return {
+      ok: true,
+      status: 200,
+      context: {
+        userId: 'support-user',
+        roles: [SUPPORT_READ_ROLE],
       },
     };
   }
@@ -126,7 +158,11 @@ export function authorizeBearerToken(authorizationHeader: string | undefined): A
 }
 
 export function hasGeneratePermission(context: AuthContext): boolean {
-  return context.roles.includes(REQUIRED_ROLE);
+  return context.roles.includes(GENERATE_ROLE);
+}
+
+export function hasSupportReadPermission(context: AuthContext): boolean {
+  return context.roles.includes(SUPPORT_READ_ROLE) || context.roles.includes(GENERATE_ROLE);
 }
 
 export async function authorizeBearerTokenAsync(
@@ -156,7 +192,10 @@ export async function authorizeBearerTokenAsync(
     );
     if (!email) return { ok: false, status: 401, error: 'Token verification failed' };
 
-    const roles = hasAllowedGenerateAccess(email) ? [REQUIRED_ROLE] : [];
+    const roles = [
+      ...(hasAllowedGenerateAccess(email) ? [GENERATE_ROLE] : []),
+      ...(hasAllowedSupportReadAccess(email) ? [SUPPORT_READ_ROLE] : []),
+    ];
     const context: AuthContext = { userId: email.toLowerCase(), roles };
     return { ok: true, status: 200, context };
   } catch {
@@ -199,7 +238,10 @@ export async function authorizeRequestAsync(
     );
     if (!email) return { ok: false, status: 401, error: 'Token verification failed' };
 
-    const roles = hasAllowedGenerateAccess(email) ? [REQUIRED_ROLE] : [];
+    const roles = [
+      ...(hasAllowedGenerateAccess(email) ? [GENERATE_ROLE] : []),
+      ...(hasAllowedSupportReadAccess(email) ? [SUPPORT_READ_ROLE] : []),
+    ];
     return {
       ok: true,
       status: 200,

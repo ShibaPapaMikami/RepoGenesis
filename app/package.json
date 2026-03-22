@@ -7,10 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "sync:generator-bundle": "node scripts/sync-generator-bundle.mjs",
+    "check:generator-bundle-sync": "node scripts/check-generator-bundle-sync.mjs",
+    "check:generated-output-compat": "node scripts/check-generated-output-compat.mjs",
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:contract": "node --experimental-strip-types --test tests/buildProjectSpec.test.ts tests/intakeParser.test.ts tests/simpleIntake.test.ts tests/skillInstallHandoff.test.ts",
+    "smoke:deploy": "node scripts/smoke-remote-deploy.mjs",
+    "test:e2e:remote-support": "playwright test e2e/support-panel.remote.spec.ts",
+    "test:contract": "node --experimental-strip-types --test tests/buildProjectSpec.test.ts tests/generateRepositoryZip.test.ts tests/intakeParser.test.ts tests/localAdmin.test.ts tests/providerPrompt.test.ts tests/recommendations.test.ts tests/refinementPrompt.test.ts tests/simpleIntake.test.ts tests/skillInstallHandoff.test.ts tests/support.test.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

@@ -54,6 +54,7 @@ ${adoptedDependencies.length > 0 ? adoptedDependencies.map((line) => `- ${line}`
 - Each repository has its own \`PROJECT.md\` with repository-specific rules.
 ${toolWrapperLine}
 - Shared decisions are documented in this file.
+- Workspace-level AI tooling policy lives in \`docs/AI_TOOLING.md\`.
 - Workspace-level technology decisions live in \`docs/TECH_DECISIONS.md\`.
 - Workspace-level external dependencies live in \`docs/EXTERNAL_DEPENDENCIES.md\`.
 - Dependencies between repos should be managed explicitly.

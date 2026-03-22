@@ -48,6 +48,7 @@ ${decisionLines.join('\n')}
 ## Files That Exist
 - ${toolFiles}
 - \`docs/ACTIVE_CONTEXT.md\` (this file)
+- \`docs/AI_TOOLING.md\`
 - \`docs/TECH_DECISIONS.md\`
 - \`docs/EXTERNAL_DEPENDENCIES.md\`
 - \`docs/REQUIREMENTS.md\`

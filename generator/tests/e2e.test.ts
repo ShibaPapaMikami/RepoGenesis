@@ -2,11 +2,13 @@ import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import { DEFAULT_RUNBOOK_PATHS } from '../src/runbookBundle';
 
 const ROOT = path.resolve(__dirname, '..');
 const DIST_INDEX = path.join(ROOT, 'dist', 'index.js');
 const FIXTURES = path.join(__dirname, 'fixtures');
 const TMP_OUTPUT = path.join(__dirname, 'tmp_output');
+const SINGLE_REPO_FILE_COUNT = 23 + DEFAULT_RUNBOOK_PATHS.length;
 
 function run(fixtureName: string, caseName: string): { stdout: string; stderr: string; exitCode: number } {
   const inputPath = path.join(FIXTURES, fixtureName);
@@ -80,6 +82,7 @@ describe('E2E — single-repo', { timeout: 20000 }, () => {
       'PROJECT.md',
       'CLAUDE.md',
       'docs/ACTIVE_CONTEXT.md',
+      'docs/AI_TOOLING.md',
       'docs/TECH_DECISIONS.md',
       'docs/EXTERNAL_DEPENDENCIES.md',
       'docs/REQUIREMENTS.md',
@@ -87,6 +90,7 @@ describe('E2E — single-repo', { timeout: 20000 }, () => {
       'docs/ROADMAP.md',
       'docs/VERSIONING_STANDARD.md',
       'docs/ADR/0000-template.md',
+      ...DEFAULT_RUNBOOK_PATHS,
       'plans/template.md',
       'prompts/restart.md',
       'SECURITY.md',
@@ -153,13 +157,13 @@ describe('E2E — single-repo', { timeout: 20000 }, () => {
 describe('E2E — app export', { timeout: 20000 }, () => {
   const SLUG = 'app-export-test';
 
-  it('should exit 0 and generate 24 files from app export JSON', () => {
+  it('should exit 0 and generate 30 files from app export JSON', () => {
     const result = run('test_brief_app_export.json', 'app-export');
     expect(result.exitCode, `CLI failed.\nstdout: ${result.stdout}\nstderr: ${result.stderr}`).toBe(0);
-    expect(result.stdout).toContain('24 files');
+    expect(result.stdout).toContain(`${SINGLE_REPO_FILE_COUNT} files`);
   });
 
-  it('should create all 24 required single-repo files from app export', () => {
+  it('should create all required single-repo files from app export', () => {
     run('test_brief_app_export.json', 'app-export');
     const base = path.join(TMP_OUTPUT, 'app-export', SLUG);
 
@@ -167,6 +171,7 @@ describe('E2E — app export', { timeout: 20000 }, () => {
       'PROJECT.md',
       'CLAUDE.md',
       'docs/ACTIVE_CONTEXT.md',
+      'docs/AI_TOOLING.md',
       'docs/TECH_DECISIONS.md',
       'docs/EXTERNAL_DEPENDENCIES.md',
       'docs/REQUIREMENTS.md',
@@ -174,8 +179,7 @@ describe('E2E — app export', { timeout: 20000 }, () => {
       'docs/ROADMAP.md',
       'docs/VERSIONING_STANDARD.md',
       'docs/ADR/0000-template.md',
-      'docs/runbooks/README.md',
-      'docs/runbooks/skill-install.md',
+      ...DEFAULT_RUNBOOK_PATHS,
       'plans/template.md',
       'prompts/restart.md',
       'SECURITY.md',
@@ -190,7 +194,7 @@ describe('E2E — app export', { timeout: 20000 }, () => {
       '.repogenesis/manifest.json',
     ];
 
-    expect(requiredFiles.length).toBe(24);
+    expect(requiredFiles.length).toBe(SINGLE_REPO_FILE_COUNT);
 
     for (const file of requiredFiles) {
       const fullPath = path.join(base, file);
@@ -206,7 +210,7 @@ describe('E2E — codex wrapper', { timeout: 20000 }, () => {
   it('should generate AGENTS.md for Codex projects', () => {
     const result = run('test_brief_codex.json', 'codex');
     expect(result.exitCode, `CLI failed.\nstdout: ${result.stdout}\nstderr: ${result.stderr}`).toBe(0);
-    expect(result.stdout).toContain('24 files');
+    expect(result.stdout).toContain(`${SINGLE_REPO_FILE_COUNT} files`);
 
     const base = path.join(TMP_OUTPUT, 'codex', SLUG);
     expect(fs.existsSync(path.join(base, 'AGENTS.md'))).toBe(true);
@@ -216,7 +220,7 @@ describe('E2E — codex wrapper', { timeout: 20000 }, () => {
     const project = fs.readFileSync(path.join(base, 'PROJECT.md'), 'utf-8');
 
     expect(agents).toContain('## Codex rules');
-    expect(project).toContain('`AGENTS.md`');
+    expect(project).toContain('docs/AI_TOOLING.md');
   });
 
   it('should validate generated Codex projects with doctor', () => {
@@ -241,7 +245,7 @@ describe('E2E — multi-repo', { timeout: 20000 }, () => {
     run('test_brief_multi.json', 'multi');
     const base = path.join(TMP_OUTPUT, 'multi', SLUG);
 
-    for (const file of ['PROJECT.md', 'CLAUDE.md', 'GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', 'docs/TECH_DECISIONS.md', 'docs/EXTERNAL_DEPENDENCIES.md', 'docs/runbooks/README.md', 'docs/runbooks/skill-install.md', '.gitignore', 'skills/README.md', 'repogenesis.skills.json', '.repogenesis/manifest.json']) {
+    for (const file of ['PROJECT.md', 'CLAUDE.md', 'GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', 'docs/AI_TOOLING.md', 'docs/TECH_DECISIONS.md', 'docs/EXTERNAL_DEPENDENCIES.md', ...DEFAULT_RUNBOOK_PATHS, '.gitignore', 'skills/README.md', 'repogenesis.skills.json', '.repogenesis/manifest.json']) {
       expect(fs.existsSync(path.join(base, file)), `Missing workspace file: ${file}`).toBe(true);
     }
   });
@@ -257,6 +261,19 @@ describe('E2E — multi-repo', { timeout: 20000 }, () => {
       expect(fs.existsSync(claudePath), `Missing: ${repo}/CLAUDE.md`).toBe(true);
       expect(fs.readFileSync(projectPath, 'utf-8')).toContain(repo);
     }
+  });
+
+  it('should point per-repo starter docs at workspace AI tooling policy', () => {
+    run('test_brief_multi.json', 'multi');
+    const base = path.join(TMP_OUTPUT, 'multi', SLUG);
+
+    const project = fs.readFileSync(path.join(base, 'web-app', 'PROJECT.md'), 'utf-8');
+    const activeContext = fs.readFileSync(path.join(base, 'web-app', 'docs', 'ACTIVE_CONTEXT.md'), 'utf-8');
+    const restart = fs.readFileSync(path.join(base, 'web-app', 'prompts', 'restart.md'), 'utf-8');
+
+    expect(project).toContain('`../docs/AI_TOOLING.md`');
+    expect(activeContext).toContain('`../docs/AI_TOOLING.md`');
+    expect(restart).toContain('Read ../docs/AI_TOOLING.md if it exists');
   });
 
   it('should include repos list in GLOBAL_CONTEXT.md', () => {

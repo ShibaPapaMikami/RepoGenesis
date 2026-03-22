@@ -492,6 +492,18 @@ test('createIntakeEnvelope should normalize provider-agnostic intake input', () 
   assert.equal(envelope.provider.model, 'gpt-x');
 });
 
+test('parseConsultationIntake should preserve provider metadata in the draft envelope', () => {
+  const draft = parseConsultationIntake(
+    SAMPLE_INPUT,
+    makeState(),
+    { provider: 'claude', promptVersion: 'internal_tool' },
+  );
+
+  assert.equal(draft.source, 'provider_consultation');
+  assert.equal(draft.provider.provider, 'claude');
+  assert.equal(draft.provider.promptVersion, 'internal_tool');
+});
+
 test('getConsultationPromptTemplate should return variant-specific guidance', () => {
   const internalPrompt = getConsultationPromptTemplate('internal_tool');
   const businessPrompt = getConsultationPromptTemplate('new_business');

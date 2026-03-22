@@ -1,5 +1,5 @@
 import { slugify } from './slugify.ts';
-import { createIntakeEnvelope } from './intakeProvider.ts';
+import { createIntakeEnvelope, type IntakeProviderMetadata } from './intakeProvider.ts';
 import type { FormState } from '../state/actions.ts';
 import type { Domain, RepoType, SecurityLevel } from '../constants/enums.ts';
 import { calculateMinSecurityLevel } from './securityCalc.ts';
@@ -11,7 +11,8 @@ export interface IntakeReadiness {
 }
 
 export interface IntakeDraft {
-  source: 'pasted_consultation';
+  source: 'pasted_consultation' | 'provider_consultation';
+  provider: IntakeProviderMetadata;
   rawText: string;
   sections: Record<string, string>;
   review: {
@@ -788,8 +789,12 @@ export function deriveDraftSuggestions(
   };
 }
 
-export function parseConsultationIntake(input: string, currentState: FormState): IntakeDraft {
-  const envelope = createIntakeEnvelope(input);
+export function parseConsultationIntake(
+  input: string,
+  currentState: FormState,
+  provider: IntakeProviderMetadata = { provider: 'manual' },
+): IntakeDraft {
+  const envelope = createIntakeEnvelope(input, provider);
   const rawText = envelope.normalizedText;
   const sections = parseSections(rawText);
   const summary = sections['プロジェクト概要'] || null;
@@ -856,7 +861,8 @@ export function parseConsultationIntake(input: string, currentState: FormState):
   }
 
   return {
-    source: 'pasted_consultation',
+    source: envelope.source === 'provider_markdown' ? 'provider_consultation' : 'pasted_consultation',
+    provider: envelope.provider,
     rawText,
     sections,
     review: {

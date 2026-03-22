@@ -8,12 +8,14 @@ import {
   loadConsultationPromptVariant,
   loadConsultationText,
   loadDraft,
+  loadRecommendationDecisions,
   loadSelectedSkills,
   loadUiTestMode,
   saveConsultationDraft,
   saveConsultationPromptVariant,
   saveConsultationText,
   saveDraft,
+  saveRecommendationDecisions,
   saveSelectedSkills,
   saveUiTestMode,
 } from './utils/storage';
@@ -26,9 +28,11 @@ import { StructureSection } from './components/sections/StructureSection';
 import { WorkflowSection } from './components/sections/WorkflowSection';
 import { PlanningSection } from './components/sections/PlanningSection';
 import { JsonOutput } from './components/output/JsonOutput';
+import { RefinementPromptPanel } from './components/output/RefinementPromptPanel';
 import { AuthPanel } from './components/auth/AuthPanel';
 import { FeedbackWidget } from './components/feedback/FeedbackWidget';
-import { getGenerationMode, getRemoteAuthMode } from './utils/generateRepository';
+import { SupportPanel } from './components/support/SupportPanel';
+import { getGenerationMode, usesSameOriginOrchestrationProxy } from './utils/generateRepository';
 import {
   getConsultationPromptTemplate,
   parseConsultationIntake,
@@ -36,6 +40,23 @@ import {
   type ConsultationPromptVariant,
   type IntakeDraft,
 } from './utils/intakeParser';
+import { formatIntakeProviderLabel } from './utils/intakeProvider.ts';
+import {
+  buildRequirementRefinementPrompt,
+  getRequirementRefinementPromptFilename,
+} from './utils/refinementPrompt.ts';
+import {
+  buildProviderGuidedPrompt,
+  buildProviderPromptFilename,
+  type ExternalPromptProvider,
+} from './utils/providerPrompt.ts';
+import {
+  DEFAULT_RECOMMENDATION_DECISIONS,
+  deriveDraftRecommendations,
+  type RecommendationDecisions,
+  type RecommendationDecisionStatus,
+  type RecommendationKey,
+} from './utils/recommendations.ts';
 import {
   formatSkillProviderNames,
   formatSkillProviderSupportSummary,
@@ -109,6 +130,8 @@ function App() {
   const [consultationMessage, setConsultationMessage] = useState<string | null>(null);
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>(() => loadSelectedSkills());
   const [promptCopied, setPromptCopied] = useState(false);
+  const [promptProvider, setPromptProvider] = useState<ExternalPromptProvider>('chatgpt');
+  const [recommendationDecisions, setRecommendationDecisions] = useState<RecommendationDecisions>(() => loadRecommendationDecisions());
   const [guidedStep, setGuidedStep] = useState<GuidedStep>('intro');
   const [draftApplied, setDraftApplied] = useState<boolean>(() =>
     deriveInitialWizardState(loadDraft(), loadConsultationText(), loadConsultationDraft()).draftApplied);
@@ -116,7 +139,7 @@ function App() {
     deriveInitialWizardState(loadDraft(), loadConsultationText(), loadConsultationDraft()).step);
   const [hasSavedProgress, setHasSavedProgress] = useState<boolean>(() =>
     deriveInitialWizardState(loadDraft(), loadConsultationText(), loadConsultationDraft()).hasProgress);
-  const [resultPhase, setResultPhase] = useState<'idle' | 'running' | 'done'>('idle');
+  const [, setResultPhase] = useState<'idle' | 'running' | 'done'>('idle');
   const [latestErrorReport, setLatestErrorReport] = useState<ErrorReportPayload | null>(null);
   const [authSession, setAuthSession] = useState<{ authenticated: boolean; email: string | null }>({
     authenticated: false,
@@ -203,6 +226,11 @@ function App() {
 
   useEffect(() => {
     if (!initialized.current) return;
+    saveRecommendationDecisions(recommendationDecisions);
+  }, [recommendationDecisions]);
+
+  useEffect(() => {
+    if (!initialized.current) return;
     saveConsultationPromptVariant(consultationPromptVariant);
   }, [consultationPromptVariant]);
 
@@ -219,10 +247,12 @@ function App() {
   const errors = validationErrors(state);
   const exportable = canExport(state);
   const generationMode = getGenerationMode();
-  const requiresCookieSession = generationMode === 'remote' && getRemoteAuthMode() === 'cookie_session';
+  const requiresRemoteLogin = generationMode === 'remote' && usesSameOriginOrchestrationProxy();
+  const showSupportPanel = requiresRemoteLogin && authSession.authenticated;
   const activeStep = guidedStep;
   const suggestedRepoType = consultationDraft?.suggestedState.structure.repo_type ?? state.structure.repo_type;
   const suggestedSecurity = consultationDraft?.suggestedState.securityLevelOverride ?? state.security.level;
+  const suggestedPhasesCount = consultationDraft?.suggestedState.workflow.phases_count ?? state.workflow.phases_count;
   const summaryProjectName = state.project.name || consultationDraft?.suggestedState.project.name || '未確定';
   const summaryDescription = state.project.description || consultationDraft?.suggestedState.project.description || '未確定';
   const summaryDomains = state.tech.domains.length > 0
@@ -239,7 +269,57 @@ function App() {
     : `Skill（スキル）は、生成後に ${activeAiToolNames} と一緒に作業する時の補助ガイドです。${activeWrapperFiles ? `まず生成された ${activeWrapperFiles} を入口として読み、必要な Skill を後から足します。` : ''} このモードでは ZIP への自動同梱はまだないため、必要になった時だけ後から追加します。`;
   const adoptedTechDecisions = state.planning.tech_decisions.filter((item) => item.status === 'adopted' && item.topic.trim() && item.choice.trim());
   const adoptedExternalDependencies = state.planning.external_dependencies.filter((item) => item.status === 'adopted' && item.name.trim());
+  const draftRecommendations = consultationDraft
+    ? deriveDraftRecommendations(state, consultationDraft, recommendationDecisions)
+    : [];
+  const repoTypeRecommendation = draftRecommendations.find((item) => item.key === 'repo_type');
+  const securityRecommendation = draftRecommendations.find((item) => item.key === 'security_level');
+  const phasesRecommendation = draftRecommendations.find((item) => item.key === 'phases_count');
+  const recommendationStatusLabels: Record<RecommendationDecisionStatus, string> = {
+    pending: '未確認',
+    accepted: '採用',
+    overridden: '上書き済み',
+  };
   const saveLabel = formatSaveLabel(saveState, lastSavedAt);
+  const guidedConsultationPrompt = buildProviderGuidedPrompt(
+    getConsultationPromptTemplate(consultationPromptVariant),
+    promptProvider,
+    'consultation',
+  );
+  const draftRefinementPrompt = consultationDraft
+    ? buildProviderGuidedPrompt(
+      buildRequirementRefinementPrompt(
+        consultationDraft.suggestedState,
+        consultationDraft,
+        consultationPromptVariant,
+      ),
+      promptProvider,
+      'refinement',
+    )
+    : null;
+  const reviewRefinementPrompt = consultationDraft
+    ? buildProviderGuidedPrompt(
+      buildRequirementRefinementPrompt(
+        state,
+        consultationDraft,
+        consultationPromptVariant,
+      ),
+      promptProvider,
+      'refinement',
+    )
+    : null;
+  const draftRefinementPromptFilename = buildProviderPromptFilename(
+    getRequirementRefinementPromptFilename(
+      consultationDraft?.suggestedState.project.slug || consultationDraft?.suggestedState.project.name || undefined,
+    ),
+    promptProvider,
+  );
+  const reviewRefinementPromptFilename = buildProviderPromptFilename(
+    getRequirementRefinementPromptFilename(
+      state.project.slug || state.project.name || undefined,
+    ),
+    promptProvider,
+  );
 
   const recommendationNotes = [
     suggestedRepoType === 'multi'
@@ -286,6 +366,46 @@ function App() {
     );
   }
 
+  function setRecommendationStatus(key: RecommendationKey, status: RecommendationDecisionStatus) {
+    setRecommendationDecisions((current) => ({
+      ...current,
+      [key]: status,
+    }));
+  }
+
+  function applySuggestedRecommendation(key: RecommendationKey) {
+    if (!consultationDraft) return;
+    switch (key) {
+      case 'repo_type':
+        dispatch({ type: 'SET_REPO_TYPE', payload: suggestedRepoType });
+        break;
+      case 'security_level':
+        dispatch({ type: 'SET_SECURITY_LEVEL_OVERRIDE', payload: suggestedSecurity });
+        break;
+      case 'phases_count':
+        dispatch({ type: 'SET_PHASES_COUNT', payload: suggestedPhasesCount });
+        break;
+      default:
+        return;
+    }
+    setRecommendationStatus(key, 'accepted');
+  }
+
+  function handleRepoTypeChange(value: typeof suggestedRepoType) {
+    dispatch({ type: 'SET_REPO_TYPE', payload: value });
+    setRecommendationStatus('repo_type', value === suggestedRepoType ? 'accepted' : 'overridden');
+  }
+
+  function handleSecurityChange(value: typeof suggestedSecurity) {
+    dispatch({ type: 'SET_SECURITY_LEVEL_OVERRIDE', payload: value });
+    setRecommendationStatus('security_level', value === suggestedSecurity ? 'accepted' : 'overridden');
+  }
+
+  function handlePhasesChange(value: number) {
+    dispatch({ type: 'SET_PHASES_COUNT', payload: value });
+    setRecommendationStatus('phases_count', value === suggestedPhasesCount ? 'accepted' : 'overridden');
+  }
+
   function renderSkillCard(skill: SkillCatalogItem) {
     const selected = selectedSkillIds.includes(skill.id);
     return (
@@ -324,6 +444,7 @@ function App() {
     dispatch({ type: 'RESET' });
     setConsultationText('');
     setConsultationDraft(null);
+    setRecommendationDecisions(DEFAULT_RECOMMENDATION_DECISIONS);
     setSelectedSkillIds([]);
     setSelectedTestTemplateId('');
     setConsultationMessage(null);
@@ -338,7 +459,7 @@ function App() {
   }
 
   async function handleCopyConsultationPrompt() {
-    await navigator.clipboard.writeText(getConsultationPromptTemplate(consultationPromptVariant));
+    await navigator.clipboard.writeText(guidedConsultationPrompt);
     setConsultationMessage('相談用プロンプトをコピーしました。AI で整理した結果を次に貼り付けてください。');
     setPromptCopied(true);
     if (promptCopyTimerRef.current) clearTimeout(promptCopyTimerRef.current);
@@ -347,7 +468,10 @@ function App() {
 
   function handleBuildConsultationDraft() {
     setPromptCopied(false);
-    const draft = parseConsultationIntake(consultationText, state);
+    const draft = parseConsultationIntake(consultationText, state, {
+      provider: promptProvider,
+      promptVersion: consultationPromptVariant,
+    });
     if (draft.review.facts.length === 0) {
       setConsultationDraft(null);
       setConsultationMessage(
@@ -357,6 +481,7 @@ function App() {
       return;
     }
     setConsultationDraft(draft);
+    setRecommendationDecisions(DEFAULT_RECOMMENDATION_DECISIONS);
     setConsultationMessage('ドラフトを作成しました。内容を確認して次へ進んでください。');
     setGuidedStep('draft');
     setDraftApplied(false);
@@ -369,6 +494,7 @@ function App() {
     setConsultationPromptVariant(template.variant);
     setConsultationText(template.content);
     setConsultationDraft(null);
+    setRecommendationDecisions(DEFAULT_RECOMMENDATION_DECISIONS);
     setConsultationMessage(`固定テスト文章「${template.label}」を貼り付け欄に反映しました。`);
     setGuidedStep('paste');
     setResumeTargetStep('paste');
@@ -388,6 +514,7 @@ function App() {
   function applyConsultationDraft(nextStep: 'options' | 'detail' | 'review') {
     if (!consultationDraft) return;
     dispatch({ type: 'RESTORE_DRAFT', payload: consultationDraft.suggestedState });
+    setRecommendationDecisions(DEFAULT_RECOMMENDATION_DECISIONS);
     setConsultationMessage(
       nextStep === 'options'
         ? 'ドラフトをフォームへ反映しました。次に、必要なオプションだけ確認してください。'
@@ -417,7 +544,7 @@ function App() {
           <div className="app-topbar-copy">
             <span className="app-save-status">{saveLabel}</span>
             <span className="app-save-note">
-              {requiresCookieSession ? 'ログインは ZIP 生成時だけ必要です' : 'ログインなしで最後まで試せます'}
+              {requiresRemoteLogin ? 'ログインは ZIP 生成時だけ必要です' : 'ログインなしで最後まで試せます'}
             </span>
           </div>
           <label className="app-utility-toggle">
@@ -435,7 +562,8 @@ function App() {
         <p className="app-version">{buildLabel}</p>
       </header>
 
-      <AuthPanel enabled={requiresCookieSession} onSessionChange={setAuthSession} compact />
+      <AuthPanel enabled={requiresRemoteLogin} onSessionChange={setAuthSession} compact />
+      <SupportPanel enabled={showSupportPanel} sessionEmail={authSession.email} />
 
       <nav className="wizard-nav" aria-label="作業ステップ">
         {WIZARD_STEPS.map((step, index) => {
@@ -464,7 +592,7 @@ function App() {
             hasSavedProgress={hasSavedProgress}
             resumeStepLabel={WIZARD_STEPS.find((step) => step.id === resumeTargetStep)?.label ?? '途中のステップ'}
             saveLabel={saveLabel}
-            requiresLoginForRemoteZip={requiresCookieSession}
+            requiresLoginForRemoteZip={requiresRemoteLogin}
           />
         )}
 
@@ -474,6 +602,8 @@ function App() {
             showTestTools={testMode}
             promptVariant={consultationPromptVariant}
             onChangePromptVariant={setConsultationPromptVariant}
+            promptProvider={promptProvider}
+            onChangePromptProvider={setPromptProvider}
             selectedTestTemplateId={selectedTestTemplateId}
             onChangeTestTemplateId={setSelectedTestTemplateId}
             onApplyTestTemplate={handleApplyConsultationTestTemplate}
@@ -490,24 +620,38 @@ function App() {
         )}
 
         {guidedStep === 'draft' && consultationDraft && (
-          <ConsultationSection
-            mode="draft"
-            showTestTools={testMode}
-            promptVariant={consultationPromptVariant}
-            onChangePromptVariant={setConsultationPromptVariant}
-            selectedTestTemplateId={selectedTestTemplateId}
-            onChangeTestTemplateId={setSelectedTestTemplateId}
-            onApplyTestTemplate={handleApplyConsultationTestTemplate}
-            intakeText={consultationText}
-            onChangeText={setConsultationText}
-            onCopyPrompt={handleCopyConsultationPrompt}
-            promptCopied={promptCopied}
-            onBuildDraft={handleBuildConsultationDraft}
-            onContinueToOptions={() => applyConsultationDraft('options')}
-            onChangeOpenQuestions={handleChangeDraftOpenQuestions}
-            draft={consultationDraft}
-            message={consultationMessage}
-          />
+          <>
+            <ConsultationSection
+              mode="draft"
+              showTestTools={testMode}
+              promptVariant={consultationPromptVariant}
+              onChangePromptVariant={setConsultationPromptVariant}
+              promptProvider={promptProvider}
+              onChangePromptProvider={setPromptProvider}
+              selectedTestTemplateId={selectedTestTemplateId}
+              onChangeTestTemplateId={setSelectedTestTemplateId}
+              onApplyTestTemplate={handleApplyConsultationTestTemplate}
+              intakeText={consultationText}
+              onChangeText={setConsultationText}
+              onCopyPrompt={handleCopyConsultationPrompt}
+              promptCopied={promptCopied}
+              onBuildDraft={handleBuildConsultationDraft}
+              onContinueToOptions={() => applyConsultationDraft('options')}
+              onChangeOpenQuestions={handleChangeDraftOpenQuestions}
+              draft={consultationDraft}
+              message={consultationMessage}
+            />
+            {draftRefinementPrompt && (
+              <RefinementPromptPanel
+                title="外部AIで要件をもう一段詰める"
+                lead="この draft と仮置き設定を Markdown で持ち出せます。ChatGPT / Claude / Gemini などで整理し直したら、相談内容のステップへ戻って貼り付けてください。"
+                promptText={draftRefinementPrompt}
+                filename={draftRefinementPromptFilename}
+                provider={promptProvider}
+                onChangeProvider={setPromptProvider}
+              />
+            )}
+          </>
         )}
 
         {guidedStep === 'options' && draftApplied && (
@@ -521,14 +665,32 @@ function App() {
             <div className="consultation-columns options-grid">
               <div className="consultation-card">
                 <h4>リポジトリ構成</h4>
-                <p className="option-callout">推奨: <strong>{suggestedRepoType === 'single' ? 'シングル' : 'マルチ'}</strong></p>
+                {repoTypeRecommendation && (
+                  <>
+                    <span className={`recommendation-badge recommendation-badge-${repoTypeRecommendation.status}`}>
+                      AI推奨: {recommendationStatusLabels[repoTypeRecommendation.status]}
+                    </span>
+                    <p className="option-callout">
+                      推奨: <strong>{repoTypeRecommendation.suggestedLabel}</strong> / 現在: <strong>{repoTypeRecommendation.currentLabel}</strong>
+                    </p>
+                    <p className="recommendation-rationale">{repoTypeRecommendation.rationale}</p>
+                    <div className="recommendation-actions">
+                      <button type="button" className="btn-secondary" onClick={() => applySuggestedRecommendation('repo_type')}>
+                        この推奨を採用
+                      </button>
+                      <button type="button" className="btn-secondary" onClick={() => setRecommendationStatus('repo_type', 'overridden')}>
+                        別の値で進める
+                      </button>
+                    </div>
+                  </>
+                )}
                 <div className="toggle-group">
                   <label className="radio-label">
                     <input
                       type="radio"
                       name="guidedRepoType"
                       checked={state.structure.repo_type === 'single'}
-                      onChange={() => dispatch({ type: 'SET_REPO_TYPE', payload: 'single' })}
+                      onChange={() => handleRepoTypeChange('single')}
                     />
                     シングル
                   </label>
@@ -537,7 +699,7 @@ function App() {
                       type="radio"
                       name="guidedRepoType"
                       checked={state.structure.repo_type === 'multi'}
-                      onChange={() => dispatch({ type: 'SET_REPO_TYPE', payload: 'multi' })}
+                      onChange={() => handleRepoTypeChange('multi')}
                     />
                     マルチ
                   </label>
@@ -546,7 +708,25 @@ function App() {
 
               <div className="consultation-card">
                 <h4>security 水準</h4>
-                <p className="option-callout">推奨: <strong>{suggestedSecurity}</strong></p>
+                {securityRecommendation && (
+                  <>
+                    <span className={`recommendation-badge recommendation-badge-${securityRecommendation.status}`}>
+                      AI推奨: {recommendationStatusLabels[securityRecommendation.status]}
+                    </span>
+                    <p className="option-callout">
+                      推奨: <strong>{securityRecommendation.suggestedLabel}</strong> / 現在: <strong>{securityRecommendation.currentLabel}</strong>
+                    </p>
+                    <p className="recommendation-rationale">{securityRecommendation.rationale}</p>
+                    <div className="recommendation-actions">
+                      <button type="button" className="btn-secondary" onClick={() => applySuggestedRecommendation('security_level')}>
+                        この推奨を採用
+                      </button>
+                      <button type="button" className="btn-secondary" onClick={() => setRecommendationStatus('security_level', 'overridden')}>
+                        別の値で進める
+                      </button>
+                    </div>
+                  </>
+                )}
                 <div className="toggle-group">
                   {(['low', 'medium', 'high'] as const).map((level) => (
                     <label key={level} className="radio-label">
@@ -554,7 +734,7 @@ function App() {
                         type="radio"
                         name="guidedSecurity"
                         checked={state.security.level === level}
-                        onChange={() => dispatch({ type: 'SET_SECURITY_LEVEL_OVERRIDE', payload: level })}
+                        onChange={() => handleSecurityChange(level)}
                       />
                       {level}
                     </label>
@@ -564,7 +744,25 @@ function App() {
 
               <div className="consultation-card">
                 <h4>進め方の段階数</h4>
-                <p className="option-callout">現在値: <strong>{state.workflow.phases_count}段階</strong></p>
+                {phasesRecommendation && (
+                  <>
+                    <span className={`recommendation-badge recommendation-badge-${phasesRecommendation.status}`}>
+                      AI推奨: {recommendationStatusLabels[phasesRecommendation.status]}
+                    </span>
+                    <p className="option-callout">
+                      推奨: <strong>{phasesRecommendation.suggestedLabel}</strong> / 現在: <strong>{phasesRecommendation.currentLabel}</strong>
+                    </p>
+                    <p className="recommendation-rationale">{phasesRecommendation.rationale}</p>
+                    <div className="recommendation-actions">
+                      <button type="button" className="btn-secondary" onClick={() => applySuggestedRecommendation('phases_count')}>
+                        この推奨を採用
+                      </button>
+                      <button type="button" className="btn-secondary" onClick={() => setRecommendationStatus('phases_count', 'overridden')}>
+                        別の値で進める
+                      </button>
+                    </div>
+                  </>
+                )}
                 <div className="toggle-group">
                   {[2, 3, 4, 5].map((count) => (
                     <label key={count} className="radio-label">
@@ -572,7 +770,7 @@ function App() {
                         type="radio"
                         name="guidedPhases"
                         checked={state.workflow.phases_count === count}
-                        onChange={() => dispatch({ type: 'SET_PHASES_COUNT', payload: count })}
+                        onChange={() => handlePhasesChange(count)}
                       />
                       {count}段階
                     </label>
@@ -724,8 +922,24 @@ function App() {
             </div>
 
             <div className="consultation-summary">
+              {consultationDraft && (
+                <p><strong>相談に使ったAI:</strong> {formatIntakeProviderLabel(consultationDraft.provider)}</p>
+              )}
               <p><strong>説明候補:</strong> {summaryDescription}</p>
             </div>
+
+            {draftRecommendations.length > 0 && (
+              <div className="consultation-summary">
+                <p><strong>AI recommendation の扱い</strong></p>
+                <ul>
+                  {draftRecommendations.map((recommendation) => (
+                    <li key={recommendation.key}>
+                      <strong>{recommendation.title}:</strong> 推奨 {recommendation.suggestedLabel} / 現在 {recommendation.currentLabel} / 状態 {recommendationStatusLabels[recommendation.status]}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="review-summary-grid review-planning-grid">
               <div className="consultation-card">
@@ -765,6 +979,17 @@ function App() {
                 <p className="consultation-lead">選んだ Skill（スキル）は ZIP に一緒に入りますが、自動実行はされません。解凍後に対応する AI でこの project を開いた時に使います。</p>
               )}
             </div>
+
+            {reviewRefinementPrompt && (
+              <RefinementPromptPanel
+                title="この状態で外部AIに再相談する"
+                lead="詳細調整まで含めた現在の設定をそのまま持ち出せます。要件を追加で詰めたい場合だけ使い、整理し直した内容を Step 2 へ戻して反映してください。"
+                promptText={reviewRefinementPrompt}
+                filename={reviewRefinementPromptFilename}
+                provider={promptProvider}
+                onChangeProvider={setPromptProvider}
+              />
+            )}
 
             <div className="output-actions">
               <button type="button" onClick={() => goToStep('detail')} className="btn-secondary">

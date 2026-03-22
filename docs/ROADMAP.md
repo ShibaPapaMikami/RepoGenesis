@@ -65,8 +65,8 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Add production deployment runbooks
 - [x] Replace `AUTH_ALLOWED_EMAILS`-centric generation gating with domain-first gating
 - [x] Fix production deployment to `cookie_session` UI path
-- [ ] Remove `manual_bearer` support from the codebase entirely
-- [ ] Add explicit admin-only mode for local support/debug paths
+- [x] Remove `manual_bearer` support from the codebase entirely
+- [x] Add explicit admin-only mode for local support/debug paths
 
 ## Phase 5: Usability for Non-Engineers (Complete)
 **Goal:** Reduce input burden and improve spec quality.
@@ -87,31 +87,35 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 
 ## Phase 6: AI-Assisted Spec Authoring
 **Goal:** Improve quality without duplicating generator knowledge.
-- [ ] Add AI provider abstraction behind intake flow
-- [ ] Add guided prompt templates for ChatGPT / Claude / Gemini
-- [ ] Convert questionnaire answers into `ProjectSpec draft`
+- [x] Add AI provider abstraction behind intake flow
+- [x] Add guided prompt templates for ChatGPT / Claude / Gemini
+- [x] Convert questionnaire answers into `ProjectSpec draft`
 - [x] Separate "facts", "assumptions", and "open questions" in output
-- [ ] Add AI-generated recommendations with user-confirmed overrides
-- [ ] Add prompt/export button for continuing requirement refinement outside RepoGenesis
-- [ ] Add deterministic `draft -> spec` mapping tests
+- [x] Add AI-generated recommendations with user-confirmed overrides
+- [x] Add prompt/export button for continuing requirement refinement outside RepoGenesis
+- [x] Add deterministic `draft -> spec` mapping tests
 
 ## Phase 7: Operational Scalability
 **Goal:** Reduce support cost as usage grows.
-- [ ] Move feedback storage from local files to persistent storage
-- [ ] Add searchable admin view for feedback / generation history
-- [ ] Add structured audit events for who generated what and when
-- [ ] Add rate limiting / abuse controls
-- [ ] Add domain-based authorization and optional role segmentation
-- [ ] Add health checks and alerting for Vercel + Render failures
-- [ ] Add smoke test after every production deploy
+- [x] Consolidate feedback / generation audit into a configurable SQLite support store
+- [ ] Back the support store with durable mounted storage in production
+- [x] Add a first searchable admin surface as read-only support API endpoints
+- [x] Add a human-facing admin view for feedback / generation history
+- [x] Add structured audit events for who generated what and when
+- [x] Add rate limiting / abuse controls
+- [x] Add domain-based authorization and optional role segmentation
+- [x] Add health checks and alerting for Vercel + Render failures
+- [x] Add smoke test after every production deploy
 
 ## Phase 8: Governance and Template Lifecycle
 **Goal:** Scale safely as standards evolve.
-- [ ] Add template versioning policy
-- [ ] Add migration strategy for `specVersion`
-- [ ] Add generated output compatibility checks in CI
-- [ ] Add release checklist for template changes
-- [ ] Define policy for rules/skills modular layer introduction
+- [x] Add baseline operational runbook bundle to generated repositories
+- [x] Add compatibility checks for generated outputs across CLI / local ZIP / mocked remote ZIP paths
+- [x] Add template versioning policy
+- [x] Add migration strategy for `specVersion`
+- [x] Add generated output compatibility checks in CI
+- [x] Add release checklist for template changes
+- [x] Define policy for rules/skills modular layer introduction
 - [ ] Decide whether to replace vendored auth with upstream `@gugenka/auth`
 
 ## Phase 9: Optional Skill Layer
@@ -129,32 +133,37 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Keep hooks/editor settings/project scripts out of core scope
 - [x] Track `official` / `curated` / `internal` source metadata and URLs
 
-## Immediate Priorities (Next 3 Milestones)
-### Milestone A: Production Hardening
-- [x] `AUTH_ALLOWED_DOMAINS=gugenka.jp` を generator 側の生成認可に反映
-- [x] `AUTH_ALLOWED_EMAILS` は例外運用に格下げ
-- [ ] 本番 UI から manual bearer を隠す
-- [ ] 認証エラー時の文言をユーザー向けに整理
+## Immediate Priorities (Current Hardening Tracks)
+### Track 1: End-to-End Generation Integrity
+- [x] Sync tool wrapper guidance, planning docs, and operational runbook bundle in generator outputs
+- [x] Keep `doctor` aligned with the runbook bundle and planning-aware starter docs
+- [x] Add local ZIP contract tests and mocked remote ZIP browser checks
+- [x] Add deployed app smoke for public shell / BFF / support proxy readiness
+- [ ] Verify the deployed public wizard / real remote ZIP flow end to end
 
-### Milestone B: Simple UX
-- [x] `相談結果を反映` の貼り付け導線を追加
-- [x] `かんたん入力` の質問セットを定義
-- [ ] 入力回答 -> `ProjectSpec` のマッピング表を作る
-- [ ] 非エンジニア向け用語集を UI に埋め込む
-- [x] 生成前サマリーを追加
+### Track 2: Product Supportability
+- [x] Consolidate feedback / generation audit into a configurable SQLite support store
+- [x] Add a reproducible Render blueprint baseline for the orchestration API + durable support disk
+- [ ] Back the support store with durable mounted storage in production
+- [x] Add read-only support API endpoints for feedback / generation audit
+- [x] Add a first human-facing support panel for feedback / generation history
+- [x] Expose support store path/status through `healthz` and smoke checks
+- [x] Add deployed app smoke for support proxy readiness
+- [x] Add a deployed cookie-session Playwright smoke for the support panel
+- [ ] Verify the deployed cookie-session support panel against real support data
+- [x] Add smoke checks for deployed public environments after release
 
-### Milestone C: AI Workflow
-- [ ] provider 非依存の intake abstraction を定義
-- [x] 相談結果を整理するための用途別プロンプトプリセットを追加
-- [ ] 回答結果をフォームに転記しやすい JSON / markdown 形式で出力
-- [x] `facts / assumptions / open questions` の 3 区分を導入
+### Track 3: Structural Separation
+- [x] Separate provider-neutral AI tooling policy into generated `docs/AI_TOOLING.md` and keep wrapper files thin
+- [ ] Continue skill layer deeper automation as its own track
+- [ ] Continue CI / docs hardening as its own track
+- [x] Remove `manual_bearer` support from public-facing paths
+- [x] Clarify which Phase 6 items belong to intake abstraction vs. later AI assistance
 
-### Milestone D: Skill Layer Planning
-- [x] skill registry item schema を定義
-- [x] project manifest (`repogenesis.skills.json`) を provider-aware に定義
-- [x] provider adapter (`codex` / `claude_code` / `gemini_cli`) を定義
-- [x] `copy + pin` を前提に install/update/remove 契約を定義
-- [x] `skills` は optional layer、generator core とは分離する
+### CI / Docs Hardening
+- [x] Add CI coverage for vendored generator bundle drift
+- [x] Add CI coverage for generator-dist vs vendored-bundle output compatibility
+- [x] Keep root README / deploy docs aligned with the current deployed smoke flow
 
 ## Explicit Non-Goals (For Now)
 - [ ] Generator の知識注入機能を先に増やすこと

@@ -34,11 +34,45 @@ export interface RemoveSkillOptions {
   skillId: string;
 }
 
+export interface UpdateSkillOptions {
+  projectRoot: string;
+  registryRoot: string;
+  skillId: string;
+  selectedProviders?: SkillProvider[];
+  installedBy?: string;
+  installedAt?: string;
+}
+
+export interface UpdateAllSkillsOptions {
+  projectRoot: string;
+  registryRoot: string;
+  installedBy?: string;
+  installedAt?: string;
+}
+
 export interface RemoveSkillResult {
   skillId: string;
   removedFiles: string[];
   manifestPath: string;
   warnings: string[];
+}
+
+export interface UpdateSkillResult {
+  skillId: string;
+  previousVersion: string;
+  nextVersion: string;
+  copiedFiles: string[];
+  removedFiles: string[];
+  manifestPath: string;
+  warnings: string[];
+}
+
+export interface UpdateAllSkillsResult {
+  updated: UpdateSkillResult[];
+  skipped: Array<{
+    skillId: string;
+    reason: string;
+  }>;
 }
 
 function manifestPath(projectRoot: string): string {
@@ -190,5 +224,128 @@ export function removeSkill(options: RemoveSkillOptions): RemoveSkillResult {
     removedFiles,
     manifestPath: savedManifestPath,
     warnings: removal.warnings,
+  };
+}
+
+export function updateSkill(options: UpdateSkillOptions): UpdateSkillResult {
+  const registryItem = findRegistryItem(options.registryRoot, options.skillId);
+  if (!registryItem) {
+    throw new Error(`Skill not found in registry: ${options.skillId}`);
+  }
+
+  const manifest = loadProjectSkillsManifest(options.projectRoot);
+  const current = manifest.installed.find((item) => item.id === options.skillId);
+  if (!current) {
+    throw new Error(`Skill is not installed in project: ${options.skillId}`);
+  }
+
+  const selectedProviders = options.selectedProviders?.length
+    ? options.selectedProviders
+    : [...new Set(current.artifacts.map((artifact) => artifact.provider))];
+
+  const plan = planSkillInstall({
+    project: buildInstallerProject(selectedProviders),
+    registryItem,
+    manifest,
+    selectedProviders,
+  });
+
+  const warnings = plan.warnings.filter((warning) => !warning.includes('manifest に既に存在します'));
+  if (current.version === registryItem.version) {
+    warnings.push(`skill ${options.skillId} はすでに最新 version (${registryItem.version}) です。artifact を再同期します。`);
+  }
+
+  const removedFiles: string[] = [];
+  for (const artifact of current.artifacts) {
+    const artifactPath = path.join(options.projectRoot, artifact.path);
+    if (fs.existsSync(artifactPath)) {
+      fs.rmSync(artifactPath, { force: true });
+      removedFiles.push(artifact.path);
+    } else {
+      warnings.push(`更新前 artifact が見つかりません: ${artifact.path}`);
+    }
+  }
+
+  const copiedFiles: string[] = [];
+  const itemRoot = registryItemRoot(options.registryRoot, options.skillId);
+  for (const artifact of plan.artifacts) {
+    const fromPath = path.join(itemRoot, artifact.sourcePath);
+    const toPath = path.join(options.projectRoot, artifact.targetPath);
+    fs.mkdirSync(path.dirname(toPath), { recursive: true });
+    fs.copyFileSync(fromPath, toPath);
+    copiedFiles.push(artifact.targetPath);
+  }
+
+  const nextManifest = applySkillInstallPlanToManifest({
+    manifest,
+    plan,
+    installedAt: options.installedAt ?? new Date().toISOString(),
+    installedBy: options.installedBy,
+  });
+  const savedManifestPath = saveProjectSkillsManifest(options.projectRoot, nextManifest);
+
+  return {
+    skillId: options.skillId,
+    previousVersion: current.version,
+    nextVersion: registryItem.version,
+    copiedFiles,
+    removedFiles,
+    manifestPath: savedManifestPath,
+    warnings,
+  };
+}
+
+export function updateAllSkills(options: UpdateAllSkillsOptions): UpdateAllSkillsResult {
+  const manifest = loadProjectSkillsManifest(options.projectRoot);
+  const updated: UpdateSkillResult[] = [];
+  const skipped: Array<{
+    skillId: string;
+    reason: string;
+  }> = [];
+
+  if (manifest.installed.length === 0) {
+    return {
+      updated,
+      skipped,
+    };
+  }
+
+  const registry = new Map(loadSkillRegistry(options.registryRoot).map((item) => [item.id, item]));
+
+  for (const installedSkill of manifest.installed) {
+    const registryItem = registry.get(installedSkill.id);
+    if (!registryItem) {
+      skipped.push({
+        skillId: installedSkill.id,
+        reason: 'registry entry is missing',
+      });
+      continue;
+    }
+
+    const missingArtifacts = installedSkill.artifacts.filter(
+      (artifact) => !fs.existsSync(path.join(options.projectRoot, artifact.path)),
+    );
+
+    if (installedSkill.version === registryItem.version && missingArtifacts.length === 0) {
+      skipped.push({
+        skillId: installedSkill.id,
+        reason: 'already up to date',
+      });
+      continue;
+    }
+
+    updated.push(updateSkill({
+      projectRoot: options.projectRoot,
+      registryRoot: options.registryRoot,
+      skillId: installedSkill.id,
+      selectedProviders: [...new Set(installedSkill.artifacts.map((artifact) => artifact.provider))],
+      installedBy: options.installedBy,
+      installedAt: options.installedAt,
+    }));
+  }
+
+  return {
+    updated,
+    skipped,
   };
 }

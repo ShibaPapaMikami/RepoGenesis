@@ -37,7 +37,7 @@ export function generateToolGuidance(
     return `# Read PROJECT.md first.
 
 ## ${label} rules
-- On session start, read: \`PROJECT.md\` -> \`GLOBAL_CONTEXT.md\` -> \`REQUIREMENTS.md\`.
+- On session start, read: \`PROJECT.md\` -> \`docs/AI_TOOLING.md\` -> \`GLOBAL_CONTEXT.md\` -> \`REQUIREMENTS.md\`.
 - Before editing a repository, also read that repository's \`PROJECT.md\` and \`docs/ACTIVE_CONTEXT.md\`.
 - Keep project truth in \`PROJECT.md\` and \`docs/\`; \`${wrapperFile}\` is only the ${label}-specific overlay.
 - Treat \`${wrapperFile}\` as a thin adapter over the shared project constitution.
@@ -49,7 +49,7 @@ ${providerSpecificLine}
     return `# Read PROJECT.md first.
 
 ## ${label} rules
-- On session start, read: \`PROJECT.md\` -> \`docs/ACTIVE_CONTEXT.md\` -> \`../GLOBAL_CONTEXT.md\`.
+- On session start, read: \`PROJECT.md\` -> \`../docs/AI_TOOLING.md\` -> \`docs/ACTIVE_CONTEXT.md\` -> \`../GLOBAL_CONTEXT.md\`.
 - \`${wrapperFile}\` contains ${label}-specific workflow only. Project truth lives in \`PROJECT.md\` and \`docs/\`.
 - Treat \`${wrapperFile}\` as a thin adapter over the shared repository and workspace constitutions.
 - If work changes another repository, return to \`../GLOBAL_CONTEXT.md\` and update both repositories' context files.
@@ -60,7 +60,7 @@ ${providerSpecificLine}
   return `# Read PROJECT.md first.
 
 ## ${label} rules
-- On session start, read: \`PROJECT.md\` -> \`docs/ACTIVE_CONTEXT.md\` -> \`docs/REQUIREMENTS.md\` -> \`docs/ROADMAP.md\`.
+- On session start, read: \`PROJECT.md\` -> \`docs/AI_TOOLING.md\` -> \`docs/ACTIVE_CONTEXT.md\` -> \`docs/REQUIREMENTS.md\` -> \`docs/ROADMAP.md\`.
 - Keep project truth in \`PROJECT.md\` and \`docs/\`; \`${wrapperFile}\` is only the ${label}-specific overlay.
 - Treat \`${wrapperFile}\` as a thin adapter over the shared project constitution.
 ${providerSpecificLine}

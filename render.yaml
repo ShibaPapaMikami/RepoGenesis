@@ -1,0 +1,36 @@
+services:
+  - type: web
+    runtime: node
+    name: repogenesis-orchestration-api
+    rootDir: generator
+    plan: starter
+    region: singapore
+    autoDeployTrigger: off
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:api
+    healthCheckPath: /healthz
+    buildFilter:
+      paths:
+        - generator/**
+        - docs/OAUTH_ORCHESTRATION_API.md
+        - docs/VERCEL_DEPLOY.md
+        - render.yaml
+    disk:
+      name: support-data
+      mountPath: /var/data/repogenesis
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: 22.17.0
+      - key: AUTH_PROVIDER
+        value: gugenka
+      - key: AUTH_ALLOWED_DOMAINS
+        value: gugenka.jp
+      - key: SESSION_AUDIENCE
+        value: repogenesis
+      - key: SUPPORT_DATA_DB_PATH
+        value: /var/data/repogenesis/support-data.sqlite
+      - key: NEXTAUTH_SECRET
+        sync: false
+      - key: CORS_ALLOW_ORIGIN
+        sync: false

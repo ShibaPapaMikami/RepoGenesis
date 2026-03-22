@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, it, expect } from 'vitest';
-import { authorizeBearerTokenAsync, authorizeRequestAsync, hasGeneratePermission } from '../src/orchestration/auth';
+import {
+  authorizeBearerTokenAsync,
+  authorizeRequestAsync,
+  hasGeneratePermission,
+  hasSupportReadPermission,
+} from '../src/orchestration/auth';
 import { signSessionJwt } from '../src/vendor/gugenka-auth/server/session';
 
 describe('orchestration auth adapter', () => {
@@ -8,6 +13,8 @@ describe('orchestration auth adapter', () => {
   let originalAudience: string | undefined;
   let originalAllowed: string | undefined;
   let originalAllowedDomains: string | undefined;
+  let originalSupportAllowed: string | undefined;
+  let originalSupportAllowedDomains: string | undefined;
 
   beforeEach(() => {
     originalProvider = process.env.AUTH_PROVIDER;
@@ -15,6 +22,8 @@ describe('orchestration auth adapter', () => {
     originalAudience = process.env.SESSION_AUDIENCE;
     originalAllowed = process.env.AUTH_ALLOWED_EMAILS;
     originalAllowedDomains = process.env.AUTH_ALLOWED_DOMAINS;
+    originalSupportAllowed = process.env.SUPPORT_ALLOWED_EMAILS;
+    originalSupportAllowedDomains = process.env.SUPPORT_ALLOWED_DOMAINS;
   });
 
   afterEach(() => {
@@ -35,6 +44,12 @@ describe('orchestration auth adapter', () => {
 
     if (originalAllowedDomains === undefined) delete process.env.AUTH_ALLOWED_DOMAINS;
     else process.env.AUTH_ALLOWED_DOMAINS = originalAllowedDomains;
+
+    if (originalSupportAllowed === undefined) delete process.env.SUPPORT_ALLOWED_EMAILS;
+    else process.env.SUPPORT_ALLOWED_EMAILS = originalSupportAllowed;
+
+    if (originalSupportAllowedDomains === undefined) delete process.env.SUPPORT_ALLOWED_DOMAINS;
+    else process.env.SUPPORT_ALLOWED_DOMAINS = originalSupportAllowedDomains;
   });
 
   it('authorizes dev-token in mock mode', async () => {
@@ -44,6 +59,7 @@ describe('orchestration auth adapter', () => {
     if (result.ok && result.context) {
       expect(result.context.userId).toBe('dev-user');
       expect(hasGeneratePermission(result.context)).toBe(true);
+      expect(hasSupportReadPermission(result.context)).toBe(true);
     }
   });
 
@@ -53,6 +69,17 @@ describe('orchestration auth adapter', () => {
     expect(result.ok).toBe(true);
     if (result.ok && result.context) {
       expect(hasGeneratePermission(result.context)).toBe(false);
+      expect(hasSupportReadPermission(result.context)).toBe(false);
+    }
+  });
+
+  it('authorizes support-token in mock mode for read-only support access', async () => {
+    process.env.AUTH_PROVIDER = 'mock';
+    const result = await authorizeBearerTokenAsync('Bearer support-token');
+    expect(result.ok).toBe(true);
+    if (result.ok && result.context) {
+      expect(hasGeneratePermission(result.context)).toBe(false);
+      expect(hasSupportReadPermission(result.context)).toBe(true);
     }
   });
 
@@ -77,6 +104,7 @@ describe('orchestration auth adapter', () => {
     if (result.ok && result.context) {
       expect(result.context.userId).toBe('dev@gugenka.jp');
       expect(hasGeneratePermission(result.context)).toBe(true);
+      expect(hasSupportReadPermission(result.context)).toBe(true);
     }
   });
 
@@ -93,6 +121,7 @@ describe('orchestration auth adapter', () => {
     if (result.ok && result.context) {
       expect(result.context.userId).toBe('cookie@gugenka.jp');
       expect(hasGeneratePermission(result.context)).toBe(true);
+      expect(hasSupportReadPermission(result.context)).toBe(true);
     }
   });
 
@@ -109,6 +138,7 @@ describe('orchestration auth adapter', () => {
     expect(result.ok).toBe(true);
     if (result.ok && result.context) {
       expect(hasGeneratePermission(result.context)).toBe(false);
+      expect(hasSupportReadPermission(result.context)).toBe(false);
     }
   });
 
@@ -125,6 +155,7 @@ describe('orchestration auth adapter', () => {
     expect(result.ok).toBe(true);
     if (result.ok && result.context) {
       expect(hasGeneratePermission(result.context)).toBe(true);
+      expect(hasSupportReadPermission(result.context)).toBe(true);
     }
   });
 
@@ -141,6 +172,7 @@ describe('orchestration auth adapter', () => {
     expect(result.ok).toBe(true);
     if (result.ok && result.context) {
       expect(hasGeneratePermission(result.context)).toBe(false);
+      expect(hasSupportReadPermission(result.context)).toBe(false);
     }
   });
 
@@ -158,6 +190,25 @@ describe('orchestration auth adapter', () => {
     expect(result.ok).toBe(true);
     if (result.ok && result.context) {
       expect(hasGeneratePermission(result.context)).toBe(true);
+      expect(hasSupportReadPermission(result.context)).toBe(true);
+    }
+  });
+
+  it('allows support-read role with dedicated support domain allowlist', async () => {
+    process.env.AUTH_PROVIDER = 'gugenka';
+    process.env.NEXTAUTH_SECRET = 'test-secret';
+    process.env.SESSION_AUDIENCE = 'repogenesis-test';
+    process.env.AUTH_ALLOWED_DOMAINS = 'gugenka.jp';
+    process.env.SUPPORT_ALLOWED_DOMAINS = 'support.example';
+
+    const token = await signSessionJwt('agent@support.example', {
+      audience: 'repogenesis-test',
+    });
+    const result = await authorizeRequestAsync(undefined, `__session=${token}`);
+    expect(result.ok).toBe(true);
+    if (result.ok && result.context) {
+      expect(hasGeneratePermission(result.context)).toBe(false);
+      expect(hasSupportReadPermission(result.context)).toBe(true);
     }
   });
 });

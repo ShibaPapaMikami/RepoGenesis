@@ -3,6 +3,9 @@ import { appendAuditRecord } from './audit';
 import type { GenerateApiDownloadSuccess, GenerateApiError } from './api';
 import { handleGenerateApiDownloadRequest } from './api';
 import { handleFeedbackApiRequest } from './feedback';
+import { buildHealthPayload } from './health';
+import { consumeRateLimit, rateLimitHeaders } from './rateLimit';
+import { handleSupportAuditListRequest, handleSupportFeedbackListRequest } from './support';
 
 const PORT = Number(process.env.PORT ?? 8002);
 const HOST = process.env.HOST ?? '0.0.0.0';
@@ -10,6 +13,31 @@ const CORS_ALLOW_ORIGIN = process.env.CORS_ALLOW_ORIGIN ?? '*';
 const CORS_ALLOW_HEADERS = 'Authorization, Content-Type';
 const CORS_EXPOSE_HEADERS = 'Content-Disposition, X-Request-Id, X-Spec-Version, X-File-Count';
 const CORS_ALLOWED_ORIGINS = CORS_ALLOW_ORIGIN.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
+
+function getAuditAuthProvider(): 'mock' | 'gugenka' {
+  return process.env.AUTH_PROVIDER === 'gugenka' ? 'gugenka' : 'mock';
+}
+
+function hasSessionCookie(cookieHeader: string | undefined): boolean {
+  if (!cookieHeader) {
+    return false;
+  }
+  return ['__session=', 'next-auth.session-token=', '__Secure-next-auth.session-token=']
+    .some((tokenName) => cookieHeader.includes(tokenName));
+}
+
+function getAuditAuthMode(
+  authorizationHeader: string | undefined,
+  cookieHeader: string | undefined,
+): 'bearer' | 'cookie_session' | 'anonymous' {
+  if (authorizationHeader?.startsWith('Bearer ')) {
+    return 'bearer';
+  }
+  if (hasSessionCookie(cookieHeader)) {
+    return 'cookie_session';
+  }
+  return 'anonymous';
+}
 
 function jsonResponse(status: number, body: unknown): { status: number; text: string } {
   return {
@@ -42,6 +70,12 @@ function applyCorsHeaders(reqOrigin: string | undefined, res: ServerResponse): v
   res.setHeader('Vary', 'Origin');
 }
 
+function applyRateLimitHeaders(res: ServerResponse, headers: Record<string, string>): void {
+  for (const [headerName, headerValue] of Object.entries(headers)) {
+    res.setHeader(headerName, headerValue);
+  }
+}
+
 function toServerRequestId(payload: unknown): string {
   if (payload && typeof payload === 'object' && 'meta' in payload) {
     const meta = (payload as { meta?: { requestId?: unknown } }).meta;
@@ -52,9 +86,11 @@ function toServerRequestId(payload: unknown): string {
   return `srv-${Date.now()}`;
 }
 
-const server = createServer((req, res) => {
+const server = createServer(async (req, res) => {
   const reqOrigin = typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
   applyCorsHeaders(reqOrigin, res);
+  const requestUrl = new URL(req.url ?? '/', 'http://localhost');
+  const pathname = requestUrl.pathname;
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
@@ -62,19 +98,65 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (req.method === 'GET' && req.url === '/healthz') {
-    const out = jsonResponse(200, { ok: true });
+  if (req.method === 'GET' && pathname === '/healthz') {
+    const out = jsonResponse(200, buildHealthPayload());
     res.writeHead(out.status, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(out.text);
     return;
   }
 
-  const isFeedbackBug = req.method === 'POST' && req.url === '/api/v1/feedback/bug';
-  const isFeedbackRequest = req.method === 'POST' && req.url === '/api/v1/feedback/request';
-  const isGenerate = req.method === 'POST' && req.url === '/api/v1/repositories/generate';
+  const isFeedbackBug = req.method === 'POST' && pathname === '/api/v1/feedback/bug';
+  const isFeedbackRequest = req.method === 'POST' && pathname === '/api/v1/feedback/request';
+  const isGenerate = req.method === 'POST' && pathname === '/api/v1/repositories/generate';
+  const isSupportFeedbackList = req.method === 'GET' && pathname === '/api/v1/support/feedback';
+  const isSupportAuditList = req.method === 'GET' && pathname === '/api/v1/support/audit';
 
-  if (!isGenerate && !isFeedbackBug && !isFeedbackRequest) {
+  if (!isGenerate && !isFeedbackBug && !isFeedbackRequest && !isSupportFeedbackList && !isSupportAuditList) {
     const out = jsonResponse(404, { error: 'Not Found' });
+    res.writeHead(out.status, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(out.text);
+    return;
+  }
+
+  const authHeader = typeof req.headers.authorization === 'string'
+    ? req.headers.authorization
+    : undefined;
+  const cookieHeader = typeof req.headers.cookie === 'string' ? req.headers.cookie : undefined;
+  const forwardedForHeader = typeof req.headers['x-forwarded-for'] === 'string'
+    ? req.headers['x-forwarded-for']
+    : undefined;
+  const remoteAddress = req.socket.remoteAddress;
+  const auditAuthProvider = getAuditAuthProvider();
+  const auditAuthMode = getAuditAuthMode(authHeader, cookieHeader);
+  const rateLimitRoute = isGenerate
+    ? 'generate'
+    : isFeedbackBug || isFeedbackRequest
+      ? 'feedback'
+      : 'support_read';
+  const rateLimit = consumeRateLimit({
+    route: rateLimitRoute,
+    authorizationHeader: authHeader,
+    cookieHeader,
+    forwardedForHeader,
+    remoteAddress,
+  });
+  applyRateLimitHeaders(res, rateLimitHeaders(rateLimit));
+  if (!rateLimit.allowed) {
+    const out = jsonResponse(429, {
+      error: 'Too Many Requests',
+      retryAfterSeconds: rateLimit.retryAfterSeconds,
+      scope: rateLimitRoute,
+    });
+    res.writeHead(out.status, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(out.text);
+    return;
+  }
+
+  if (isSupportFeedbackList || isSupportAuditList) {
+    const supportResult = isSupportFeedbackList
+      ? await handleSupportFeedbackListRequest(authHeader, cookieHeader, requestUrl.toString())
+      : await handleSupportAuditListRequest(authHeader, cookieHeader, requestUrl.toString());
+    const out = jsonResponse(supportResult.status, supportResult.body);
     res.writeHead(out.status, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(out.text);
     return;
@@ -93,11 +175,6 @@ const server = createServer((req, res) => {
       res.end(out.text);
       return;
     }
-
-    const authHeader = typeof req.headers.authorization === 'string'
-      ? req.headers.authorization
-      : undefined;
-    const cookieHeader = typeof req.headers.cookie === 'string' ? req.headers.cookie : undefined;
 
     if (isFeedbackBug || isFeedbackRequest) {
       const feedbackType = isFeedbackBug ? 'bug' : 'request';
@@ -126,6 +203,8 @@ const server = createServer((req, res) => {
         userId: 'unknown',
         timestamp: new Date().toISOString(),
         result: 'failure',
+        authProvider: auditAuthProvider,
+        authMode: auditAuthMode,
         errorCode: String(result.status),
       });
       const out = jsonResponse(result.status, result.body);
@@ -143,6 +222,11 @@ const server = createServer((req, res) => {
       specVersion: ok.specVersion,
       repoType: ok.repoType,
       fileCount: ok.fileCount,
+      projectSlug: ok.projectSlug,
+      artifactFilename: ok.artifact.filename,
+      authProvider: auditAuthProvider,
+      authMode: auditAuthMode,
+      selectedSkillIds: ok.selectedSkillIds,
     });
     // eslint-disable-next-line no-console
     console.log(

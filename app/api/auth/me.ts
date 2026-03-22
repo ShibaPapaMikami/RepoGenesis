@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { getSessionEmailFromCookies } from '../_lib/session.js';
+import { requireLocalAdminMode } from '../_lib/localAdmin.ts';
+import { getSessionEmailFromCookies } from '../_lib/session.ts';
 
 type Req = IncomingMessage & {
   method?: string;
@@ -27,6 +28,12 @@ function parseCookieHeader(cookieHeader: string | undefined): Map<string, string
 export default async function handler(req: Req, res: Res): Promise<void> {
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'Method Not Allowed' });
+    return;
+  }
+
+  const localAdminGate = requireLocalAdminMode(req.headers);
+  if (!localAdminGate.ok) {
+    res.status(localAdminGate.status).json({ error: localAdminGate.error });
     return;
   }
 

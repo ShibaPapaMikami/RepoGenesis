@@ -5,6 +5,10 @@ import * as os from 'os';
 import { generate } from '../src/generator';
 import { generateFromSpec } from '../src/generateFromSpec';
 import { projectBriefSchema } from '../src/schema';
+import { DEFAULT_RUNBOOK_PATHS } from '../src/runbookBundle';
+
+const SINGLE_REPO_FILE_COUNT = 23 + DEFAULT_RUNBOOK_PATHS.length;
+const MULTI_REPO_FILE_COUNT = 39 + DEFAULT_RUNBOOK_PATHS.length;
 
 const SINGLE_BRIEF = {
   specVersion: '1.0',
@@ -159,12 +163,13 @@ describe('generator — single-repo', () => {
     const result = generate({ inputPath, outputPath: tmpDir, force: false });
 
     expect(result.success).toBe(true);
-    expect(result.filesCreated.length).toBe(24);
+    expect(result.filesCreated.length).toBe(SINGLE_REPO_FILE_COUNT);
 
     const expectedFiles = [
       'PROJECT.md',
       'CLAUDE.md',
       'docs/ACTIVE_CONTEXT.md',
+      'docs/AI_TOOLING.md',
       'docs/TECH_DECISIONS.md',
       'docs/EXTERNAL_DEPENDENCIES.md',
       'docs/REQUIREMENTS.md',
@@ -172,8 +177,7 @@ describe('generator — single-repo', () => {
       'docs/ROADMAP.md',
       'docs/VERSIONING_STANDARD.md',
       'docs/ADR/0000-template.md',
-      'docs/runbooks/README.md',
-      'docs/runbooks/skill-install.md',
+      ...DEFAULT_RUNBOOK_PATHS,
       'plans/template.md',
       'prompts/restart.md',
       'SECURITY.md',
@@ -209,7 +213,7 @@ describe('generator — single-repo', () => {
     // Second generate with --force
     const result = generate({ inputPath, outputPath: tmpDir, force: true });
     expect(result.success).toBe(true);
-    expect(result.filesCreated.length).toBe(24);
+    expect(result.filesCreated.length).toBe(SINGLE_REPO_FILE_COUNT);
   });
 
   it('should render normalized project descriptions in generated docs', () => {
@@ -294,6 +298,7 @@ describe('generator — single-repo', () => {
     expect(requirements).toContain('### R1: Deliver the primary workflow');
     expect(requirements).toContain('### R2: Keep the project operable and traceable from day one');
     expect(requirements).toContain('The exact boundary of the initial scope is written down');
+    expect(requirements).toContain('AI Tooling Policy: `docs/AI_TOOLING.md`');
 
     expect(architecture).not.toContain('[Describe the high-level architecture here]');
     expect(architecture).not.toContain('[List and describe key system components]');
@@ -311,6 +316,7 @@ describe('generator — single-repo', () => {
 
     const agents = fs.readFileSync(path.join(result.outputDir, 'AGENTS.md'), 'utf-8');
     const projectMd = fs.readFileSync(path.join(result.outputDir, 'PROJECT.md'), 'utf-8');
+    const aiTooling = fs.readFileSync(path.join(result.outputDir, 'docs/AI_TOOLING.md'), 'utf-8');
     const activeContext = fs.readFileSync(path.join(result.outputDir, 'docs/ACTIVE_CONTEXT.md'), 'utf-8');
     const restart = fs.readFileSync(path.join(result.outputDir, 'prompts/restart.md'), 'utf-8');
 
@@ -318,8 +324,10 @@ describe('generator — single-repo', () => {
     expect(fs.existsSync(path.join(result.outputDir, 'CLAUDE.md'))).toBe(false);
     expect(agents).toContain('## Codex rules');
     expect(agents).toContain('`AGENTS.md` is only the Codex-specific overlay');
-    expect(projectMd).toContain('`AGENTS.md`');
+    expect(projectMd).toContain('docs/AI_TOOLING.md');
+    expect(aiTooling).toContain('`AGENTS.md`');
     expect(activeContext).toContain('`AGENTS.md`');
+    expect(restart).toContain('Read docs/AI_TOOLING.md if it exists');
     expect(restart).toContain('AGENTS.md');
   });
 });
@@ -332,7 +340,21 @@ describe('generator — multi-repo', () => {
     expect(result.success).toBe(true);
 
     // Workspace-level files
-    const workspaceFiles = ['PROJECT.md', 'CLAUDE.md', 'GLOBAL_CONTEXT.md', 'REQUIREMENTS.md', 'SECURITY.md', 'VERSIONING_STANDARD.md', 'docs/TECH_DECISIONS.md', 'docs/EXTERNAL_DEPENDENCIES.md', 'docs/runbooks/README.md', 'docs/runbooks/skill-install.md', '.gitignore', 'skills/README.md', 'repogenesis.skills.json'];
+    const workspaceFiles = [
+      'PROJECT.md',
+      'CLAUDE.md',
+      'GLOBAL_CONTEXT.md',
+      'REQUIREMENTS.md',
+      'SECURITY.md',
+      'VERSIONING_STANDARD.md',
+      'docs/AI_TOOLING.md',
+      'docs/TECH_DECISIONS.md',
+      'docs/EXTERNAL_DEPENDENCIES.md',
+      ...DEFAULT_RUNBOOK_PATHS,
+      '.gitignore',
+      'skills/README.md',
+      'repogenesis.skills.json',
+    ];
     for (const file of workspaceFiles) {
       const fullPath = path.join(result.outputDir, file);
       expect(fs.existsSync(fullPath), `Expected workspace file: ${file}`).toBe(true);
@@ -358,6 +380,19 @@ describe('generator — multi-repo', () => {
         expect(fs.existsSync(fullPath), `Expected repo file: ${file}`).toBe(true);
       }
     }
+  });
+
+  it('should reference workspace AI tooling policy from per-repo starter docs', () => {
+    const inputPath = writeInputFile(MULTI_BRIEF);
+    const result = generate({ inputPath, outputPath: tmpDir, force: true });
+
+    const repoProject = fs.readFileSync(path.join(result.outputDir, 'frontend/PROJECT.md'), 'utf-8');
+    const repoActiveContext = fs.readFileSync(path.join(result.outputDir, 'frontend/docs/ACTIVE_CONTEXT.md'), 'utf-8');
+    const repoRestart = fs.readFileSync(path.join(result.outputDir, 'frontend/prompts/restart.md'), 'utf-8');
+
+    expect(repoProject).toContain('`../docs/AI_TOOLING.md`');
+    expect(repoActiveContext).toContain('`../docs/AI_TOOLING.md`');
+    expect(repoRestart).toContain('Read ../docs/AI_TOOLING.md if it exists');
   });
 
   it('should include GLOBAL_CONTEXT.md with repos list', () => {
@@ -462,18 +497,20 @@ describe('generateFromSpec — pure function', () => {
     return result.data;
   }
 
-  it('should return Map with 24 files for single-repo', () => {
+  it('should return Map with default runbook bundle for single-repo', () => {
     const brief = parseBrief(SINGLE_BRIEF);
     const files = generateFromSpec(brief);
-    expect(files.size).toBe(24);
+    expect(files.size).toBe(SINGLE_REPO_FILE_COUNT);
     expect(files.has('PROJECT.md')).toBe(true);
     expect(files.has('CLAUDE.md')).toBe(true);
+    expect(files.has('docs/AI_TOOLING.md')).toBe(true);
     expect(files.has('SECURITY.md')).toBe(true);
     expect(files.has('docs/TECH_DECISIONS.md')).toBe(true);
     expect(files.has('docs/EXTERNAL_DEPENDENCIES.md')).toBe(true);
     expect(files.has('docs/VERSIONING_STANDARD.md')).toBe(true);
-    expect(files.has('docs/runbooks/README.md')).toBe(true);
-    expect(files.has('docs/runbooks/skill-install.md')).toBe(true);
+    for (const runbook of DEFAULT_RUNBOOK_PATHS) {
+      expect(files.has(runbook), `Missing runbook: ${runbook}`).toBe(true);
+    }
     expect(files.has('.gitignore')).toBe(true);
     expect(files.has('skills/README.md')).toBe(true);
     expect(files.has('repogenesis.skills.json')).toBe(true);
@@ -483,16 +520,18 @@ describe('generateFromSpec — pure function', () => {
   it('should return Map with correct files for multi-repo', () => {
     const brief = parseBrief(MULTI_BRIEF);
     const files = generateFromSpec(brief);
-    // 17 workspace + 11 * 2 repos + 1 manifest = 40
-    expect(files.size).toBe(40);
+    // 22 workspace + 11 * 2 repos + 1 manifest = 45
+    expect(files.size).toBe(MULTI_REPO_FILE_COUNT);
     expect(files.has('PROJECT.md')).toBe(true);
     expect(files.has('CLAUDE.md')).toBe(true);
     expect(files.has('GLOBAL_CONTEXT.md')).toBe(true);
+    expect(files.has('docs/AI_TOOLING.md')).toBe(true);
     expect(files.has('docs/TECH_DECISIONS.md')).toBe(true);
     expect(files.has('docs/EXTERNAL_DEPENDENCIES.md')).toBe(true);
     expect(files.has('VERSIONING_STANDARD.md')).toBe(true);
-    expect(files.has('docs/runbooks/README.md')).toBe(true);
-    expect(files.has('docs/runbooks/skill-install.md')).toBe(true);
+    for (const runbook of DEFAULT_RUNBOOK_PATHS) {
+      expect(files.has(runbook), `Missing workspace runbook: ${runbook}`).toBe(true);
+    }
     expect(files.has('skills/README.md')).toBe(true);
     expect(files.has('repogenesis.skills.json')).toBe(true);
     expect(files.has('frontend/PROJECT.md')).toBe(true);
@@ -588,7 +627,7 @@ describe('generateFromSpec — pure function', () => {
     const manifest = JSON.parse(manifestRaw as string);
     expect(manifest.specVersion).toBe('1.0');
     expect(manifest.repoType).toBe('single');
-    expect(manifest.fileCount).toBe(24);
+    expect(manifest.fileCount).toBe(SINGLE_REPO_FILE_COUNT);
     expect(manifest.source).toBe('legacyBrief');
     expect(manifest.selectedSkills).toEqual([]);
   });

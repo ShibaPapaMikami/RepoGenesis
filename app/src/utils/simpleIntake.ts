@@ -150,7 +150,6 @@ export function buildSimpleIntakeDraft(input: SimpleIntakeState, currentState: F
 
   return {
     ...draft,
-    source: 'pasted_consultation',
     suggestedState: applySimpleIntakeOverrides(draft.suggestedState, input),
   };
 }

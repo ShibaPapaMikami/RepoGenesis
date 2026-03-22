@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { buildExpiredSessionCookie } from '../_lib/session.js';
+import { requireLocalAdminMode } from '../_lib/localAdmin.ts';
+import { buildExpiredSessionCookie } from '../_lib/session.ts';
 
 type Res = ServerResponse & {
   json: (body: unknown) => void;
@@ -15,6 +16,12 @@ export default async function handler(req: IncomingMessage & { method?: string }
   }
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method Not Allowed' });
+    return;
+  }
+
+  const localAdminGate = requireLocalAdminMode(req.headers);
+  if (!localAdminGate.ok) {
+    res.status(localAdminGate.status).json({ error: localAdminGate.error });
     return;
   }
 

@@ -3,6 +3,11 @@ import type { IntakeDraft } from './intakeParser';
 import type { ConsultationPromptVariant } from './intakeParser';
 import type { SimpleIntakeState } from './simpleIntake.ts';
 import { normalizeAiTools, type LegacyAiTool } from './aiTools.ts';
+import { normalizeIntakeProviderMetadata } from './intakeProvider.ts';
+import {
+  normalizeRecommendationDecisions,
+  type RecommendationDecisions,
+} from './recommendations.ts';
 
 const STORAGE_KEY = 'draft_project_brief';
 const CONSULTATION_TEXT_KEY = 'consultation_input_text';
@@ -12,6 +17,7 @@ const INPUT_MODE_KEY = 'consultation_input_mode';
 const SELECTED_SKILLS_KEY = 'selected_skill_ids';
 const CONSULTATION_PROMPT_VARIANT_KEY = 'consultation_prompt_variant';
 const UI_TEST_MODE_KEY = 'ui_test_mode';
+const RECOMMENDATION_DECISIONS_KEY = 'consultation_recommendation_decisions';
 
 export function saveDraft(state: FormState): void {
   try {
@@ -72,10 +78,7 @@ export function loadConsultationDraft(): IntakeDraft | null {
     const raw = localStorage.getItem(CONSULTATION_DRAFT_KEY);
     if (!raw) return null;
     const draft = JSON.parse(raw) as IntakeDraft;
-    return {
-      ...draft,
-      suggestedState: migrateDraft(draft.suggestedState),
-    };
+    return migrateConsultationDraft(draft);
   } catch {
     return null;
   }
@@ -123,8 +126,27 @@ export function clearConsultationState(): void {
     localStorage.removeItem(SIMPLE_INPUT_KEY);
     localStorage.removeItem(INPUT_MODE_KEY);
     localStorage.removeItem(SELECTED_SKILLS_KEY);
+    localStorage.removeItem(RECOMMENDATION_DECISIONS_KEY);
   } catch {
     // silently ignore
+  }
+}
+
+export function saveRecommendationDecisions(value: RecommendationDecisions): void {
+  try {
+    localStorage.setItem(RECOMMENDATION_DECISIONS_KEY, JSON.stringify(value));
+  } catch {
+    // silently ignore
+  }
+}
+
+export function loadRecommendationDecisions(): RecommendationDecisions {
+  try {
+    const raw = localStorage.getItem(RECOMMENDATION_DECISIONS_KEY);
+    if (!raw) return normalizeRecommendationDecisions(null);
+    return normalizeRecommendationDecisions(JSON.parse(raw) as Partial<RecommendationDecisions>);
+  } catch {
+    return normalizeRecommendationDecisions(null);
   }
 }
 
@@ -196,5 +218,14 @@ function migrateDraft(state: FormState): FormState {
       tech_decisions: state.planning?.tech_decisions ?? [],
       external_dependencies: state.planning?.external_dependencies ?? [],
     },
+  };
+}
+
+function migrateConsultationDraft(draft: IntakeDraft): IntakeDraft {
+  return {
+    ...draft,
+    source: draft.source === 'provider_consultation' ? 'provider_consultation' : 'pasted_consultation',
+    provider: normalizeIntakeProviderMetadata((draft as Partial<IntakeDraft>).provider),
+    suggestedState: migrateDraft(draft.suggestedState),
   };
 }

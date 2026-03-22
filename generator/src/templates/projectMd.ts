@@ -1,5 +1,5 @@
 import type { ProjectBrief } from '../schema';
-import { buildToolWrapperExampleClause, formatAiTools, getToolWrapperFiles } from '../aiTools';
+import { buildToolWrapperExampleClause, getToolWrapperFiles } from '../aiTools';
 import { getAdoptedDependencyBulletLines, getAdoptedTechBulletLines } from '../planning';
 import { formatDomains, formatOwner, formatProjectDescription } from '../templateDisplay';
 
@@ -51,6 +51,7 @@ ${brief.project.slug}/
 ${toolLines}
 ├── docs/
 │   ├── ACTIVE_CONTEXT.md
+│   ├── AI_TOOLING.md
 │   ├── TECH_DECISIONS.md
 │   ├── EXTERNAL_DEPENDENCIES.md
 │   ├── REQUIREMENTS.md
@@ -81,6 +82,7 @@ ${toolLines}
 ├── SECURITY.md
 ├── VERSIONING_STANDARD.md
 ├── docs/
+│   ├── AI_TOOLING.md
 │   ├── TECH_DECISIONS.md
 │   ├── EXTERNAL_DEPENDENCIES.md
 │   └── runbooks/
@@ -163,7 +165,7 @@ ${brief.project.name} (workspace: ${brief.project.slug})
 ${deps}## Tech Stack
 - Domains: ${formatDomains(brief.tech.domains)}
 - Primary Language: ${brief.tech.primary_language}
-${frameworkLine}- AI Tools: ${formatAiTools(brief.tech)}
+${frameworkLine}- AI Tooling Policy: \`../docs/AI_TOOLING.md\`
 ${adoptedPlanning}
 
 ## Absolute Rules
@@ -179,12 +181,14 @@ ${buildSecurityRules(brief)}
 - \`docs/ROADMAP.md\` tracks phase progression for this repository.
 - \`docs/ARCHITECTURE.md\` defines this repository's technical boundaries.
 - \`docs/VERSIONING_STANDARD.md\` defines runtime traceability rules.
+- \`../docs/AI_TOOLING.md\` defines the provider-neutral AI tooling policy for the workspace.
 - \`../docs/TECH_DECISIONS.md\` tracks workspace-level adopted, candidate, and open technical decisions.
 - \`../docs/EXTERNAL_DEPENDENCIES.md\` tracks workspace-level external dependencies and their status.
 - \`../GLOBAL_CONTEXT.md\` is the workspace-level source of truth for cross-repo context.
 
 ### 4. Session Protocol
 - Read \`PROJECT.md\` first.
+- Read \`../docs/AI_TOOLING.md\`.
 - Read the tool-specific wrapper${buildToolWrapperExampleClause(brief.tech)} if your tool uses one.
 - Read \`docs/ACTIVE_CONTEXT.md\`.
 - Read \`../GLOBAL_CONTEXT.md\` when changes cross repository boundaries.
@@ -209,7 +213,7 @@ ${formatProjectDescription(brief.project.description)}
 ## Tech Stack
 - Domains: ${formatDomains(brief.tech.domains)}
 - Primary Language: ${brief.tech.primary_language}
-${frameworkLine}- AI Tools: ${formatAiTools(brief.tech)}
+${frameworkLine}- AI Tooling Policy: \`docs/AI_TOOLING.md\`
 ${adoptedPlanning}
 
 ## Workspace Repositories
@@ -227,6 +231,7 @@ ${buildSecurityRules(brief)}
 - \`GLOBAL_CONTEXT.md\` is the single source of truth for workspace-level current state.
 - \`REQUIREMENTS.md\` is the single source of truth for workspace-level requirements.
 - \`SECURITY.md\` defines shared security rules.
+- \`docs/AI_TOOLING.md\` defines the provider-neutral AI tooling policy.
 - \`docs/TECH_DECISIONS.md\` tracks adopted, candidate, and open technical decisions.
 - \`docs/EXTERNAL_DEPENDENCIES.md\` tracks adopted, candidate, and open external dependencies.
 - Each repository's \`PROJECT.md\` defines repository-local rules.
@@ -234,6 +239,7 @@ ${buildSecurityRules(brief)}
 
 ### 4. Session Protocol
 - Read \`PROJECT.md\` first.
+- Read \`docs/AI_TOOLING.md\`.
 - Read the tool-specific wrapper${buildToolWrapperExampleClause(brief.tech)} if your tool uses one.
 - Read \`GLOBAL_CONTEXT.md\`.
 - Read the target repository's \`PROJECT.md\` and \`docs/ACTIVE_CONTEXT.md\` before editing it.
@@ -251,11 +257,12 @@ ${formatProjectDescription(brief.project.description)}
 ## Tech Stack
 - Domains: ${formatDomains(brief.tech.domains)}
 - Primary Language: ${brief.tech.primary_language}
-${frameworkLine}- AI Tools: ${formatAiTools(brief.tech)}
+${frameworkLine}- AI Tooling Policy: \`docs/AI_TOOLING.md\`
 ${adoptedPlanning}
 
 ## Development Workflow
 - Use the tool-specific wrapper that matches your environment when present.
+- Use \`docs/AI_TOOLING.md\` as the provider-neutral entry point for AI tooling rules.
 - Keep shared project knowledge in \`PROJECT.md\` and \`docs/\`.
 - Use tool-specific files only for tool behavior, not for project truth.
 
@@ -272,6 +279,7 @@ ${buildSecurityRules(brief)}
 - \`docs/ACTIVE_CONTEXT.md\` is the single source of truth for current project state.
 - \`docs/ROADMAP.md\` is the single source of truth for phase progression.
 - \`docs/REQUIREMENTS.md\` is the single source of truth for what the system must do.
+- \`docs/AI_TOOLING.md\` defines the provider-neutral AI tooling policy and wrapper expectations.
 - \`docs/TECH_DECISIONS.md\` tracks adopted, candidate, and open technical decisions.
 - \`docs/EXTERNAL_DEPENDENCIES.md\` tracks adopted, candidate, and open external dependencies.
 - \`docs/VERSIONING_STANDARD.md\` defines release/version traceability rules.
@@ -279,6 +287,7 @@ ${buildSecurityRules(brief)}
 
 ### 4. Session Protocol
 - Read \`PROJECT.md\` first.
+- Read \`docs/AI_TOOLING.md\`.
 - Read the tool-specific wrapper${buildToolWrapperExampleClause(brief.tech)} if your tool uses one.
 - Read \`docs/ACTIVE_CONTEXT.md\` and \`docs/REQUIREMENTS.md\` before taking action.
 - Summarize current state before taking any action.

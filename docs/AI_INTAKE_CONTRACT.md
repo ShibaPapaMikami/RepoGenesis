@@ -111,7 +111,13 @@ parser は貼り付け結果を次の draft へ変換する。
 
 ```ts
 type IntakeDraft = {
-  source: 'pasted_consultation';
+  source: 'pasted_consultation' | 'provider_consultation';
+  provider: {
+    provider: 'manual' | 'chatgpt' | 'claude' | 'gemini' | 'openai_api' | 'anthropic_api' | 'google_api';
+    model?: string;
+    promptVersion?: string;
+    requestId?: string;
+  };
   rawText: string;
   sections: Record<string, string>;
   review: {
@@ -137,6 +143,9 @@ type IntakeDraft = {
   suggestedState: FormState;
 };
 ```
+
+`provider` は「どの AI / prompt wrapper で整理した結果か」を保持するための metadata で、generator の入力知識そのものには使わない。
+ここで保持する目的は audit と review の補助であり、spec の source of truth は引き続き deterministic な parser 結果である。
 
 `suggestedState` には既存の project / tech / security / structure / workflow に加えて、
 planning 情報を含める。
@@ -296,6 +305,26 @@ planning は「要件」と「技術判断」を分離するための内部モ�
 - parser が高度な自然言語理解に依存すること
 - provider 固有の prompt 仕様を契約本体に埋め込むこと
 - AI 出力を信用して既存 state を無条件に保持または無条件に破棄すること
+
+## Boundary Commitments
+この契約は Phase 6 の intake abstraction に属するものだけを固定する。
+
+### This contract owns
+- markdown / questionnaire input を `IntakeDraft` へ落とす shape
+- `review`, `certainty`, `suggestedState`, `planning` の deterministic semantics
+- review gate 前に何が confirmed / provisional / unresolved かをどう扱うか
+- provider 非依存で `draft -> spec` を作る優先順位
+
+### This contract does not own
+- provider-specific API request shape
+- model selection, retries, failover, rate limit strategy
+- AI recommendation UI の細かい見せ方
+- prompt versioning や telemetry schema の詳細
+
+### Integration rule
+- 将来の AI API integration は、この contract の input/output shape に合わせる
+- provider 由来の追加メタデータは別レイヤーで保持し、`IntakeDraft` の core shape へ混ぜない
+- AI 提案は review gate を通るまで project truth に昇格しない
 
 ## Current Acceptance Target
 Phase 6 入口時点で最低限次を満たす。

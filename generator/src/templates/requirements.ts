@@ -1,5 +1,4 @@
 import type { ProjectBrief } from '../schema';
-import { formatAiTools } from '../aiTools';
 import { formatDomains, formatOwner, formatProjectDescription } from '../templateDisplay';
 
 export function generateRequirements(brief: ProjectBrief): string {
@@ -58,7 +57,7 @@ Define what ${project.name} must do. This is the single source of truth for func
 ## Technical Context
 - Domains: ${formatDomains(tech.domains)}
 - Primary Language: ${tech.primary_language}
-${frameworkLine}- AI Tools: ${formatAiTools(tech)}
+${frameworkLine}- AI Tooling Policy: \`docs/AI_TOOLING.md\`
 
 ## Core Requirements
 ${requirementLines.join('\n')}

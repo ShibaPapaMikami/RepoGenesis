@@ -2,6 +2,7 @@ import type { FormState } from '../state/actions.ts';
 import { buildProjectSpec } from './buildProjectSpec.ts';
 import { generateRepositoryZip } from './generateRepositoryZip.ts';
 import type { SkillCatalogItem } from '../data/skillCatalog.ts';
+import { readRuntimeEnv } from './runtimeEnv.ts';
 
 export interface GenerateRepositoryResult {
   blob: Blob;
@@ -28,10 +29,7 @@ export class GenerateRepositoryError extends Error {
   }
 }
 
-const API_BASE = import.meta.env.VITE_ORCHESTRATION_API_URL as string | undefined;
-const REMOTE_AUTH_MODE = (import.meta.env.VITE_REMOTE_AUTH_MODE as string | undefined) ?? 'manual_bearer';
-const ENABLE_MANUAL_BEARER_UI = (import.meta.env.VITE_ENABLE_MANUAL_BEARER_UI as string | undefined) === 'true';
-const PROXY_BASE = '/api/orchestration';
+const API_BASE = readRuntimeEnv('VITE_ORCHESTRATION_API_URL');
 const REMOTE_GENERATE_TIMEOUT_MS = 60_000;
 
 export function getOrchestrationApiBase(): string | undefined {
@@ -39,23 +37,11 @@ export function getOrchestrationApiBase(): string | undefined {
 }
 
 export function getGenerationMode(): 'local' | 'remote' {
-  if (getRemoteAuthMode() === 'cookie_session') return 'remote';
   return API_BASE && API_BASE.length > 0 ? 'remote' : 'local';
 }
 
-export function getRemoteAuthMode(): 'manual_bearer' | 'cookie_session' {
-  return REMOTE_AUTH_MODE === 'cookie_session' ? 'cookie_session' : 'manual_bearer';
-}
-
-export function canUseManualBearerUi(): boolean {
-  return import.meta.env.DEV || ENABLE_MANUAL_BEARER_UI;
-}
-
-function resolveApiBase(authMode: 'manual_bearer' | 'cookie_session'): string | undefined {
-  if (authMode === 'cookie_session') {
-    return PROXY_BASE;
-  }
-  return API_BASE;
+export function usesSameOriginOrchestrationProxy(): boolean {
+  return typeof API_BASE === 'string' && API_BASE.startsWith('/');
 }
 
 function parseFilenameFromContentDisposition(headerValue: string | null, fallback: string): string {
@@ -68,15 +54,11 @@ function parseFilenameFromContentDisposition(headerValue: string | null, fallbac
 function getRemoteGenerateErrorMessage(
   status: number,
   error?: string,
-  authMode?: 'manual_bearer' | 'cookie_session',
 ): string {
   const normalized = error?.trim().toLowerCase();
 
   if (status === 401) {
-    if (authMode === 'cookie_session') {
-      return 'ログイン状態を確認できませんでした。上部の認証セクションでログインし直してから再実行してください。';
-    }
-    return '認証トークンを確認できませんでした。APIトークンを見直して再実行してください。';
+    return 'ログイン状態を確認できませんでした。上部の認証セクションでログインし直してから再実行してください。';
   }
 
   if (status === 403) {
@@ -106,32 +88,24 @@ function toSelectedSkillMeta(skills: SkillCatalogItem[]) {
 
 async function generateRepositoryRemote(
   state: FormState,
-  authToken: string,
   selectedSkills: SkillCatalogItem[],
 ): Promise<GenerateRepositoryResult> {
-  const authMode = getRemoteAuthMode();
-  const apiBase = resolveApiBase(authMode);
+  const apiBase = getOrchestrationApiBase();
   if (!apiBase) {
     throw new Error('VITE_ORCHESTRATION_API_URL が未設定です');
-  }
-  if (authMode === 'manual_bearer' && (!authToken || authToken.trim().length === 0)) {
-    throw new Error('リモート生成には API トークンが必要です');
   }
 
   const spec = buildProjectSpec(state);
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  if (authMode === 'manual_bearer') {
-    headers.Authorization = `Bearer ${authToken.trim()}`;
-  }
 
   let response: Response;
   try {
     response = await fetch(`${apiBase}/repositories/generate`, {
       method: 'POST',
       headers,
-      credentials: authMode === 'cookie_session' ? 'include' : 'same-origin',
+      credentials: 'include',
       body: JSON.stringify({
         spec,
         output: { format: 'zip' },
@@ -161,7 +135,7 @@ async function generateRepositoryRemote(
     } catch {
       // no-op: keep default message
     }
-    const msg = getRemoteGenerateErrorMessage(response.status, serverError, authMode);
+    const msg = getRemoteGenerateErrorMessage(response.status, serverError);
     throw new GenerateRepositoryError(msg, {
       status: response.status,
       requestId,
@@ -190,11 +164,10 @@ async function generateRepositoryRemote(
 
 export async function generateRepository(
   state: FormState,
-  authToken?: string,
   selectedSkills: SkillCatalogItem[] = [],
 ): Promise<GenerateRepositoryResult> {
   if (getGenerationMode() === 'remote') {
-    return generateRepositoryRemote(state, authToken ?? '', selectedSkills);
+    return generateRepositoryRemote(state, selectedSkills);
   }
 
   const local = generateRepositoryZip(state, selectedSkills);

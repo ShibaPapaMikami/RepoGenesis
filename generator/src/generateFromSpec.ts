@@ -5,6 +5,7 @@ import { generateAgentsMd } from './templates/agentsMd';
 import { generateClaudeMd } from './templates/claudeMd';
 import { generateGeminiMd } from './templates/geminiMd';
 import { generateActiveContext } from './templates/activeContext';
+import { generateAiTooling } from './templates/aiTooling';
 import { generateTechDecisions } from './templates/techDecisions';
 import { generateExternalDependencies } from './templates/externalDependencies';
 import { generateRequirements } from './templates/requirements';
@@ -23,12 +24,11 @@ import { generateIssueBugReport } from './templates/issueBugReport';
 import { generateIssueFeatureRequest } from './templates/issueFeatureRequest';
 import { generateVersioningStandard } from './templates/versioningStandard';
 import { createEmptySkillsManifest } from './skillsManifest';
-import { generateRunbookReadme } from './templates/runbookReadme';
-import { generateSkillInstallRunbook } from './templates/skillInstallRunbook';
 import { generateSkillsReadme } from './templates/skillsReadme';
 import type { ProjectSkillsManifest, SkillProvider } from './skillsManifest';
 import { generateInstallSelectedSkillsScript } from './templates/installSelectedSkillsScript';
 import { formatOwner } from './templateDisplay';
+import { buildDefaultRunbookEntries } from './runbookBundle';
 
 type RepoEntry = ProjectBrief['structure']['repos'][number];
 const DEFAULT_SPEC_VERSION: SpecVersion = '1.0';
@@ -161,6 +161,7 @@ ${deps}
 - \`docs/ARCHITECTURE.md\`
 - \`docs/ROADMAP.md\`
 - \`docs/VERSIONING_STANDARD.md\`
+- \`../docs/AI_TOOLING.md\`
 - \`../docs/TECH_DECISIONS.md\`
 - \`../docs/EXTERNAL_DEPENDENCIES.md\`
 - \`docs/ADR/0000-template.md\`
@@ -211,6 +212,7 @@ function buildSingleRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions)
     ['PROJECT.md', generateProjectMd(brief, { scope: 'single' })],
     ...buildToolWrapperEntries(brief, { scope: 'single' }),
     ['docs/ACTIVE_CONTEXT.md', generateActiveContext(brief)],
+    ['docs/AI_TOOLING.md', generateAiTooling(brief)],
     ['docs/TECH_DECISIONS.md', generateTechDecisions(brief)],
     ['docs/EXTERNAL_DEPENDENCIES.md', generateExternalDependencies(brief)],
     ['docs/REQUIREMENTS.md', generateRequirements(brief)],
@@ -218,10 +220,9 @@ function buildSingleRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions)
     ['docs/ROADMAP.md', generateRoadmap(brief)],
     ['docs/VERSIONING_STANDARD.md', generateVersioningStandard(brief)],
     ['docs/ADR/0000-template.md', generateAdrTemplate(brief)],
-    ['docs/runbooks/README.md', generateRunbookReadme(brief)],
-    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief, selectedSkills, { bundledAtGeneration: selectedSkillsBundled })],
+    ...buildDefaultRunbookEntries(brief, selectedSkills, { bundledAtGeneration: selectedSkillsBundled }),
     ['plans/template.md', generatePlansTemplate(brief)],
-    ['prompts/restart.md', generateRestart(brief)],
+    ['prompts/restart.md', generateRestart(brief, { scope: 'single' })],
     ['SECURITY.md', generateSecurity(brief)],
     ['.env.example', generateEnvExample(brief)],
     ['.gitignore', generateGitignore(brief)],
@@ -259,13 +260,13 @@ function buildMultiRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions):
     ['PROJECT.md', generateProjectMd(brief, { scope: 'workspace' })],
     ...buildToolWrapperEntries(brief, { scope: 'workspace' }),
     ['GLOBAL_CONTEXT.md', generateGlobalContext(brief)],
+    ['docs/AI_TOOLING.md', generateAiTooling(brief)],
     ['docs/TECH_DECISIONS.md', generateTechDecisions(brief)],
     ['docs/EXTERNAL_DEPENDENCIES.md', generateExternalDependencies(brief)],
     ['REQUIREMENTS.md', generateRequirements(brief)],
     ['SECURITY.md', generateSecurity(brief)],
     ['VERSIONING_STANDARD.md', generateVersioningStandard(brief)],
-    ['docs/runbooks/README.md', generateRunbookReadme(brief)],
-    ['docs/runbooks/skill-install.md', generateSkillInstallRunbook(brief, selectedSkills, { bundledAtGeneration: selectedSkillsBundled })],
+    ...buildDefaultRunbookEntries(brief, selectedSkills, { bundledAtGeneration: selectedSkillsBundled }),
     ['.gitignore', generateGitignore(brief)],
     ['skills/README.md', generateSkillsReadme(brief, selectedSkills, { bundledAtGeneration: selectedSkillsBundled })],
     ['repogenesis.skills.json', `${JSON.stringify(selectedSkillsManifest, null, 2)}\n`],
@@ -297,7 +298,7 @@ function buildMultiRepo(brief: ProjectBrief, options?: GenerateFromSpecOptions):
       [`${repo.name}/docs/VERSIONING_STANDARD.md`, generateVersioningStandard(brief)],
       [`${repo.name}/docs/ADR/0000-template.md`, generateAdrTemplate(brief)],
       [`${repo.name}/plans/template.md`, generatePlansTemplate(brief)],
-      [`${repo.name}/prompts/restart.md`, generateRestart(brief)],
+      [`${repo.name}/prompts/restart.md`, generateRestart(brief, { scope: 'repo' })],
       [`${repo.name}/.env.example`, generateEnvExample(brief)],
       [`${repo.name}/.gitignore`, generateGitignore(brief)],
     ];

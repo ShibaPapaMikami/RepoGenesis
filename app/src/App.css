@@ -631,6 +631,168 @@
   justify-content: flex-end;
 }
 
+.support-panel {
+  background: linear-gradient(180deg, #fffdf7 0%, #f8fbff 100%);
+  border-color: #d8e4f3;
+}
+
+.support-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.support-panel-header h2 {
+  margin-bottom: 0.35rem;
+}
+
+.support-panel-lead,
+.support-panel-meta {
+  margin: 0;
+}
+
+.support-panel-lead {
+  color: #58677a;
+  font-size: 0.92rem;
+}
+
+.support-panel-meta {
+  margin-top: 0.25rem;
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.support-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.support-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.support-filter select {
+  min-width: 112px;
+}
+
+.support-store-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #dbe5f0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.support-store-summary p {
+  margin: 0;
+  font-size: 0.83rem;
+  color: #475569;
+}
+
+.support-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 0.85rem;
+}
+
+.support-card {
+  min-height: 100%;
+}
+
+.support-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.support-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: #eef6ff;
+  color: #0f4a7f;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.support-empty {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.support-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.support-list-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.8rem 0.9rem;
+  background: #fff;
+}
+
+.support-list-item p {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.support-list-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.support-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: lowercase;
+}
+
+.support-pill-bug,
+.support-pill-failure {
+  background: #fff1f2;
+  color: #b42318;
+}
+
+.support-pill-request,
+.support-pill-success {
+  background: #eefbf2;
+  color: #166534;
+}
+
+.support-list-meta {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
 .feedback-panel {
   margin-top: 1rem;
   border-top: 1px solid #e0e0e0;
@@ -916,6 +1078,44 @@
   font-size: 0.88rem;
 }
 
+.recommendation-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.6rem;
+  padding: 0.22rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.recommendation-badge-pending {
+  background: #eef6ff;
+  color: #0f4a7f;
+}
+
+.recommendation-badge-accepted {
+  background: #eefbf2;
+  color: #166534;
+}
+
+.recommendation-badge-overridden {
+  background: #fff6e8;
+  color: #9a3412;
+}
+
+.recommendation-rationale {
+  margin: 0 0 0.75rem;
+  color: #4f5d6b;
+  font-size: 0.86rem;
+}
+
+.recommendation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.85rem;
+}
+
 .simple-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1034,6 +1234,44 @@
 .consultation-summary ul {
   margin: 0.45rem 0 0;
   padding-left: 1.1rem;
+}
+
+.refinement-prompt-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.refinement-prompt-lead {
+  margin-bottom: 0;
+}
+
+.refinement-prompt-provider {
+  margin-bottom: 0;
+}
+
+.refinement-prompt-preview {
+  border-top: 1px solid #e7eef6;
+  padding-top: 0.75rem;
+}
+
+.refinement-prompt-preview summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #1d4b78;
+}
+
+.refinement-prompt-preview pre {
+  margin: 0.75rem 0 0;
+  padding: 0.9rem;
+  border-radius: 10px;
+  background: #f6f9fc;
+  border: 1px solid #dbe5f0;
+  color: #203246;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.83rem;
+  line-height: 1.55;
 }
 
 .skill-selection {
@@ -1232,7 +1470,14 @@
     grid-template-columns: 1fr;
   }
 
+  .support-panel-header,
+  .support-panel-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .guided-steps,
+  .support-grid,
   .simple-grid,
   .consultation-columns,
   .review-summary-grid,

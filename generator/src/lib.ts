@@ -1,4 +1,5 @@
 export { generateFromSpec } from './generateFromSpec';
+export { migrateSpec } from './migrateSpec';
 export {
   projectBriefSchema,
   projectSpecSchema,
@@ -21,10 +22,15 @@ export {
   loadSkillRegistry,
 } from './skillRegistryLoader';
 export {
+  getInstalledSkillStatuses,
+} from './skillStatus';
+export {
   installSkill,
   loadProjectSkillsManifest,
   removeSkill,
   saveProjectSkillsManifest,
+  updateAllSkills,
+  updateSkill,
 } from './skillInstaller';
 export {
   applySkillInstallPlanToManifest,

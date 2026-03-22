@@ -2,6 +2,7 @@
 .env
 .env.local
 .env.production
+.env.vercel.pull
 
 # Dependencies
 node_modules/
@@ -24,6 +25,10 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+generator/data/
 
 # Generated output (user downloads)
 /output/

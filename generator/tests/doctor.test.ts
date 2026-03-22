@@ -65,6 +65,16 @@ describe('doctor', () => {
     expect(result.errors).toContain('Missing expected tool wrapper: AGENTS.md');
   });
 
+  it('fails when a required operational runbook is missing', () => {
+    const outputDir = generateFixture('test_brief_codex.json');
+    fs.rmSync(path.join(outputDir, 'docs/runbooks/rollback.md'));
+
+    const result = doctor({ projectRoot: outputDir });
+
+    expect(result.success).toBe(false);
+    expect(result.errors).toContain('Missing required file: docs/runbooks/rollback.md');
+  });
+
   it('fails when the skills manifest points at a missing artifact', () => {
     const outputDir = generateFixture('test_brief_codex.json');
     fs.writeFileSync(path.join(outputDir, 'repogenesis.skills.json'), `${JSON.stringify({
@@ -90,6 +100,41 @@ describe('doctor', () => {
 
     expect(result.success).toBe(false);
     expect(result.errors).toContain('Missing installed skill artifact: .codex/skills/repo-readiness-review/SKILL.md');
+  });
+
+  it('warns when installed skills drift from the registry', () => {
+    const outputDir = generateFixture('test_brief_codex.json');
+    fs.writeFileSync(path.join(outputDir, 'repogenesis.skills.json'), `${JSON.stringify({
+      version: 1,
+      source: 'repogenesis',
+      installed: [
+        {
+          id: 'repo-readiness-review',
+          version: '0.0.9',
+          installedAt: '2026-03-20T00:00:00.000Z',
+          artifacts: [
+            {
+              provider: 'codex',
+              artifactKind: 'skill',
+              path: '.codex/skills/repo-readiness-review/SKILL.md',
+            },
+          ],
+        },
+      ],
+    }, null, 2)}\n`);
+    fs.mkdirSync(path.join(outputDir, '.codex/skills/repo-readiness-review'), { recursive: true });
+    fs.writeFileSync(path.join(outputDir, '.codex/skills/repo-readiness-review/SKILL.md'), '# test\n');
+
+    const result = doctor({
+      projectRoot: outputDir,
+      registryRoot: path.join(__dirname, '../../skills/registry'),
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toContain(
+      'Installed skill has update available: repo-readiness-review (0.0.9 -> 0.1.0)',
+    );
   });
 
   it('fails when .env.example drops an adopted dependency env var', () => {

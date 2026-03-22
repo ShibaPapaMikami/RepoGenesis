@@ -54,6 +54,8 @@ export interface GenerateApiError {
 
 export interface GenerateApiDownloadSuccess extends GenerateApiSuccess {
   userId: string;
+  projectSlug: string;
+  selectedSkillIds: string[];
   zipBuffer: Buffer;
 }
 
@@ -236,6 +238,8 @@ export async function handleGenerateApiDownloadRequest(
     body: {
       requestId,
       userId,
+      projectSlug: spec.project.slug,
+      selectedSkillIds: selectedSkills.map((skill) => skill.id),
       specVersion: spec.specVersion,
       fileCount: fileMap.size,
       repoType: spec.structure.repo_type,

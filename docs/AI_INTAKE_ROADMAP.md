@@ -140,6 +140,29 @@ AI を「決定者」ではなく「整理補助」として使うための実�
 6. AI API 抽象化
 7. 永続ログ/運用画面
 
+## Phase 6 Boundary
+Phase 6 では「AI を使うこと」そのものではなく、AI が入っても壊れない intake 境界を固定する。
+
+### Belongs to intake abstraction
+- 貼り付け入力 / かんたん入力を `IntakeDraft` に正規化すること
+- `facts / assumptions / open questions` の shape を固定すること
+- `draft -> spec` の deterministic mapping を固定すること
+- `RepoGenesis入力候補` から planning 候補を provider 非依存で拾うこと
+- review gate で `confirmed / provisional / unresolved` を分けて見せること
+- provider-neutral な prompt/export 導線を持つこと
+
+### Belongs to later AI assistance
+- 特定 provider の API client 実装
+- model 選定や provider failover
+- AI による recommendation の自動生成
+- prompt version / provider version / response metadata の詳細監査
+- 高度な意味推定や自由文からの強い自動補完
+
+### Rule of separation
+- intake abstraction は provider がなくても動くことを前提にする
+- AI assistance は `IntakeDraft` を作る補助層であり、generator の source of truth にはならない
+- review gate を通る前の AI 提案は、常に provisional または open questions 扱いに留める
+
 ## Immediate Next Step
 最初に実装すべきなのは `かんたん入力` ではなく `相談結果を反映` モードである。
 理由は以下。

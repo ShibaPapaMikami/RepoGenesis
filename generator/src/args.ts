@@ -6,10 +6,14 @@ const GENERATE_USAGE = `repogenesis v${VERSION} — AI-ready repository structur
 
 Usage:
   repogenesis --input <path> --output <path> [--force]
-  repogenesis doctor --project <path>
+  repogenesis migrate-spec --input <path> --output <path> [--force]
+  repogenesis doctor --project <path> [--registry <path>]
   repogenesis skills list --registry <path> [--include-experimental]
   repogenesis skills add --project <path> --registry <path> --skill <id> [--provider <name>]...
+  repogenesis skills status --project <path> --registry <path>
   repogenesis skills remove --project <path> --skill <id>
+  repogenesis skills update --project <path> --registry <path> --skill <id> [--provider <name>]...
+  repogenesis skills update --project <path> --registry <path> --all
 
 Options:
   --input <path>                 Path to project_brief.json
@@ -32,8 +36,15 @@ export type CliArgs =
       force: boolean;
     }
   | {
+      command: 'migrate-spec';
+      input: string;
+      output: string;
+      force: boolean;
+    }
+  | {
       command: 'doctor';
       project: string;
+      registry?: string;
     }
   | {
       command: 'skills-list';
@@ -49,9 +60,23 @@ export type CliArgs =
       installedBy?: string;
     }
   | {
+      command: 'skills-status';
+      project: string;
+      registry: string;
+    }
+  | {
       command: 'skills-remove';
       project: string;
       skillId: string;
+    }
+  | {
+      command: 'skills-update';
+      project: string;
+      registry: string;
+      skillId?: string;
+      all: boolean;
+      providers: SkillProvider[];
+      installedBy?: string;
     };
 
 function exitWithUsage(message?: string): never {
@@ -95,13 +120,45 @@ function parseGenerateArgs(args: string[]): CliArgs {
   return { command: 'generate', input, output, force };
 }
 
+function parseMigrateSpecArgs(args: string[]): CliArgs {
+  let input: string | undefined;
+  let output: string | undefined;
+  let force = false;
+
+  for (let i = 0; i < args.length; i++) {
+    switch (args[i]) {
+      case '--input':
+        input = args[++i];
+        break;
+      case '--output':
+        output = args[++i];
+        break;
+      case '--force':
+        force = true;
+        break;
+      default:
+        exitWithUsage(`Unknown option: ${args[i]}`);
+    }
+  }
+
+  if (!input || !output) {
+    exitWithUsage('Error: --input and --output are required for migrate-spec.');
+  }
+
+  return { command: 'migrate-spec', input, output, force };
+}
+
 function parseDoctorArgs(args: string[]): CliArgs {
   let project: string | undefined;
+  let registry: string | undefined;
 
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
       case '--project':
         project = args[++i];
+        break;
+      case '--registry':
+        registry = args[++i];
         break;
       default:
         exitWithUsage(`Unknown option: ${args[i]}`);
@@ -112,7 +169,7 @@ function parseDoctorArgs(args: string[]): CliArgs {
     exitWithUsage('Error: --project is required for doctor.');
   }
 
-  return { command: 'doctor', project };
+  return { command: 'doctor', project, registry };
 }
 
 function parseSkillsArgs(args: string[]): CliArgs {
@@ -183,6 +240,30 @@ function parseSkillsArgs(args: string[]): CliArgs {
     return { command: 'skills-add', project, registry, skillId, providers, installedBy };
   }
 
+  if (subcommand === 'status') {
+    let project: string | undefined;
+    let registry: string | undefined;
+
+    for (let i = 1; i < args.length; i++) {
+      switch (args[i]) {
+        case '--project':
+          project = args[++i];
+          break;
+        case '--registry':
+          registry = args[++i];
+          break;
+        default:
+          exitWithUsage(`Unknown option: ${args[i]}`);
+      }
+    }
+
+    if (!project || !registry) {
+      exitWithUsage('Error: --project and --registry are required for skills status.');
+    }
+
+    return { command: 'skills-status', project, registry };
+  }
+
   if (subcommand === 'remove') {
     let project: string | undefined;
     let skillId: string | undefined;
@@ -207,6 +288,59 @@ function parseSkillsArgs(args: string[]): CliArgs {
     return { command: 'skills-remove', project, skillId };
   }
 
+  if (subcommand === 'update') {
+    let project: string | undefined;
+    let registry: string | undefined;
+    let skillId: string | undefined;
+    let all = false;
+    let installedBy: string | undefined;
+    const providers: SkillProvider[] = [];
+
+    for (let i = 1; i < args.length; i++) {
+      switch (args[i]) {
+        case '--project':
+          project = args[++i];
+          break;
+        case '--registry':
+          registry = args[++i];
+          break;
+        case '--skill':
+          skillId = args[++i];
+          break;
+        case '--all':
+          all = true;
+          break;
+        case '--provider': {
+          const provider = args[++i];
+          if (!provider || !isSkillProvider(provider)) {
+            exitWithUsage(`Error: invalid provider: ${provider ?? ''}`);
+          }
+          providers.push(provider);
+          break;
+        }
+        case '--installed-by':
+          installedBy = args[++i];
+          break;
+        default:
+          exitWithUsage(`Unknown option: ${args[i]}`);
+      }
+    }
+
+    if (!project || !registry) {
+      exitWithUsage('Error: --project and --registry are required for skills update.');
+    }
+
+    if ((skillId && all) || (!skillId && !all)) {
+      exitWithUsage('Error: skills update requires exactly one of --skill or --all.');
+    }
+
+    if (all && providers.length > 0) {
+      exitWithUsage('Error: --provider cannot be combined with skills update --all.');
+    }
+
+    return { command: 'skills-update', project, registry, skillId, all, providers, installedBy };
+  }
+
   exitWithUsage(`Unknown skills subcommand: ${subcommand}`);
 }
 
@@ -228,6 +362,10 @@ export function parseArgs(argv: string[]): CliArgs {
 
   if (args[0] === 'doctor') {
     return parseDoctorArgs(args.slice(1));
+  }
+
+  if (args[0] === 'migrate-spec') {
+    return parseMigrateSpecArgs(args.slice(1));
   }
 
   return parseGenerateArgs(args);

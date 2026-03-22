@@ -7,6 +7,15 @@ on:
   pull_request:
 
 jobs:
+  workflow-config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate workflow and smoke script syntax
+        run: bash scripts/check-workflows.sh
+
   app:
     runs-on: ubuntu-latest
     defaults:
@@ -37,6 +46,41 @@ jobs:
 
       - name: E2E tests
         run: npm run test:e2e
+
+  bundle-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+          cache: npm
+          cache-dependency-path: |
+            app/package-lock.json
+            generator/package-lock.json
+
+      - name: Install generator dependencies
+        working-directory: generator
+        run: npm ci
+
+      - name: Build generator
+        working-directory: generator
+        run: npm run build
+
+      - name: Install app dependencies
+        working-directory: app
+        run: npm ci
+
+      - name: Check vendored generator bundle
+        working-directory: app
+        run: npm run check:generator-bundle-sync
+
+      - name: Check generated output compatibility
+        working-directory: app
+        run: npm run check:generated-output-compat
 
   generator:
     runs-on: ubuntu-latest
