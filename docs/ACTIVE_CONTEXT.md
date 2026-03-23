@@ -246,6 +246,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 - support panel は remote mode でも全員に見せず、`VITE_SUPPORT_ALLOWED_EMAILS` / `VITE_SUPPORT_ALLOWED_DOMAINS` に一致する support viewer だけに出す方針へ切り替えた
 - generated `docs/AI_TOOLING.md` / tool wrapper guidance には、作業中の進捗チェックと残り時間の目安をデフォルトで共有するルールを追加した
 - stable production domain `https://repo-genesis-omega.vercel.app` を確認し、`smoke:deploy` も `pass=4 warn=0 fail=0` で通した
+- Vercel Authentication を戻す場合の bypass runbook と、stable domain 前提の X ポスト下書きを docs に追加した
 
 ## Files That Exist
 - `claude.md`

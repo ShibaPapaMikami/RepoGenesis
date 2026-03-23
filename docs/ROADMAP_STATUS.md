@@ -97,6 +97,7 @@ Phase 6 / Hardening
 - support panel は default-hidden に切り替え、`VITE_SUPPORT_ALLOWED_EMAILS` / `VITE_SUPPORT_ALLOWED_DOMAINS` に一致する support viewer だけに表示する形へ寄せた。
 - generated `docs/AI_TOOLING.md` と tool wrapper guidance に、進捗チェックと残り時間の目安をデフォルトで出す運用ルールを追加した。
 - stable production domain `https://repo-genesis-omega.vercel.app` を確認し、`smoke:deploy` も `pass=4 warn=0 fail=0` で通した。
+- Vercel Authentication を戻す場合の bypass runbook (`docs/VERCEL_AUTH_BYPASS_RUNBOOK.md`) と、stable domain 前提の X ポスト下書き (`docs/X_POST_DRAFT.md`) を追加した。
 - orchestration auth は production 相当環境で `AUTH_PROVIDER=mock` と `GENERATE_REQUIRE_AUTH=false` を 503 で止めるようにし、誤設定を code path で防ぐようにした。
 - public wizard には skip link / step focus / reduced-motion を追加し、キーボード操作と動き抑制の最低限を先に整えた。
 - consultation step の select / textarea / button は `aria-describedby` で説明文と結び、相談用 prompt / draft 化の意図が読み上げでも追えるようにした。

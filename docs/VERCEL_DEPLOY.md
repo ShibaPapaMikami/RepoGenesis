@@ -155,6 +155,10 @@ npm run test:e2e:remote-support
 - wrapper script は upstream `healthz` / durable-support check と app smoke を連続で走らせる
 - support panel 自体は allowlist に一致する support viewer にだけ表示される
 
+Vercel Authentication を戻す場合:
+- `docs/VERCEL_AUTH_BYPASS_RUNBOOK.md` を参照
+- stable domain は `https://repo-genesis-omega.vercel.app` を前提にする
+
 ## Local Admin Mode (for localhost-only support/debug)
 
 localhost で same-origin auth / support debug path を触る場合は、明示的に local admin mode を有効にする。
