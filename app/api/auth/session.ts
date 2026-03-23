@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { requireLocalAdminMode } from '../_lib/localAdmin.ts';
-import { buildSessionCookie, isAllowedEmail, signSessionJwt } from '../_lib/session.ts';
+import { requireLocalAdminMode } from '../_lib/localAdmin.js';
+import { buildSessionCookie, isAllowedEmail, signSessionJwt } from '../_lib/session.js';
 
 type Req = IncomingMessage & {
   method?: string;

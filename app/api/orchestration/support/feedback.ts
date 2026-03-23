@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { requireLocalAdminMode } from '../../_lib/localAdmin.ts';
+import { requireLocalAdminMode } from '../../_lib/localAdmin.js';
 
 type VercelRequest = IncomingMessage & {
   method?: string;

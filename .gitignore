@@ -34,3 +34,4 @@ generator/data/
 /output/
 app/test-results/
 app/playwright-report/
+.vercel

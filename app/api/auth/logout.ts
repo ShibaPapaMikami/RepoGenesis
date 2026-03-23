@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { requireLocalAdminMode } from '../_lib/localAdmin.ts';
-import { buildExpiredSessionCookie } from '../_lib/session.ts';
+import { requireLocalAdminMode } from '../_lib/localAdmin.js';
+import { buildExpiredSessionCookie } from '../_lib/session.js';
 
 type Res = ServerResponse & {
   json: (body: unknown) => void;
