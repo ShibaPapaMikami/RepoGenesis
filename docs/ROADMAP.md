@@ -98,7 +98,7 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 ## Phase 7: Operational Scalability
 **Goal:** Reduce support cost as usage grows.
 - [x] Consolidate feedback / generation audit into a configurable SQLite support store
-- [ ] Back the support store with durable mounted storage in production
+- [x] Back the support store with durable mounted storage in production
 - [x] Add a first searchable admin surface as read-only support API endpoints
 - [x] Add a human-facing admin view for feedback / generation history
 - [x] Add structured audit events for who generated what and when
@@ -139,18 +139,18 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Keep `doctor` aligned with the runbook bundle and planning-aware starter docs
 - [x] Add local ZIP contract tests and mocked remote ZIP browser checks
 - [x] Add deployed app smoke for public shell / BFF / support proxy readiness
-- [ ] Verify the deployed public wizard / real remote ZIP flow end to end
+- [x] Verify the deployed public wizard / real remote ZIP flow end to end
 
 ### Track 2: Product Supportability
 - [x] Consolidate feedback / generation audit into a configurable SQLite support store
 - [x] Add a reproducible Render blueprint baseline for the orchestration API + durable support disk
-- [ ] Back the support store with durable mounted storage in production
+- [x] Back the support store with durable mounted storage in production
 - [x] Add read-only support API endpoints for feedback / generation audit
 - [x] Add a first human-facing support panel for feedback / generation history
 - [x] Expose support store path/status through `healthz` and smoke checks
 - [x] Add deployed app smoke for support proxy readiness
 - [x] Add a deployed cookie-session Playwright smoke for the support panel
-- [ ] Verify the deployed cookie-session support panel against real support data
+- [x] Verify the deployed cookie-session support panel against real support data
 - [x] Add smoke checks for deployed public environments after release
 
 ### Track 3: Structural Separation

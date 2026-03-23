@@ -1,7 +1,7 @@
 # ACTIVE_CONTEXT.md — Current Project State
 
 ## Last Updated
-2026-03-22
+2026-03-23
 
 ## Current Phase
 Phase 6 — AI-Assisted Spec Authoring (Hardening)
@@ -150,8 +150,13 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - `skills status` を generator CLI に追加し、install 済み skill の version / registry 差分 / missing artifact を一覧できるようにした
   - `skills update` は `--all` 付きで bulk path を持つようになり、outdated または missing artifact の install 済み skill をまとめて明示更新できるようにした
   - `doctor --registry <path>` を追加し、install 済み skill の registry drift (`update_available`, `missing_from_registry`) も warning として検出できるようにした
-  - `repogenesis migrate-spec --input <legacy.json> --output <project_spec.json>` を追加し、legacy `projectBrief` を canonical な `ProjectSpec` へ正規化できるようにした
-  - `docs/SPEC_VERSIONING.md` に `migrate-spec` 前提の migration strategy を追加し、Phase 8 の `specVersion` migration policy を固定した
+- `repogenesis migrate-spec --input <legacy.json> --output <project_spec.json>` を追加し、legacy `projectBrief` を canonical な `ProjectSpec` へ正規化できるようにした
+- `docs/SPEC_VERSIONING.md` に `migrate-spec` 前提の migration strategy を追加し、Phase 8 の `specVersion` migration policy を固定した
+- Render `Starter` + persistent disk (`/var/data/repogenesis`) で orchestration API を live 化し、`/healthz` で `configuredPath=/var/data/repogenesis/support-data.sqlite` と `usingDefaultPath=false` を確認した
+- Vercel production に Render upstream を接続し、BFF generate / support proxy が本番で upstream へ到達する状態にした
+- Firebase Authorized Domains に Vercel domain を追加し、Google ログインから cookie-session 発行まで production で通した
+- support/auth API の Vercel import 解決を `.js` shim で安定化し、`ERR_MODULE_NOT_FOUND` を解消した (`47896f2`)
+- production support panel で real support data を読めること、authenticated remote ZIP generation で `/Users/masafumimikami/Downloads/faq-internal.zip` を出せることを確認した
 
 ## What Is Being Done Now
 - いまの主要テーマ:
@@ -166,7 +171,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
     - Web selection -> handoff -> generated output persistence を閉じる
   - Phase 5 完了後の運用フォロー
     - timeout 時の運用切り分けを runbook 化済み
-    - remote ZIP timeout の再発監視
+    - live Render + Vercel pair の smoke/health green baseline 固定
   - 次の大きい変更を分離
     - optional skill layer
     - CI/docs
@@ -180,22 +185,14 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 ## What Is Blocked
 - 技術的 blocker は解消済み。
   - 残る blocker は構造整理と運用整備:
-  - support store は SQLite に寄せたが、production で durable volume に向ける作業はまだ
   - remote ZIP timeout は request id で追える状態。再試行成功済みのため、当面は Render 側の再発監視を継続
   - AI tool 非依存化は `docs/AI_TOOLING.md` を provider-neutral contract とする形で generator / app / tests まで反映済み。残りは deployed public wizard / real remote ZIP 経路での実地確認
   - Phase 6 の境界整理は docs に反映済み。残りはその境界に沿った AI provider integration の実装判断
   - skill layer は provider-aware contract / installer / Web selection / remote ZIP 同梱まで反映。自動インストールと local ZIP 同梱は未反映
   - `doctor` は core file / wrapper / installed skill artifact / planning docs / `.env.example` の整合検査まで実装済み。残りは browser export や production ZIP 生成後の実地確認
-  - production での最新 public wizard (`04a9281`) の実地確認はこれから
-  - planning-aware な public wizard / remote ZIP の production 実地確認はこれから
-  - support store の production 永続化と deployed support panel の実地確認は継続
-  - deployed `healthz` / `smoke:api` で `usingDefaultPath=false` を確認する作業が残っている
-  - deployed `smoke:deploy` で Vercel 側 env/bff misconfiguration がないことを確認する作業が残っている
-  - ただし現時点の Vercel project `app` では `vercel env ls production` が空で、live BFF は `ORCHESTRATION_API_URL` 未設定のまま
-  - upstream target は URL 自体は repo に残っていなかったので、repo root の `render.yaml` で Render Blueprint baseline を固定した。残りは dashboard sync と secret 投入
-  - Blueprint baseline は `generator/tests/renderBlueprint.test.ts` で drift を検知できるようにした
-  - deployed verification は repo root の `scripts/smoke-deployed-stack.sh` で upstream smoke と app smoke をまとめて回せるようにした
-  - deployed cookie-session support panel の確認用に、Playwright `app/e2e/support-panel.remote.spec.ts` を追加した
+  - production での planning-aware な public wizard / remote ZIP / support panel の実地確認は完了した
+  - いま残る実運用課題は deployment 固有 URL 依存で、Firebase Authorized Domains / Render `CORS_ALLOW_ORIGIN` / 公開導線を stable production domain へ寄せること
+  - deployed verification は repo root の `scripts/smoke-deployed-stack.sh` で upstream smoke と app smoke をまとめて回せる状態までできているが、live pair に対する green baseline の記録はこれから
   - app 側の vendored generator bundle drift は `app/scripts/check-generator-bundle-sync.mjs` と CI の bundle-sync job で検知できるようにした
   - generator dist と app vendored bundle の出力互換は fixture 比較で CI に固定した
 
@@ -223,15 +220,14 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 - interactive CLIなし（対話的プロンプト未対応）
 - skill injectionなし（テンプレートの外部差し込み未対応）
 - 選択 Skill の自動インストールなし（remote ZIP では同梱されるが、実行時セットアップは自動化していない）
-- support store は SQLite になったが、production で durable volume 未接続だと依然として非永続
+- support store は production で durable volume 接続済みだが、現在の公開 URL は deployment 固有で、認証設定が stable domain にまだ寄っていない
 - planning 候補の語彙はまだルールベースで、AI API / OSS / notification provider の表現揺れを今後追加で吸収する必要がある
 - local ZIP 用 vendor bundle は `npm run sync:generator-bundle` で手動同期が必要
 - 標準 runbook bundle は generic baseline であり、実際の deploy command / dashboard URL / owner 名は project ごとに追記が必要
 - support panel は remote mode の internal path にだけ出る。local ZIP では表示しない
 - `healthz` は support path を返すが、mounted storage そのものの durability までは判定しない
 - `smoke:deploy` は未ログイン smoke なので、cookie-session の成功導線そのものまでは確認しない
-- 現行 production (`app-eight-liart-88.vercel.app`) は public shell こそ返すが、BFF / support proxy は upstream 未設定で `500` を返す
-- checked-in `render.yaml` は orchestration API を `repogenesis-orchestration-api` として Render に立てる baseline だが、まだ sync 前なので live URL は未確定
+- checked-in `render.yaml` は Render `repogenesis-api` として live 化済みで、support store は `/var/data/repogenesis/support-data.sqlite` を指している
 
 ## Files That Exist
 - `claude.md`

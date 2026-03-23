@@ -1,7 +1,7 @@
 # ROADMAP_STATUS.md — Current Position
 
 ## Last Updated
-2026-03-22
+2026-03-23
 
 ## Roadmap Position
 Phase 6 / Hardening
@@ -86,24 +86,25 @@ Phase 6 / Hardening
 - `docs/SPEC_VERSIONING.md` に migration strategy を追加し、Phase 8 の `specVersion` migration policy を repo 内で閉じた。
 - options step に AI recommendation の `未確認 / 採用 / 上書き済み` を追加し、repo 構成 / security 水準 / 段階数について user-confirmed override を review まで保持できるようにした。
 - `createIntakeEnvelope` を draft 作成導線まで通し、選んだ ChatGPT / Claude / Gemini を provider metadata として `IntakeDraft` に保持するようにした。draft / review でも `相談に使ったAI` を見えるようにした。
+- Render `Starter` + persistent disk (`/var/data/repogenesis`) で orchestration API を本番化し、`/healthz` で `usingDefaultPath=false` を確認した。
+- Vercel production に `ORCHESTRATION_API_URL=https://repogenesis-api.onrender.com` を接続し、BFF generate / support proxy が `ORCHESTRATION_API_URL is not configured` ではなく認証境界へ到達する状態にした。
+- Firebase Authorized Domains に本番 Vercel domain を追加し、Google ログインと cookie-session 発行を production で通した。
+- Vercel serverless で落ちていた support/auth API の `.ts` import を修正し、`ERR_MODULE_NOT_FOUND` を解消した (`47896f2`)。
+- production の internal support panel で Render 上の real SQLite support store を読めることを確認した。
+- production の authenticated remote ZIP generation で実 artifact `/Users/masafumimikami/Downloads/faq-internal.zip` をダウンロードできることを確認した。
 
 ## What This Phase Still Needs
-- Verify the latest planning-aware generation flow on production and confirm generated docs stay coherent across browser export and remote ZIP generation.
 - Refine the public UI so non-engineers can understand planning fields without reading internal terminology.
-- Keep the provider-neutral intake boundary stable while deployed public wizard / remote ZIP verification catches up.
 - Keep optional skill layer separate from the intake/generator core while hardening local export behavior and provider-specific guidance.
-- Point `SUPPORT_DATA_DB_PATH` at durable mounted storage in deployed environments and verify the support panel against real data.
 - Keep deployed `healthz` / `smoke:api` aligned with support store checks so default-path regressions are caught quickly.
 - Keep deployed `smoke:deploy` aligned with BFF / support proxy checks so Vercel-side env regressions are caught quickly.
-- Sync the checked-in Render Blueprint (or equivalent upstream service), then wire `ORCHESTRATION_API_URL` into the live Vercel project.
+- Move the current deployment-specific Vercel URL to a stable production domain and align Firebase Authorized Domains / `CORS_ALLOW_ORIGIN` with that stable host.
 - Keep the new provider-neutral `docs/AI_TOOLING.md` contract aligned across deployed public wizard / real remote ZIP paths after the upstream service is wired.
 
 ## Next Three Tasks
-1. Wire the SQLite support store to durable mounted storage in deployed environments and verify the cookie-session support panel against real data.
-2. Sync [`render.yaml`](/Users/masafumimikami/Documents/WebApp/RepoGenesis/render.yaml) into Render (or provision an equivalent upstream service), then set Vercel `ORCHESTRATION_API_URL` so `smoke:deploy` stops returning `500 ORCHESTRATION_API_URL is not configured`.
-3. Verify deployed `healthz` / `smoke:api` on that environment and confirm `usingDefaultPath=false`, then run [`scripts/smoke-deployed-stack.sh`](/Users/masafumimikami/Documents/WebApp/RepoGenesis/scripts/smoke-deployed-stack.sh).
-4. Verify the deployed public wizard / real remote ZIP flow on the latest planning-aware commit and confirm the richer runbook bundle and `docs/AI_TOOLING.md` stay aligned end to end.
-5. Split pending large changes into separate tracks:
+1. Move the current deployment-specific Vercel URL to a stable production domain, then update Firebase Authorized Domains and Render `CORS_ALLOW_ORIGIN`.
+2. Run the checked-in deployed smoke flow (`deployed-smoke.yml` / `stack-health.yml`) against the live Render + Vercel pair and capture the first green production baseline.
+3. Split pending large changes into separate tracks:
    - skill layer deeper automation
    - CI / docs
 
