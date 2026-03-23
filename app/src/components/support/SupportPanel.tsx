@@ -9,6 +9,7 @@ import {
 interface SupportPanelProps {
   enabled: boolean;
   sessionEmail: string | null;
+  embedded?: boolean;
 }
 
 interface SupportPanelState {
@@ -44,7 +45,7 @@ function auditResultLabel(value: SupportAuditRecord['result']): string {
   return value === 'success' ? '成功' : '失敗';
 }
 
-export function SupportPanel({ enabled, sessionEmail }: SupportPanelProps) {
+export function SupportPanel({ enabled, sessionEmail, embedded = false }: SupportPanelProps) {
   const [feedbackType, setFeedbackType] = useState<SupportFeedbackType>('all');
   const [data, setData] = useState<SupportPanelState>({
     feedbackItems: [],
@@ -125,13 +126,17 @@ export function SupportPanel({ enabled, sessionEmail }: SupportPanelProps) {
 
   return (
     <section className="form-section support-panel">
-      <div className="support-panel-header">
+      <div className={`support-panel-header${embedded ? ' support-panel-header-embedded' : ''}`}>
         <div>
-          <p className="section-kicker">Internal Support</p>
-          <h2>運用ログ</h2>
-          <p className="support-panel-lead">
-            remote / cookie-session 構成で保存された feedback と generation audit を read-only で確認します。
-          </p>
+          {!embedded && (
+            <>
+              <p className="section-kicker">Internal Support</p>
+              <h2>運用ログ</h2>
+              <p className="support-panel-lead">
+                remote / cookie-session 構成で保存された feedback と generation audit を read-only で確認します。
+              </p>
+            </>
+          )}
           {sessionEmail && <p className="support-panel-meta">閲覧中: {sessionEmail}</p>}
           {lastLoadedAt && <p className="support-panel-meta">最終読み込み: {lastLoadedAt}</p>}
         </div>

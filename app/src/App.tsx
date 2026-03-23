@@ -154,6 +154,7 @@ function App() {
   });
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const [supportPanelOpen, setSupportPanelOpen] = useState(false);
 
   const initialized = useRef(false);
   const promptCopyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -254,6 +255,21 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!supportPanelOpen) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setSupportPanelOpen(false);
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [supportPanelOpen]);
+
+  useEffect(() => {
     if (!initialized.current || !shouldFocusMainRef.current) return;
     shouldFocusMainRef.current = false;
     mainRef.current?.focus({ preventScroll: true });
@@ -338,6 +354,11 @@ function App() {
     promptProvider,
   );
   const activeStepLabel = WIZARD_STEPS.find((step) => step.id === activeStep)?.label ?? activeStep;
+
+  useEffect(() => {
+    if (showSupportPanel) return;
+    setSupportPanelOpen(false);
+  }, [showSupportPanel]);
 
   const recommendationNotes = [
     suggestedRepoType === 'multi'
@@ -580,7 +601,20 @@ function App() {
       />
 
       <AuthPanel enabled={requiresRemoteLogin} onSessionChange={setAuthSession} compact />
-      <SupportPanel enabled={showSupportPanel} sessionEmail={authSession.email} />
+      {showSupportPanel && (
+        <div className="support-launcher-row">
+          <p className="support-launcher-note">運用ログは管理者向けの別画面で開きます。</p>
+          <button
+            type="button"
+            className="btn-secondary support-launcher-button"
+            onClick={() => setSupportPanelOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={supportPanelOpen}
+          >
+            運用ログを開く
+          </button>
+        </div>
+      )}
 
       <main id="main-content" className="app-main" ref={mainRef} tabIndex={-1}>
         {guidedStep === 'intro' && (
@@ -1046,6 +1080,40 @@ function App() {
           </button>
         </div>
       </main>
+
+      {showSupportPanel && supportPanelOpen && (
+        <div
+          className="support-modal-backdrop"
+          role="presentation"
+          onClick={() => setSupportPanelOpen(false)}
+        >
+          <section
+            className="support-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="運用ログ"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="support-modal-header">
+              <div>
+                <p className="section-kicker">Internal Support</p>
+                <h3>運用ログ</h3>
+                <p className="consultation-lead">
+                  管理者向けの read-only ログです。通常の作業フローからは切り離しています。
+                </p>
+              </div>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setSupportPanelOpen(false)}
+              >
+                閉じる
+              </button>
+            </div>
+            <SupportPanel enabled={showSupportPanel} sessionEmail={authSession.email} embedded />
+          </section>
+        </div>
+      )}
 
       <FeedbackWidget state={state} errorReport={latestErrorReport} />
     </div>
