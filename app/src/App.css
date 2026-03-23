@@ -72,6 +72,18 @@
   align-items: center;
 }
 
+.app-build-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.42rem 0.72rem;
+  border-radius: 999px;
+  background: rgba(36, 52, 61, 0.92);
+  color: #fff7eb;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .app-save-status {
   font-size: 0.82rem;
   font-weight: 700;
@@ -94,12 +106,24 @@
   color: var(--rg-muted);
 }
 
+.app-devtools {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.app-devtools-button {
+  white-space: nowrap;
+}
+
 .app-hero-panel {
   position: relative;
   overflow: hidden;
-  padding: clamp(1.6rem, 2.4vw, 2.25rem);
+  padding: clamp(1.3rem, 1.8vw, 1.7rem);
   border: 1px solid rgba(108, 87, 61, 0.2);
-  border-radius: 34px;
+  border-radius: 28px;
   background:
     linear-gradient(140deg, rgba(255, 250, 244, 0.94) 0%, rgba(249, 236, 217, 0.78) 56%, rgba(245, 231, 213, 0.92) 100%);
   box-shadow: var(--rg-shadow);
@@ -119,47 +143,41 @@
 }
 
 .app-kicker {
-  margin: 0 0 0.9rem;
-  font-size: 0.78rem;
+  margin: 0 0 0.55rem;
+  font-size: 0.74rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   font-weight: 700;
   color: var(--rg-accent-strong);
 }
 
-.app-hero-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(250px, 0.75fr);
-  gap: 1.25rem;
-  align-items: stretch;
-}
-
 .app-hero-copy {
   position: relative;
   z-index: 1;
+  max-width: 860px;
 }
 
 .app-header h1 {
   margin: 0;
   font-family: 'Zen Old Mincho', serif;
-  font-size: clamp(3.4rem, 8vw, 5.8rem);
+  font-size: clamp(3.1rem, 7vw, 4.8rem);
   letter-spacing: -0.05em;
   line-height: 0.92;
   color: #221d17;
 }
 
 .app-hero-title {
-  margin: 0.8rem 0 0;
-  font-size: 1.12rem;
+  margin: 0.5rem 0 0;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--rg-muted);
 }
 
 .app-hero-lead {
-  max-width: 60ch;
-  margin: 1rem 0 0;
-  font-size: 1rem;
-  line-height: 1.85;
+  max-width: 58ch;
+  margin: 0.8rem 0 0;
+  font-size: 0.96rem;
+  line-height: 1.72;
   color: #2f3e47;
 }
 
@@ -167,7 +185,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
-  margin-top: 1.2rem;
+  margin-top: 0.95rem;
 }
 
 .app-hero-tag {
@@ -182,42 +200,6 @@
   font-weight: 700;
 }
 
-.app-hero-aside {
-  position: relative;
-  z-index: 1;
-  align-self: stretch;
-  padding: 1.15rem 1.2rem;
-  border-radius: 26px;
-  border: 1px solid rgba(108, 87, 61, 0.16);
-  background:
-    linear-gradient(180deg, rgba(31, 48, 58, 0.96) 0%, rgba(38, 56, 67, 0.92) 100%);
-  color: #f4ede3;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
-.app-hero-meta-label {
-  margin: 0;
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 243, 226, 0.72);
-}
-
-.app-version {
-  margin: 0.42rem 0 0;
-  font-size: 1.1rem;
-  color: #fff7eb;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-}
-
-.app-hero-meta-copy {
-  margin: 0.85rem 0 0;
-  font-size: 0.92rem;
-  line-height: 1.75;
-  color: rgba(255, 245, 231, 0.85);
-}
 
 .app-main {
   display: flex;
@@ -784,26 +766,6 @@
   gap: 0.75rem;
   flex-wrap: wrap;
   justify-content: flex-end;
-}
-
-.support-launcher-row {
-  width: min(1180px, 100%);
-  margin: 0 auto 1rem;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 0.85rem;
-  flex-wrap: wrap;
-}
-
-.support-launcher-note {
-  margin: 0;
-  font-size: 0.86rem;
-  color: #6b7280;
-}
-
-.support-launcher-button {
-  white-space: nowrap;
 }
 
 .support-modal-backdrop {
@@ -1663,10 +1625,6 @@
     width: calc(100vw - 24px);
   }
 
-  .app-hero-grid {
-    grid-template-columns: 1fr;
-  }
-
   .app-topbar {
     flex-direction: column;
     align-items: flex-start;
@@ -1689,7 +1647,6 @@
     justify-content: flex-start;
   }
 
-  .support-launcher-row,
   .support-modal-header,
   .support-panel-header,
   .support-panel-actions {

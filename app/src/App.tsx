@@ -594,6 +594,8 @@ function App() {
         testMode={testMode}
         onToggleTestMode={setTestMode}
         buildLabel={buildLabel}
+        showDeveloperTools={showSupportPanel}
+        onOpenSupportPanel={() => setSupportPanelOpen(true)}
         activeStep={activeStep}
         steps={WIZARD_STEPS}
         canVisitStep={canVisitStep}
@@ -601,20 +603,6 @@ function App() {
       />
 
       <AuthPanel enabled={requiresRemoteLogin} onSessionChange={setAuthSession} compact />
-      {showSupportPanel && (
-        <div className="support-launcher-row">
-          <p className="support-launcher-note">運用ログは管理者向けの別画面で開きます。</p>
-          <button
-            type="button"
-            className="btn-secondary support-launcher-button"
-            onClick={() => setSupportPanelOpen(true)}
-            aria-haspopup="dialog"
-            aria-expanded={supportPanelOpen}
-          >
-            運用ログを開く
-          </button>
-        </div>
-      )}
 
       <main id="main-content" className="app-main" ref={mainRef} tabIndex={-1}>
         {guidedStep === 'intro' && (

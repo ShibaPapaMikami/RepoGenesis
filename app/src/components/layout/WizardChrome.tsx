@@ -9,6 +9,8 @@ interface WizardChromeProps<TStep extends string> {
   testMode: boolean;
   onToggleTestMode: (checked: boolean) => void;
   buildLabel: string;
+  showDeveloperTools: boolean;
+  onOpenSupportPanel: () => void;
   activeStep: TStep;
   steps: WizardStepDefinition<TStep>[];
   canVisitStep: (step: TStep) => boolean;
@@ -21,6 +23,8 @@ export function WizardChrome<TStep extends string>({
   testMode,
   onToggleTestMode,
   buildLabel,
+  showDeveloperTools,
+  onOpenSupportPanel,
   activeStep,
   steps,
   canVisitStep,
@@ -31,43 +35,47 @@ export function WizardChrome<TStep extends string>({
       <header className="app-header app-header-public">
         <div className="app-topbar">
           <div className="app-topbar-copy">
+            <span className="app-build-badge">{buildLabel}</span>
             <span className="app-save-status">{saveLabel}</span>
             <span className="app-save-note">
               {requiresRemoteLogin ? 'ログインは ZIP 生成時だけ必要です' : 'ログインなしで最後まで試せます'}
             </span>
           </div>
-          <label className="app-utility-toggle">
-            <input
-              type="checkbox"
-              checked={testMode}
-              onChange={(event) => onToggleTestMode(event.target.checked)}
-            />
-            テストモード
-          </label>
+          {showDeveloperTools && (
+            <div className="app-devtools" aria-label="開発者向けユーティリティ">
+              <label className="app-utility-toggle">
+                <input
+                  type="checkbox"
+                  checked={testMode}
+                  onChange={(event) => onToggleTestMode(event.target.checked)}
+                />
+                テストモード
+              </label>
+              <button
+                type="button"
+                className="btn-secondary app-devtools-button"
+                onClick={onOpenSupportPanel}
+                aria-haspopup="dialog"
+              >
+                運用ログ
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="app-hero-panel">
           <p className="app-kicker">AI Intake Wizard For Better Repos</p>
-          <div className="app-hero-grid">
-            <div className="app-hero-copy">
-              <h1>RepoGenesis</h1>
-              <p className="app-hero-title">AI対応リポジトリ構造ジェネレータ</p>
-              <p className="app-hero-lead">
-                相談メモを、そのまま starter repo に変えるための生成フローです。構成、security、skill、runbook まで 1 本の wizard で固めます。
-              </p>
-              <div className="app-hero-tags" aria-label="主な特徴">
-                <span className="app-hero-tag">Prompt-to-draft</span>
-                <span className="app-hero-tag">Runbook-aware</span>
-                <span className="app-hero-tag">Skill-ready</span>
-              </div>
+          <div className="app-hero-copy">
+            <h1>RepoGenesis</h1>
+            <p className="app-hero-title">AI対応リポジトリ構造ジェネレータ</p>
+            <p className="app-hero-lead">
+              相談メモを starter repo に変えるための wizard です。構成、security、skill、runbook までを一連の流れで固めます。
+            </p>
+            <div className="app-hero-tags" aria-label="主な特徴">
+              <span className="app-hero-tag">Prompt-to-draft</span>
+              <span className="app-hero-tag">Runbook-aware</span>
+              <span className="app-hero-tag">Skill-ready</span>
             </div>
-            <aside className="app-hero-aside">
-              <p className="app-hero-meta-label">Current build</p>
-              <p className="app-version">{buildLabel}</p>
-              <p className="app-hero-meta-copy">
-                Intake → Options → Review → ZIP の順に進めば、手戻りを抑えた starter repo を作れます。
-              </p>
-            </aside>
           </div>
         </div>
       </header>
