@@ -7,7 +7,7 @@ export interface AuthContext {
 
 export interface AuthResult {
   ok: boolean;
-  status: 200 | 401 | 403;
+  status: 200 | 401 | 403 | 503;
   context?: AuthContext;
   error?: string;
 }
@@ -15,6 +15,7 @@ export interface AuthResult {
 const GENERATE_ROLE = 'repogenesis:generate';
 const SUPPORT_READ_ROLE = 'repogenesis:support_read';
 const DEFAULT_ALLOWED_DOMAIN = 'gugenka.jp';
+const INSECURE_AUTH_OVERRIDE_ENV = 'ALLOW_INSECURE_AUTH_IN_PRODUCTION';
 
 function getAuthProvider(): string {
   return process.env.AUTH_PROVIDER ?? 'mock';
@@ -22,6 +23,23 @@ function getAuthProvider(): string {
 
 function getSessionAudience(): string {
   return process.env.SESSION_AUDIENCE ?? 'repogenesis';
+}
+
+function isProductionLikeRuntime(): boolean {
+  return process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+}
+
+function allowInsecureAuthInProduction(): boolean {
+  return (process.env[INSECURE_AUTH_OVERRIDE_ENV] ?? '').toLowerCase() === 'true';
+}
+
+export function getAuthConfigurationError(): string | null {
+  if (!isProductionLikeRuntime()) return null;
+  if (allowInsecureAuthInProduction()) return null;
+  if (getAuthProvider() !== 'gugenka') {
+    return `AUTH_PROVIDER=${getAuthProvider()} is not allowed in production`;
+  }
+  return null;
 }
 
 function parseConfiguredSet(rawValue: string | undefined): Set<string> | null {
@@ -107,6 +125,10 @@ function parseCookieHeader(cookieHeader: string | undefined): Map<string, string
  * - gugenka provider: vendored gugenka-auth session verifier
  */
 export function authorizeBearerToken(authorizationHeader: string | undefined): AuthResult {
+  const configurationError = getAuthConfigurationError();
+  if (configurationError) {
+    return { ok: false, status: 503, error: configurationError };
+  }
   if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
     return { ok: false, status: 401, error: 'Missing or invalid Authorization header' };
   }
@@ -168,6 +190,10 @@ export function hasSupportReadPermission(context: AuthContext): boolean {
 export async function authorizeBearerTokenAsync(
   authorizationHeader: string | undefined,
 ): Promise<AuthResult> {
+  const configurationError = getAuthConfigurationError();
+  if (configurationError) {
+    return { ok: false, status: 503, error: configurationError };
+  }
   if (getAuthProvider() !== 'gugenka') {
     return authorizeBearerToken(authorizationHeader);
   }
@@ -207,6 +233,10 @@ export async function authorizeRequestAsync(
   authorizationHeader: string | undefined,
   cookieHeader: string | undefined,
 ): Promise<AuthResult> {
+  const configurationError = getAuthConfigurationError();
+  if (configurationError) {
+    return { ok: false, status: 503, error: configurationError };
+  }
   if (getAuthProvider() !== 'gugenka') {
     return authorizeBearerToken(authorizationHeader);
   }

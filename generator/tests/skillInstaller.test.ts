@@ -19,6 +19,15 @@ afterEach(() => {
 });
 
 describe('skill installer', () => {
+  it('rejects unsafe skill identifiers', () => {
+    expect(() => installSkill({
+      projectRoot,
+      registryRoot,
+      skillId: '../escape',
+      selectedProviders: ['claude_code'],
+    })).toThrow(/skillId must be slug-safe/);
+  });
+
   it('copies provider artifacts and writes manifest', () => {
     const result = installSkill({
       projectRoot,

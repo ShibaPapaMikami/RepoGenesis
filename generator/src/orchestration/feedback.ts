@@ -1,5 +1,6 @@
 import { authorizeRequestAsync } from './auth';
 import { persistFeedback, type FeedbackType } from './feedbackStore';
+import { createEntityId, resolveRequestId } from './requestId';
 
 export interface FeedbackApiRequest {
   title: unknown;
@@ -26,11 +27,6 @@ export interface FeedbackApiError {
 export interface ApiResponse<T = unknown> {
   status: number;
   body: T;
-}
-
-function toRequestId(maybeId: unknown): string {
-  if (typeof maybeId === 'string' && maybeId.length > 0) return maybeId;
-  return `fb-${Date.now()}`;
 }
 
 function sanitizeString(input: unknown): string {
@@ -60,7 +56,7 @@ export async function handleFeedbackApiRequest(
     return { status: 400, body: { error: 'Invalid payload' } };
   }
 
-  const requestId = toRequestId(isRecord(payload.meta) ? payload.meta.requestId : undefined);
+  const requestId = resolveRequestId('fb', isRecord(payload.meta) ? payload.meta.requestId : undefined);
   const title = sanitizeString(payload.title);
   const description = sanitizeString(payload.description);
   const emailRaw = sanitizeString(payload.email);
@@ -74,7 +70,7 @@ export async function handleFeedbackApiRequest(
     return { status: 400, body: { error: 'description must be at least 10 characters', requestId } };
   }
 
-  const feedbackId = `${feedbackType}-${Date.now()}`;
+  const feedbackId = createEntityId(feedbackType);
   const userId = auth.ok && auth.context ? auth.context.userId : 'anonymous';
   const stored = persistFeedback({
     feedbackId,

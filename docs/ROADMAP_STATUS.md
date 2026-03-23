@@ -53,6 +53,8 @@ Phase 6 / Hardening
 - feedback / generation audit は scattered JSON/JSONL ではなく、`SUPPORT_DATA_DB_PATH` で指定する SQLite support store へ集約する実装に切り替えた。
 - `GET /api/v1/support/feedback` / `GET /api/v1/support/audit` を追加し、SQLite support store を読む最初の searchable admin surface を read-only API として用意した。
 - app 側にも same-origin BFF (`/api/orchestration/support/feedback` / `/api/orchestration/support/audit`) と read-only support panel を追加し、cookie-session 環境では feedback / generation audit を UI から確認できるようにした。
+- public wizard の visual direction を見直し、default form UI から editorial/studio 寄りの見た目へ寄せ始めた。
+- curated skill catalog / registry に `frontend-design` を追加し、Codex / Claude Code / Gemini CLI で同じデザイン改善の入口を選べるようにした。
 - generation audit は `projectSlug` / `artifactFilename` / `authProvider` / `authMode` / `selectedSkillIds` を持つ structured event へ広げ、support panel でも「誰が・どの経路で・何を生成したか」を追いやすくした。
 - orchestration API には in-memory rate limit を追加し、`generate` / `feedback` / `support read` を route 別に制限できるようにした。key は bearer / session cookie / forwarded IP を hash して扱う。
 - auth は domain-first の generate 権限に加えて optional な `support_read` role segmentation を持つようになり、専用 allowlist で read-only support viewer を許可できるようにした。
@@ -92,6 +94,19 @@ Phase 6 / Hardening
 - Vercel serverless で落ちていた support/auth API の `.ts` import を修正し、`ERR_MODULE_NOT_FOUND` を解消した (`47896f2`)。
 - production の internal support panel で Render 上の real SQLite support store を読めることを確認した。
 - production の authenticated remote ZIP generation で実 artifact `/Users/masafumimikami/Downloads/faq-internal.zip` をダウンロードできることを確認した。
+- orchestration auth は production 相当環境で `AUTH_PROVIDER=mock` と `GENERATE_REQUIRE_AUTH=false` を 503 で止めるようにし、誤設定を code path で防ぐようにした。
+- public wizard には skip link / step focus / reduced-motion を追加し、キーボード操作と動き抑制の最低限を先に整えた。
+- consultation step の select / textarea / button は `aria-describedby` で説明文と結び、相談用 prompt / draft 化の意図が読み上げでも追えるようにした。
+- app header / hero / step nav は `WizardChrome` へ分離し、`App.tsx` の chrome 部分を切り出した。AuthPanel / SupportPanel も status 読み上げと help text を追加した。
+- orchestration API の credentialed CORS は allowlist 外 origin を 403 で拒否するように harden し、fallback で request origin を反射しないようにした。
+- orchestration API の POST body には size 上限と async 例外の 500 fallback を追加し、oversized request / invalid JSON / stream error を明示応答するようにした。
+- generator / skill installer / selected skill bundle / ZIP builder に path safety を追加し、root 外へ出る相対 path を拒否するようにした。
+- rate-limit bucket には期限切れ cleanup を追加し、長期稼働で stale entry が蓄積しないようにした。
+- ZIP contract test は binary を UTF-8 includes で見る方式をやめ、entry 名の実解析へ切り替えた。
+- CI の Node version は 22.17.0 に統一し、app `typecheck` と job timeout を追加した。
+- support data store の schema migration は whitelist 化した identifier だけで `ALTER TABLE` するようにし、内部 SQL 組み立てを限定した。
+- support data store reader は壊れた JSON metadata / selected skill list を無視して継続するようにし、破損行でプロセスが落ちないようにした。
+- generate / feedback / server fallback の request id は `Date.now()` ではなく UUID ベースへ切り替えた。
 
 ## What This Phase Still Needs
 - Refine the public UI so non-engineers can understand planning fields without reading internal terminology.

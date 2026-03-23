@@ -21,6 +21,7 @@ import {
 } from './utils/storage';
 import { IntroSection } from './components/sections/IntroSection';
 import { ConsultationSection } from './components/sections/ConsultationSection';
+import { WizardChrome } from './components/layout/WizardChrome';
 import { ProjectSection } from './components/sections/ProjectSection';
 import { TechSection } from './components/sections/TechSection';
 import { SecuritySection } from './components/sections/SecuritySection';
@@ -120,6 +121,11 @@ function formatSaveLabel(state: SaveState, lastSavedAt: string | null): string {
   return '自動保存は有効です';
 }
 
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 function App() {
   const [state, dispatch] = useReducer(formReducer, initialFormState);
   const [consultationText, setConsultationText] = useState(() => loadConsultationText());
@@ -151,7 +157,9 @@ function App() {
   const initialized = useRef(false);
   const promptCopyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const outputRef = useRef<HTMLElement | null>(null);
+  const mainRef = useRef<HTMLElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shouldFocusMainRef = useRef(false);
 
   const markSaved = useCallback(() => {
     setSaveState('saved');
@@ -244,6 +252,12 @@ function App() {
     if (timerRef.current) clearTimeout(timerRef.current);
   }, []);
 
+  useEffect(() => {
+    if (!initialized.current || !shouldFocusMainRef.current) return;
+    shouldFocusMainRef.current = false;
+    mainRef.current?.focus({ preventScroll: true });
+  }, [guidedStep]);
+
   const errors = validationErrors(state);
   const exportable = canExport(state);
   const generationMode = getGenerationMode();
@@ -320,6 +334,7 @@ function App() {
     ),
     promptProvider,
   );
+  const activeStepLabel = WIZARD_STEPS.find((step) => step.id === activeStep)?.label ?? activeStep;
 
   const recommendationNotes = [
     suggestedRepoType === 'multi'
@@ -354,8 +369,9 @@ function App() {
 
   function goToStep(step: GuidedStep) {
     if (!canVisitStep(step)) return;
+    shouldFocusMainRef.current = true;
     setGuidedStep(step);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
   }
 
   function toggleSkillSelection(skillId: string) {
@@ -459,11 +475,16 @@ function App() {
   }
 
   async function handleCopyConsultationPrompt() {
-    await navigator.clipboard.writeText(guidedConsultationPrompt);
-    setConsultationMessage('相談用プロンプトをコピーしました。AI で整理した結果を次に貼り付けてください。');
-    setPromptCopied(true);
-    if (promptCopyTimerRef.current) clearTimeout(promptCopyTimerRef.current);
-    promptCopyTimerRef.current = setTimeout(() => setPromptCopied(false), 2400);
+    try {
+      await navigator.clipboard.writeText(guidedConsultationPrompt);
+      setConsultationMessage('相談用プロンプトをコピーしました。AI で整理した結果を次に貼り付けてください。');
+      setPromptCopied(true);
+      if (promptCopyTimerRef.current) clearTimeout(promptCopyTimerRef.current);
+      promptCopyTimerRef.current = setTimeout(() => setPromptCopied(false), 2400);
+    } catch {
+      setConsultationMessage('プロンプトのコピーに失敗しました。HTTPS 環境または対応ブラウザで再試行してください。');
+      setPromptCopied(false);
+    }
   }
 
   function handleBuildConsultationDraft() {
@@ -539,52 +560,26 @@ function App() {
 
   return (
     <div className="app">
-      <header className="app-header app-header-public">
-        <div className="app-topbar">
-          <div className="app-topbar-copy">
-            <span className="app-save-status">{saveLabel}</span>
-            <span className="app-save-note">
-              {requiresRemoteLogin ? 'ログインは ZIP 生成時だけ必要です' : 'ログインなしで最後まで試せます'}
-            </span>
-          </div>
-          <label className="app-utility-toggle">
-            <input
-              type="checkbox"
-              checked={testMode}
-              onChange={(event) => setTestMode(event.target.checked)}
-            />
-            テストモード
-          </label>
-        </div>
-
-        <h1>RepoGenesis</h1>
-        <p>AI対応リポジトリ構造ジェネレータ</p>
-        <p className="app-version">{buildLabel}</p>
-      </header>
+      <a href="#main-content" className="skip-link">メインコンテンツへ移動</a>
+      <p className="sr-only" role="status" aria-live="polite">
+        現在のステップ: {activeStepLabel}
+      </p>
+      <WizardChrome
+        saveLabel={saveLabel}
+        requiresRemoteLogin={requiresRemoteLogin}
+        testMode={testMode}
+        onToggleTestMode={setTestMode}
+        buildLabel={buildLabel}
+        activeStep={activeStep}
+        steps={WIZARD_STEPS}
+        canVisitStep={canVisitStep}
+        onGoToStep={goToStep}
+      />
 
       <AuthPanel enabled={requiresRemoteLogin} onSessionChange={setAuthSession} compact />
       <SupportPanel enabled={showSupportPanel} sessionEmail={authSession.email} />
 
-      <nav className="wizard-nav" aria-label="作業ステップ">
-        {WIZARD_STEPS.map((step, index) => {
-          const available = canVisitStep(step.id);
-          const current = activeStep === step.id;
-          return (
-            <button
-              key={step.id}
-              type="button"
-              className={`wizard-step${current ? ' wizard-step-current' : ''}${available ? '' : ' wizard-step-locked'}`}
-              onClick={() => goToStep(step.id)}
-              disabled={!available}
-            >
-              <span className="wizard-step-index">{index + 1}</span>
-              <span>{step.label}</span>
-            </button>
-          );
-        })}
-      </nav>
-
-      <main className="app-main">
+      <main id="main-content" className="app-main" ref={mainRef} tabIndex={-1}>
         {guidedStep === 'intro' && (
           <IntroSection
             onStart={handleStartFresh}
@@ -998,10 +993,14 @@ function App() {
               <button
                 type="button"
                 onClick={() => {
+                  shouldFocusMainRef.current = true;
                   setGuidedStep('result');
                   setResultPhase('idle');
                   requestAnimationFrame(() => {
-                    outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    outputRef.current?.scrollIntoView({
+                      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+                      block: 'start',
+                    });
                   });
                 }}
                 className="btn-primary"

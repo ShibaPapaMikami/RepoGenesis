@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { consumeRateLimit, rateLimitHeaders, resetRateLimitStateForTests } from '../src/orchestration/rateLimit';
+import {
+  consumeRateLimit,
+  getRateLimitBucketCountForTests,
+  rateLimitHeaders,
+  resetRateLimitStateForTests,
+} from '../src/orchestration/rateLimit';
 
 describe('orchestration rate limit', () => {
   afterEach(() => {
@@ -147,5 +152,30 @@ describe('orchestration rate limit', () => {
     expect(headers['X-RateLimit-Limit']).toBe('30');
     expect(headers['X-RateLimit-Remaining']).toBe('0');
     expect(headers['Retry-After']).toBe('12');
+  });
+
+  it('sweeps expired buckets before adding new traffic', () => {
+    process.env.GENERATE_RATE_LIMIT_WINDOW_MS = '1000';
+
+    consumeRateLimit({
+      route: 'generate',
+      authorizationHeader: 'Bearer stale-token',
+      cookieHeader: undefined,
+      forwardedForHeader: undefined,
+      remoteAddress: '127.0.0.1',
+      now: 1_000,
+    });
+    expect(getRateLimitBucketCountForTests()).toBe(1);
+
+    consumeRateLimit({
+      route: 'feedback',
+      authorizationHeader: 'Bearer fresh-token',
+      cookieHeader: undefined,
+      forwardedForHeader: undefined,
+      remoteAddress: '127.0.0.1',
+      now: 62_000,
+    });
+
+    expect(getRateLimitBucketCountForTests()).toBe(1);
   });
 });

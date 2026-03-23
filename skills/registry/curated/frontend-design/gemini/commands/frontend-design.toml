@@ -1,0 +1,23 @@
+name = "frontend-design"
+description = "Create a stronger frontend direction with distinctive typography, layout, color, and polish."
+
+prompt = """
+Use this command when the repository needs a higher-quality frontend design direction.
+
+Before coding:
+- identify purpose, audience, and constraints
+- choose one bold aesthetic direction
+- define the one memorable visual trait
+
+Implementation rules:
+- avoid generic AI-looking layouts, fonts, and color palettes
+- use stronger typography, atmosphere, and spatial contrast
+- keep motion intentional and production-usable
+- return real working code, not mock styling
+
+Return:
+1. visual direction
+2. implementation plan
+3. working changes
+4. polish notes
+"""

@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { resolvePathWithin } from './pathSafety';
 
 export function ensureDir(dirPath: string): void {
   fs.mkdirSync(dirPath, { recursive: true });
@@ -10,7 +11,7 @@ export function ensureDir(dirPath: string): void {
  * UTF-8、LF改行を強制。
  */
 export function writeFile(basePath: string, relativePath: string, content: string): void {
-  const fullPath = path.join(basePath, relativePath);
+  const fullPath = resolvePathWithin(basePath, relativePath, 'generated file path');
   const dir = path.dirname(fullPath);
   ensureDir(dir);
 

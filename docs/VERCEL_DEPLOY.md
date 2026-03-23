@@ -71,6 +71,8 @@ npm run start:api
 - `CORS_ALLOW_ORIGIN` は単一の本番ドメインに固定
 - `SUPPORT_DATA_DB_PATH` は container filesystem ではなく mounted storage / durable volume に向ける
 - `node:sqlite` を使うため Node 22.17+ を使う（`render.yaml` は `NODE_VERSION=22.17.0` を固定）
+- production では `AUTH_PROVIDER=mock` と `GENERATE_REQUIRE_AUTH=false` を残さない
+- 一時調査で override する場合だけ `ALLOW_INSECURE_AUTH_IN_PRODUCTION=true` または `ALLOW_INSECURE_GENERATE_WITHOUT_AUTH_IN_PRODUCTION=true` を使い、終了後すぐ消す
 
 ## 3. Smoke checks (before go-live)
 

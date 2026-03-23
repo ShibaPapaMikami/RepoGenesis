@@ -6,6 +6,7 @@ import { generate } from '../src/generator';
 import { generateFromSpec } from '../src/generateFromSpec';
 import { projectBriefSchema } from '../src/schema';
 import { DEFAULT_RUNBOOK_PATHS } from '../src/runbookBundle';
+import { writeFile } from '../src/utils/fileWriter';
 
 const SINGLE_REPO_FILE_COUNT = 23 + DEFAULT_RUNBOOK_PATHS.length;
 const MULTI_REPO_FILE_COUNT = 39 + DEFAULT_RUNBOOK_PATHS.length;
@@ -158,6 +159,11 @@ function writeInputFile(brief: object): string {
 }
 
 describe('generator — single-repo', () => {
+  it('should reject generated file paths that escape the output root', () => {
+    expect(() => writeFile(tmpDir, '../escape.txt', 'unsafe')).toThrow(/must stay within the project root/);
+    expect(fs.existsSync(path.join(path.dirname(tmpDir), 'escape.txt'))).toBe(false);
+  });
+
   it('should generate all required files for single-repo', () => {
     const inputPath = writeInputFile(SINGLE_BRIEF);
     const result = generate({ inputPath, outputPath: tmpDir, force: false });

@@ -37,11 +37,11 @@ function shortStorePath(value: string): string {
 }
 
 function feedbackTypeLabel(value: SupportFeedbackRecord['type']): string {
-  return value === 'bug' ? 'bug' : 'request';
+  return value === 'bug' ? '不具合' : '要望';
 }
 
 function auditResultLabel(value: SupportAuditRecord['result']): string {
-  return value === 'success' ? 'success' : 'failure';
+  return value === 'success' ? '成功' : '失敗';
 }
 
 export function SupportPanel({ enabled, sessionEmail }: SupportPanelProps) {
@@ -136,39 +136,56 @@ export function SupportPanel({ enabled, sessionEmail }: SupportPanelProps) {
           {lastLoadedAt && <p className="support-panel-meta">最終読み込み: {lastLoadedAt}</p>}
         </div>
         <div className="support-panel-actions">
-          <label className="support-filter">
-            feedback
-            <select value={feedbackType} onChange={(event) => setFeedbackType(event.target.value as SupportFeedbackType)}>
-              <option value="all">all</option>
-              <option value="bug">bug</option>
-              <option value="request">request</option>
+          <label className="support-filter" htmlFor="supportFeedbackFilter">
+            feedback表示
+            <select
+              id="supportFeedbackFilter"
+              value={feedbackType}
+              onChange={(event) => setFeedbackType(event.target.value as SupportFeedbackType)}
+              aria-describedby="supportFeedbackFilterHint"
+            >
+              <option value="all">すべて</option>
+              <option value="bug">不具合のみ</option>
+              <option value="request">要望のみ</option>
             </select>
           </label>
-          <button type="button" className="btn-secondary" onClick={() => void handleRefresh()}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => void handleRefresh()}
+            aria-describedby="supportFeedbackFilterHint"
+          >
             再読み込み
           </button>
         </div>
       </div>
+      <p id="supportFeedbackFilterHint" className="hint">
+        フィードバック一覧の表示種別だけを切り替えます。生成ログは常に最新順で表示します。
+      </p>
 
       {message && (
-        <div className={`generation-status ${status === 'error' ? 'generation-status-error' : 'generation-status-pending'}`}>
+        <div
+          className={`generation-status ${status === 'error' ? 'generation-status-error' : 'generation-status-pending'}`}
+          role="status"
+          aria-live="polite"
+        >
           <p>{message}</p>
         </div>
       )}
 
       <div className="support-store-summary">
-        <p><strong>feedback store:</strong> {data.feedbackStorePath ? shortStorePath(data.feedbackStorePath) : '未取得'}</p>
-        <p><strong>audit store:</strong> {data.auditStorePath ? shortStorePath(data.auditStorePath) : '未取得'}</p>
+        <p><strong>feedback保存先:</strong> {data.feedbackStorePath ? shortStorePath(data.feedbackStorePath) : '未取得'}</p>
+        <p><strong>audit保存先:</strong> {data.auditStorePath ? shortStorePath(data.auditStorePath) : '未取得'}</p>
       </div>
 
       <div className="support-grid">
         <section className="consultation-card support-card">
           <div className="support-card-header">
-            <h4>最新 feedback</h4>
+            <h4>最新フィードバック</h4>
             <span className="support-count">{data.feedbackItems.length}件</span>
           </div>
           {data.feedbackItems.length === 0 ? (
-            <p className="support-empty">まだ feedback はありません。</p>
+            <p className="support-empty">まだフィードバックはありません。</p>
           ) : (
             <ul className="support-list">
               {data.feedbackItems.map((item) => (
@@ -190,11 +207,11 @@ export function SupportPanel({ enabled, sessionEmail }: SupportPanelProps) {
 
         <section className="consultation-card support-card">
           <div className="support-card-header">
-            <h4>最新 generation audit</h4>
+            <h4>最新生成ログ</h4>
             <span className="support-count">{data.auditItems.length}件</span>
           </div>
           {data.auditItems.length === 0 ? (
-            <p className="support-empty">まだ generation audit はありません。</p>
+            <p className="support-empty">まだ生成ログはありません。</p>
           ) : (
             <ul className="support-list">
               {data.auditItems.map((item) => (

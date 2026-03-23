@@ -44,6 +44,44 @@ export interface SupportDataStoreStatus {
 let database: DatabaseSync | null = null;
 let databasePath: string | null = null;
 
+const AUDIT_COLUMN_TYPES = {
+  project_slug: 'TEXT',
+  artifact_filename: 'TEXT',
+  auth_provider: 'TEXT',
+  auth_mode: 'TEXT',
+  selected_skill_ids_json: 'TEXT',
+} as const;
+
+function quoteSqlIdentifier(identifier: string): string {
+  return `"${identifier.replace(/"/g, '""')}"`;
+}
+
+function safeParseObjectJson(input: string | null): Record<string, unknown> | undefined {
+  if (!input) {
+    return undefined;
+  }
+  try {
+    const parsed = JSON.parse(input) as unknown;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? parsed as Record<string, unknown>
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function safeParseStringArrayJson(input: string | null): string[] | undefined {
+  if (!input) {
+    return undefined;
+  }
+  try {
+    const parsed = JSON.parse(input) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function getConfiguredSupportDataDbPath(): string | null {
   const configuredPath = process.env.SUPPORT_DATA_DB_PATH?.trim();
   if (configuredPath && configuredPath.length > 0) {
@@ -97,19 +135,22 @@ function ensureDatabaseSchema(db: DatabaseSync): void {
       ON generation_audit_entries(timestamp DESC);
   `);
 
-  ensureTableColumn(db, 'generation_audit_entries', 'project_slug', 'TEXT');
-  ensureTableColumn(db, 'generation_audit_entries', 'artifact_filename', 'TEXT');
-  ensureTableColumn(db, 'generation_audit_entries', 'auth_provider', 'TEXT');
-  ensureTableColumn(db, 'generation_audit_entries', 'auth_mode', 'TEXT');
-  ensureTableColumn(db, 'generation_audit_entries', 'selected_skill_ids_json', 'TEXT');
+  for (const [columnName, columnType] of Object.entries(AUDIT_COLUMN_TYPES)) {
+    ensureAuditTableColumn(db, columnName as keyof typeof AUDIT_COLUMN_TYPES, columnType);
+  }
 }
 
-function ensureTableColumn(db: DatabaseSync, tableName: string, columnName: string, columnType: string): void {
-  const existing = db.prepare(`PRAGMA table_info(${tableName})`).all() as Array<{ name: string }>;
+function ensureAuditTableColumn(
+  db: DatabaseSync,
+  columnName: keyof typeof AUDIT_COLUMN_TYPES,
+  columnType: (typeof AUDIT_COLUMN_TYPES)[keyof typeof AUDIT_COLUMN_TYPES],
+): void {
+  const tableName = 'generation_audit_entries';
+  const existing = db.prepare(`PRAGMA table_info(${quoteSqlIdentifier(tableName)})`).all() as Array<{ name: string }>;
   if (existing.some((column) => column.name === columnName)) {
     return;
   }
-  db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnType}`);
+  db.exec(`ALTER TABLE ${quoteSqlIdentifier(tableName)} ADD COLUMN ${quoteSqlIdentifier(columnName)} ${columnType}`);
 }
 
 function getDatabase(): { db: DatabaseSync; dbPath: string } {
@@ -203,7 +244,7 @@ export function getFeedbackRecord(feedbackId: string): FeedbackRecord | null {
     title: row.title,
     description: row.description,
     email: row.email ?? undefined,
-    metadata: row.metadata_json ? JSON.parse(row.metadata_json) as Record<string, unknown> : undefined,
+    metadata: safeParseObjectJson(row.metadata_json),
   };
 }
 
@@ -262,7 +303,7 @@ export function listFeedbackRecords(options: { type?: FeedbackType; limit?: numb
     title: row.title,
     description: row.description,
     email: row.email ?? undefined,
-    metadata: row.metadata_json ? JSON.parse(row.metadata_json) as Record<string, unknown> : undefined,
+    metadata: safeParseObjectJson(row.metadata_json),
   }));
 }
 
@@ -349,7 +390,7 @@ export function listAuditRecords(limit = 20): AuditRecord[] {
     artifactFilename: row.artifact_filename ?? undefined,
     authProvider: row.auth_provider ?? undefined,
     authMode: row.auth_mode ?? undefined,
-    selectedSkillIds: row.selected_skill_ids_json ? JSON.parse(row.selected_skill_ids_json) as string[] : undefined,
+    selectedSkillIds: safeParseStringArrayJson(row.selected_skill_ids_json),
     errorCode: row.error_code ?? undefined,
   }));
 }

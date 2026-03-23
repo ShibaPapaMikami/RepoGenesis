@@ -18,6 +18,21 @@ OAuth 統合時に、認証境界と生成ロジック境界を混ぜないた�
 5. `AUTH_PROVIDER=gugenka` では session JWT 検証に `NEXTAUTH_SECRET` と `SESSION_AUDIENCE` が必要。
 6. 現在は `gugenka-auth` の server session 実装を vendor 取り込みで利用している。
 7. `generate` は `repogenesis:generate`、support read は `repogenesis:support_read` を想定し、support read は専用 allowlist を optional に持てる。
+8. production 相当環境 (`NODE_ENV=production` または `VERCEL_ENV=production`) では `AUTH_PROVIDER=mock` を許可しない。
+9. production 相当環境では `GENERATE_REQUIRE_AUTH=false` を許可しない。
+10. どうしても一時 override が必要な場合だけ、明示 env で一時的に許可する。
+
+## Production Guard Rails
+
+- `AUTH_PROVIDER=mock` を production で使いたい場合:
+  - `ALLOW_INSECURE_AUTH_IN_PRODUCTION=true`
+- `GENERATE_REQUIRE_AUTH=false` を production で使いたい場合:
+  - `ALLOW_INSECURE_GENERATE_WITHOUT_AUTH_IN_PRODUCTION=true`
+
+ルール:
+- どちらも通常運用では使わない。
+- 一時調査が終わったら必ず削除する。
+- deployed smoke / health check は override が残っていない前提で運用する。
 
 ## Endpoint (MVP)
 

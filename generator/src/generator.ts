@@ -3,6 +3,7 @@ import * as path from 'path';
 import packageJson from '../package.json';
 import { projectBriefSchema, projectSpecSchema, SUPPORTED_SPEC_VERSIONS, type SpecVersion } from './schema';
 import { writeFile } from './utils/fileWriter';
+import { resolvePathWithin } from './utils/pathSafety';
 import { generateFromSpec } from './generateFromSpec';
 
 export interface GenerateOptions {
@@ -73,7 +74,8 @@ export function generate(options: GenerateOptions): GenerateResult {
   }
 
   const brief = specOrBrief;
-  const outputDir = path.join(outputPath, brief.project.slug);
+  const outputRoot = path.resolve(outputPath);
+  const outputDir = resolvePathWithin(outputRoot, brief.project.slug, 'project output directory');
 
   // 4. Output directory check
   if (fs.existsSync(outputDir)) {

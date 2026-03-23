@@ -12,6 +12,7 @@ test('skill catalog should return multiple recommended skills', () => {
 
   assert.deepEqual(skills.map((skill) => skill.id), [
     'repo-readiness-review',
+    'frontend-design',
     'gh-fix-ci',
     'playwright',
     'vercel-deploy',

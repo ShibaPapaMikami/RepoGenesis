@@ -29,6 +29,8 @@ const DEFAULT_ROUTE_CONFIG: Record<RateLimitRoute, RateLimitRouteConfig> = {
 };
 
 const RATE_LIMIT_BUCKETS = new Map<string, RateLimitBucket>();
+const BUCKET_SWEEP_INTERVAL_MS = 60_000;
+let lastBucketSweepAt = 0;
 
 function getEnvNumber(name: string, fallback: number): number {
   const raw = process.env[name]?.trim();
@@ -126,6 +128,14 @@ export function consumeRateLimit(input: {
 }): RateLimitDecision {
   const config = getRouteConfig(input.route);
   const now = input.now ?? Date.now();
+  if (now - lastBucketSweepAt >= BUCKET_SWEEP_INTERVAL_MS) {
+    for (const [bucketKey, bucket] of RATE_LIMIT_BUCKETS.entries()) {
+      if (bucket.resetAt <= now) {
+        RATE_LIMIT_BUCKETS.delete(bucketKey);
+      }
+    }
+    lastBucketSweepAt = now;
+  }
   const identifier = resolveIdentifier(input);
 
   if (config.max <= 0 || config.windowMs <= 0) {
@@ -186,4 +196,9 @@ export function rateLimitHeaders(decision: RateLimitDecision): Record<string, st
 
 export function resetRateLimitStateForTests(): void {
   RATE_LIMIT_BUCKETS.clear();
+  lastBucketSweepAt = 0;
+}
+
+export function getRateLimitBucketCountForTests(): number {
+  return RATE_LIMIT_BUCKETS.size;
 }

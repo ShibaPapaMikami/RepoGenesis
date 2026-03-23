@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, it, expect } from 'vitest';
 import {
   authorizeBearerTokenAsync,
   authorizeRequestAsync,
+  getAuthConfigurationError,
   hasGeneratePermission,
   hasSupportReadPermission,
 } from '../src/orchestration/auth';
@@ -15,6 +16,9 @@ describe('orchestration auth adapter', () => {
   let originalAllowedDomains: string | undefined;
   let originalSupportAllowed: string | undefined;
   let originalSupportAllowedDomains: string | undefined;
+  let originalNodeEnv: string | undefined;
+  let originalVercelEnv: string | undefined;
+  let originalInsecureOverride: string | undefined;
 
   beforeEach(() => {
     originalProvider = process.env.AUTH_PROVIDER;
@@ -24,6 +28,9 @@ describe('orchestration auth adapter', () => {
     originalAllowedDomains = process.env.AUTH_ALLOWED_DOMAINS;
     originalSupportAllowed = process.env.SUPPORT_ALLOWED_EMAILS;
     originalSupportAllowedDomains = process.env.SUPPORT_ALLOWED_DOMAINS;
+    originalNodeEnv = process.env.NODE_ENV;
+    originalVercelEnv = process.env.VERCEL_ENV;
+    originalInsecureOverride = process.env.ALLOW_INSECURE_AUTH_IN_PRODUCTION;
   });
 
   afterEach(() => {
@@ -50,6 +57,15 @@ describe('orchestration auth adapter', () => {
 
     if (originalSupportAllowedDomains === undefined) delete process.env.SUPPORT_ALLOWED_DOMAINS;
     else process.env.SUPPORT_ALLOWED_DOMAINS = originalSupportAllowedDomains;
+
+    if (originalNodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = originalNodeEnv;
+
+    if (originalVercelEnv === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = originalVercelEnv;
+
+    if (originalInsecureOverride === undefined) delete process.env.ALLOW_INSECURE_AUTH_IN_PRODUCTION;
+    else process.env.ALLOW_INSECURE_AUTH_IN_PRODUCTION = originalInsecureOverride;
   });
 
   it('authorizes dev-token in mock mode', async () => {
@@ -210,5 +226,26 @@ describe('orchestration auth adapter', () => {
       expect(hasGeneratePermission(result.context)).toBe(false);
       expect(hasSupportReadPermission(result.context)).toBe(true);
     }
+  });
+
+  it('rejects mock auth in production without explicit override', async () => {
+    process.env.NODE_ENV = 'production';
+    process.env.AUTH_PROVIDER = 'mock';
+
+    expect(getAuthConfigurationError()).toBe('AUTH_PROVIDER=mock is not allowed in production');
+    const result = await authorizeBearerTokenAsync('Bearer dev-token');
+    expect(result.ok).toBe(false);
+    expect(result.status).toBe(503);
+    expect(result.error).toBe('AUTH_PROVIDER=mock is not allowed in production');
+  });
+
+  it('allows mock auth in production only with explicit override', async () => {
+    process.env.NODE_ENV = 'production';
+    process.env.AUTH_PROVIDER = 'mock';
+    process.env.ALLOW_INSECURE_AUTH_IN_PRODUCTION = 'true';
+
+    expect(getAuthConfigurationError()).toBeNull();
+    const result = await authorizeBearerTokenAsync('Bearer dev-token');
+    expect(result.ok).toBe(true);
   });
 });

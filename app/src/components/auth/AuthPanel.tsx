@@ -282,10 +282,10 @@ export function AuthPanel({ enabled, onSessionChange, compact = false }: AuthPan
             <p className="auth-panel-subtitle">
               {email ? `ログイン中: ${email}` : '公開版では、ログインすると remote ZIP 生成が使えます。入力と draft 確認はログインなしでも進められます。'}
             </p>
-            {message && <p className={status === 'error' ? 'error auth-message' : 'auth-message'}>{message}</p>}
+            {message && <p className={status === 'error' ? 'error auth-message' : 'auth-message'} role="status" aria-live="polite">{message}</p>}
           </div>
           <div className="auth-panel-compact-actions">
-            <span className={`auth-badge auth-badge-${status}`}>
+            <span className={`auth-badge auth-badge-${status}`} aria-label={`認証状態: ${status === 'authenticated' ? '認証済み' : status === 'loading' ? '確認中' : status === 'error' ? 'エラー' : '未認証'}`}>
               {status === 'authenticated' ? '認証済み' : status === 'loading' ? '確認中' : status === 'error' ? 'エラー' : '未認証'}
             </span>
             {!missingConfig && (
@@ -295,6 +295,7 @@ export function AuthPanel({ enabled, onSessionChange, compact = false }: AuthPan
                   onClick={handleLogin}
                   disabled={isBusy || status === 'authenticated'}
                   className="btn-primary"
+                  aria-describedby="auth-panel-help"
                 >
                   {isBusy ? '処理中...' : 'Google でログイン'}
                 </button>
@@ -303,6 +304,7 @@ export function AuthPanel({ enabled, onSessionChange, compact = false }: AuthPan
                   onClick={handleLogout}
                   disabled={isBusy || !email}
                   className="btn-secondary"
+                  aria-describedby="auth-panel-help"
                 >
                   ログアウト
                 </button>
@@ -310,6 +312,9 @@ export function AuthPanel({ enabled, onSessionChange, compact = false }: AuthPan
             )}
           </div>
         </div>
+        <p id="auth-panel-help" className="hint">
+          ログインは remote ZIP 生成と運用ログの閲覧にだけ必要です。相談内容の整理までは未ログインでも進められます。
+        </p>
         {missingConfig && <p className="error">Vercel に Firebase 認証設定が不足しています。</p>}
       </section>
     );
@@ -332,7 +337,7 @@ export function AuthPanel({ enabled, onSessionChange, compact = false }: AuthPan
       ) : (
         <>
           <p className="auth-email">{email ? `現在のユーザー: ${email}` : '現在のユーザー: 未ログイン'}</p>
-          {message && <p className={status === 'error' ? 'error auth-message' : 'auth-message'}>{message}</p>}
+          {message && <p className={status === 'error' ? 'error auth-message' : 'auth-message'} role="status" aria-live="polite">{message}</p>}
           <div className="output-actions">
             <button
               type="button"

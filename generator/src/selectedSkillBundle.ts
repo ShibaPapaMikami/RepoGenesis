@@ -5,6 +5,7 @@ import { loadSkillRegistry } from './skillRegistryLoader';
 import { createEmptySkillsManifest, type ProjectSkillsManifest } from './skillsManifest';
 import type { ProjectBrief } from './schema';
 import type { SelectedSkillRecommendation } from './generateFromSpec';
+import { assertSafeIdentifier, assertSafeRelativePath, resolvePathWithin } from './utils/pathSafety';
 
 export interface BundledSelectedSkillResult {
   files: Array<[string, string]>;
@@ -17,9 +18,10 @@ export function resolveDefaultSkillRegistryRoot(): string {
 }
 
 function registryItemRoot(registryRoot: string, skillId: string): string {
-  const curatedPath = path.join(registryRoot, 'curated', skillId);
-  const officialPath = path.join(registryRoot, 'official', skillId);
-  const internalPath = path.join(registryRoot, 'internal', skillId);
+  const safeSkillId = assertSafeIdentifier(skillId, 'skillId');
+  const curatedPath = path.join(registryRoot, 'curated', safeSkillId);
+  const officialPath = path.join(registryRoot, 'official', safeSkillId);
+  const internalPath = path.join(registryRoot, 'internal', safeSkillId);
 
   for (const candidate of [curatedPath, officialPath, internalPath]) {
     if (fs.existsSync(path.join(candidate, 'skill.json'))) {
@@ -36,7 +38,17 @@ function normalizePlanWithExistingArtifacts(
   plan: SkillInstallPlan,
 ): SkillInstallPlan {
   const itemRoot = registryItemRoot(registryRoot, skillId);
-  const artifacts = plan.artifacts.filter((artifact) => fs.existsSync(path.join(itemRoot, artifact.sourcePath)));
+  const artifacts = plan.artifacts.filter((artifact) => {
+    try {
+      return fs.existsSync(resolvePathWithin(
+        itemRoot,
+        artifact.sourcePath,
+        `registry artifact source (${artifact.sourcePath})`,
+      ));
+    } catch {
+      return false;
+    }
+  });
 
   return {
     ...plan,
@@ -59,6 +71,7 @@ export function bundleSelectedSkillsFromRegistry(options: {
   let manifest = createEmptySkillsManifest();
 
   for (const selectedSkill of options.selectedSkills) {
+    assertSafeIdentifier(selectedSkill.id, 'selected skill id');
     const registryItem = registryItems.find((item) => item.id === selectedSkill.id);
     if (!registryItem) {
       warnings.push(`selected skill ${selectedSkill.id} が registry に見つかりません。`);
@@ -86,8 +99,14 @@ export function bundleSelectedSkillsFromRegistry(options: {
 
     const itemRoot = registryItemRoot(registryRoot, selectedSkill.id);
     for (const artifact of plan.artifacts) {
-      const content = fs.readFileSync(path.join(itemRoot, artifact.sourcePath), 'utf-8');
-      files.set(artifact.targetPath, content);
+      const sourcePath = resolvePathWithin(
+        itemRoot,
+        artifact.sourcePath,
+        `registry artifact source (${artifact.sourcePath})`,
+      );
+      const targetPath = assertSafeRelativePath(artifact.targetPath, `bundled artifact target (${artifact.targetPath})`);
+      const content = fs.readFileSync(sourcePath, 'utf-8');
+      files.set(targetPath, content);
     }
 
     manifest = applySkillInstallPlanToManifest({

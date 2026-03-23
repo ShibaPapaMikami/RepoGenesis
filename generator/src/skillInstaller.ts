@@ -10,6 +10,7 @@ import {
   planSkillRemoval,
 } from './skillInstallerPlan';
 import type { ProjectBrief } from './schema';
+import { assertSafeIdentifier, resolvePathWithin } from './utils/pathSafety';
 
 const MANIFEST_FILE = 'repogenesis.skills.json';
 
@@ -146,9 +147,10 @@ function findRegistryItem(registryRoot: string, skillId: string) {
 }
 
 function registryItemRoot(registryRoot: string, skillId: string): string {
-  const curatedPath = path.join(registryRoot, 'curated', skillId);
-  const officialPath = path.join(registryRoot, 'official', skillId);
-  const internalPath = path.join(registryRoot, 'internal', skillId);
+  const safeSkillId = assertSafeIdentifier(skillId, 'skillId');
+  const curatedPath = path.join(registryRoot, 'curated', safeSkillId);
+  const officialPath = path.join(registryRoot, 'official', safeSkillId);
+  const internalPath = path.join(registryRoot, 'internal', safeSkillId);
   for (const candidate of [curatedPath, officialPath, internalPath]) {
     if (fs.existsSync(path.join(candidate, 'skill.json'))) {
       return candidate;
@@ -158,6 +160,7 @@ function registryItemRoot(registryRoot: string, skillId: string): string {
 }
 
 export function installSkill(options: InstallSkillOptions): InstallSkillResult {
+  assertSafeIdentifier(options.skillId, 'skillId');
   const registryItem = findRegistryItem(options.registryRoot, options.skillId);
   if (!registryItem) {
     throw new Error(`Skill not found in registry: ${options.skillId}`);
@@ -174,8 +177,8 @@ export function installSkill(options: InstallSkillOptions): InstallSkillResult {
   const copiedFiles: string[] = [];
   const itemRoot = registryItemRoot(options.registryRoot, options.skillId);
   for (const artifact of plan.artifacts) {
-    const fromPath = path.join(itemRoot, artifact.sourcePath);
-    const toPath = path.join(options.projectRoot, artifact.targetPath);
+    const fromPath = resolvePathWithin(itemRoot, artifact.sourcePath, `registry artifact source (${artifact.sourcePath})`);
+    const toPath = resolvePathWithin(options.projectRoot, artifact.targetPath, `project artifact target (${artifact.targetPath})`);
     fs.mkdirSync(path.dirname(toPath), { recursive: true });
     fs.copyFileSync(fromPath, toPath);
     copiedFiles.push(artifact.targetPath);
@@ -198,6 +201,7 @@ export function installSkill(options: InstallSkillOptions): InstallSkillResult {
 }
 
 export function removeSkill(options: RemoveSkillOptions): RemoveSkillResult {
+  assertSafeIdentifier(options.skillId, 'skillId');
   const manifest = loadProjectSkillsManifest(options.projectRoot);
   const removal = planSkillRemoval({
     manifest,
@@ -206,7 +210,7 @@ export function removeSkill(options: RemoveSkillOptions): RemoveSkillResult {
 
   const removedFiles: string[] = [];
   for (const artifact of removal.removedArtifacts) {
-    const artifactPath = path.join(options.projectRoot, artifact.path);
+    const artifactPath = resolvePathWithin(options.projectRoot, artifact.path, `installed artifact path (${artifact.path})`);
     if (fs.existsSync(artifactPath)) {
       fs.rmSync(artifactPath, { force: true });
       removedFiles.push(artifact.path);
@@ -228,6 +232,7 @@ export function removeSkill(options: RemoveSkillOptions): RemoveSkillResult {
 }
 
 export function updateSkill(options: UpdateSkillOptions): UpdateSkillResult {
+  assertSafeIdentifier(options.skillId, 'skillId');
   const registryItem = findRegistryItem(options.registryRoot, options.skillId);
   if (!registryItem) {
     throw new Error(`Skill not found in registry: ${options.skillId}`);
@@ -257,7 +262,7 @@ export function updateSkill(options: UpdateSkillOptions): UpdateSkillResult {
 
   const removedFiles: string[] = [];
   for (const artifact of current.artifacts) {
-    const artifactPath = path.join(options.projectRoot, artifact.path);
+    const artifactPath = resolvePathWithin(options.projectRoot, artifact.path, `installed artifact path (${artifact.path})`);
     if (fs.existsSync(artifactPath)) {
       fs.rmSync(artifactPath, { force: true });
       removedFiles.push(artifact.path);
@@ -269,8 +274,8 @@ export function updateSkill(options: UpdateSkillOptions): UpdateSkillResult {
   const copiedFiles: string[] = [];
   const itemRoot = registryItemRoot(options.registryRoot, options.skillId);
   for (const artifact of plan.artifacts) {
-    const fromPath = path.join(itemRoot, artifact.sourcePath);
-    const toPath = path.join(options.projectRoot, artifact.targetPath);
+    const fromPath = resolvePathWithin(itemRoot, artifact.sourcePath, `registry artifact source (${artifact.sourcePath})`);
+    const toPath = resolvePathWithin(options.projectRoot, artifact.targetPath, `project artifact target (${artifact.targetPath})`);
     fs.mkdirSync(path.dirname(toPath), { recursive: true });
     fs.copyFileSync(fromPath, toPath);
     copiedFiles.push(artifact.targetPath);
@@ -323,7 +328,17 @@ export function updateAllSkills(options: UpdateAllSkillsOptions): UpdateAllSkill
     }
 
     const missingArtifacts = installedSkill.artifacts.filter(
-      (artifact) => !fs.existsSync(path.join(options.projectRoot, artifact.path)),
+      (artifact) => {
+        try {
+          return !fs.existsSync(resolvePathWithin(
+            options.projectRoot,
+            artifact.path,
+            `installed artifact path (${artifact.path})`,
+          ));
+        } catch {
+          return true;
+        }
+      },
     );
 
     if (installedSkill.version === registryItem.version && missingArtifacts.length === 0) {

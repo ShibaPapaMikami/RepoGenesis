@@ -1,18 +1,19 @@
 {
-  "id": "repo-readiness-review",
-  "name": "Repo Readiness Review",
-  "description": "Review a generated repository for missing structure, weak assumptions, and operational gaps before implementation starts.",
-  "owner": "repogenesis",
+  "id": "frontend-design",
+  "name": "Frontend Design Direction",
+  "description": "Create a distinctive, production-grade frontend direction with stronger typography, layout, color, and interaction polish.",
+  "owner": "anthropic",
   "version": "0.1.0",
   "status": "stable",
   "riskLevel": "low",
   "sourceType": "curated",
   "sourceLabel": "RepoGenesis curated",
-  "sourceUrl": "https://github.com/gugenka/RepoGenesis/tree/main/skills/registry/curated/repo-readiness-review",
+  "sourceUrl": "https://github.com/anthropics/claude-code/blob/main/plugins/frontend-design/skills/frontend-design/SKILL.md",
   "tags": [
-    "review",
-    "repogenesis",
-    "readiness"
+    "frontend",
+    "design",
+    "ui",
+    "branding"
   ],
   "installMode": "copy",
   "providers": [
@@ -50,7 +51,7 @@
     {
       "provider": "gemini_cli",
       "artifactKind": "command",
-      "entryPath": "gemini/commands/repo-readiness.toml",
+      "entryPath": "gemini/commands/frontend-design.toml",
       "readmePath": "common/README.md"
     }
   ],

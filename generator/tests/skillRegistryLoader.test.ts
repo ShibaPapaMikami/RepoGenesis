@@ -8,6 +8,7 @@ describe('skill registry loader', () => {
   it('loads multiple registry entries from the filesystem in id order', () => {
     const items = loadSkillRegistry(REGISTRY_ROOT);
     expect(items.map((item) => item.id)).toEqual([
+      'frontend-design',
       'gh-fix-ci',
       'playwright',
       'render-deploy',

@@ -53,6 +53,8 @@ describe('orchestration feedback api', () => {
     });
     expect(res.status).toBe(200);
     if (res.status === 200) {
+      expect(res.body.requestId).toMatch(/^fb-[0-9a-f-]{36}$/);
+      expect(res.body.feedbackId).toMatch(/^bug-[0-9a-f-]{36}$/);
       expect(res.body.storedPath).toContain('support-data.sqlite#feedback:');
       expect(fs.existsSync(getSupportDataStorePath())).toBe(true);
       const stored = getFeedbackRecord(res.body.feedbackId);

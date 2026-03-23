@@ -14,6 +14,28 @@ const RUNBOOK_PATHS = [
 ] as const;
 const SINGLE_REPO_FILE_COUNT = 30;
 
+function listZipEntryNames(zipBuffer: Buffer): string[] {
+  const names: string[] = [];
+  let offset = 0;
+
+  while (offset + 30 <= zipBuffer.length) {
+    const signature = zipBuffer.readUInt32LE(offset);
+    if (signature !== 0x04034b50) {
+      break;
+    }
+
+    const compressedSize = zipBuffer.readUInt32LE(offset + 18);
+    const fileNameLength = zipBuffer.readUInt16LE(offset + 26);
+    const extraLength = zipBuffer.readUInt16LE(offset + 28);
+    const nameStart = offset + 30;
+    const nameEnd = nameStart + fileNameLength;
+    names.push(zipBuffer.subarray(nameStart, nameEnd).toString('utf8'));
+    offset = nameEnd + extraLength + compressedSize;
+  }
+
+  return names;
+}
+
 function makeState(): FormState {
   return {
     project: {
@@ -82,14 +104,14 @@ test('generateRepositoryZip should include the default operational runbook bundl
   assert.equal(result.fileCount, SINGLE_REPO_FILE_COUNT);
 
   const zipBuffer = Buffer.from(await result.blob.arrayBuffer());
-  const zipText = zipBuffer.toString('utf8');
+  const zipEntries = listZipEntryNames(zipBuffer);
 
-  assert.equal(zipText.includes('repogenesis/docs/AI_TOOLING.md'), true);
+  assert.equal(zipBuffer.readUInt32LE(0), 0x04034b50);
+  assert.equal(zipEntries.includes('repogenesis/docs/AI_TOOLING.md'), true);
 
   for (const runbookPath of RUNBOOK_PATHS) {
-    assert.equal(zipText.includes(runbookPath), true, `Missing runbook entry: ${runbookPath}`);
+    assert.equal(zipEntries.includes(runbookPath), true, `Missing runbook entry: ${runbookPath}`);
   }
 
-  assert.equal(zipText.includes('repogenesis/.repogenesis/manifest.json'), true);
-  assert.equal(zipText.includes('"fileCount": 30'), true);
+  assert.equal(zipEntries.includes('repogenesis/.repogenesis/manifest.json'), true);
 });

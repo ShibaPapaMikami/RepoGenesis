@@ -14,6 +14,24 @@ interface ZipRecord {
 }
 
 const encoder = new TextEncoder();
+const MAX_ZIP_ENTRIES = 5000;
+const MAX_ZIP_ENTRY_BYTES = 5 * 1024 * 1024;
+const MAX_ZIP_TOTAL_BYTES = 20 * 1024 * 1024;
+
+function assertSafeZipPath(entryPath: string): string {
+  const normalized = entryPath.replace(/\\/g, '/');
+  if (
+    normalized.length === 0
+    || normalized.startsWith('/')
+    || normalized === '.'
+    || normalized === '..'
+    || normalized.startsWith('../')
+    || normalized.includes('/../')
+  ) {
+    throw new Error(`Unsafe ZIP entry path: ${entryPath}`);
+  }
+  return normalized;
+}
 
 const crcTable = (() => {
   const table = new Uint32Array(256);
@@ -66,16 +84,29 @@ function concatBytes(parts: Uint8Array[]): Uint8Array {
 }
 
 export function createZipBuffer(entries: ZipEntry[]): Buffer {
+  if (entries.length > MAX_ZIP_ENTRIES) {
+    throw new Error(`ZIP entry count exceeds limit (${MAX_ZIP_ENTRIES})`);
+  }
+
   const records: ZipRecord[] = [];
   const localParts: Uint8Array[] = [];
   let offset = 0;
+  let totalBytes = 0;
   const now = new Date();
   const { modTime, modDate } = createDosTimestamp(now);
 
   for (const entry of entries) {
-    const nameBytes = encoder.encode(entry.path);
+    const safePath = assertSafeZipPath(entry.path);
+    const nameBytes = encoder.encode(safePath);
     const dataBytes = encoder.encode(entry.content);
     const size = dataBytes.length;
+    if (size > MAX_ZIP_ENTRY_BYTES) {
+      throw new Error(`ZIP entry exceeds size limit: ${safePath}`);
+    }
+    totalBytes += size;
+    if (totalBytes > MAX_ZIP_TOTAL_BYTES) {
+      throw new Error(`ZIP total payload exceeds limit (${MAX_ZIP_TOTAL_BYTES})`);
+    }
     const crc = crc32(dataBytes);
 
     const localHeader = new Uint8Array(30);

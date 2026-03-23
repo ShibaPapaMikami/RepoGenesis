@@ -1,7 +1,8 @@
 import packageJson from '../../package.json';
 import { generateFromSpec } from '../generateFromSpec';
 import { projectSpecSchema } from '../schema';
-import { authorizeRequestAsync, hasGeneratePermission } from './auth';
+import { authorizeRequestAsync, getAuthConfigurationError, hasGeneratePermission } from './auth';
+import { resolveRequestId } from './requestId';
 import { createZipBuffer } from './zip';
 import type { SkillProvider } from '../skillsManifest';
 import { bundleSelectedSkillsFromRegistry } from '../selectedSkillBundle';
@@ -131,9 +132,21 @@ function requiresGenerateAuth(): boolean {
   return (process.env.GENERATE_REQUIRE_AUTH ?? 'true').toLowerCase() !== 'false';
 }
 
-function toRequestId(maybeId: unknown): string {
-  if (typeof maybeId === 'string' && maybeId.length > 0) return maybeId;
-  return `srv-${Date.now()}`;
+function isProductionLikeRuntime(): boolean {
+  return process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+}
+
+function allowInsecureGenerateWithoutAuthInProduction(): boolean {
+  return (process.env.ALLOW_INSECURE_GENERATE_WITHOUT_AUTH_IN_PRODUCTION ?? '').toLowerCase() === 'true';
+}
+
+function getGenerateConfigurationError(): string | null {
+  const authConfigurationError = getAuthConfigurationError();
+  if (authConfigurationError) return authConfigurationError;
+  if (isProductionLikeRuntime() && !requiresGenerateAuth() && !allowInsecureGenerateWithoutAuthInProduction()) {
+    return 'GENERATE_REQUIRE_AUTH=false is not allowed in production';
+  }
+  return null;
 }
 
 function extractIssueMessage(issues: Array<{ path: PropertyKey[]; message: string }>): string {
@@ -159,7 +172,11 @@ async function prepareGenerateRequest(
   }
 
   const req = payload as GenerateApiRequest;
-  const requestId = toRequestId(req.meta?.requestId);
+  const requestId = resolveRequestId('srv', req.meta?.requestId);
+  const configurationError = getGenerateConfigurationError();
+  if (configurationError) {
+    return { status: 503, body: { error: configurationError, requestId } };
+  }
 
   if (req.output?.format && req.output.format !== 'zip') {
     return { status: 400, body: { error: 'Unsupported output.format', requestId } };

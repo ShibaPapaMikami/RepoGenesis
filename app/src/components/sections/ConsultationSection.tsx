@@ -55,6 +55,14 @@ export function ConsultationSection({
 }: ConsultationSectionProps) {
   const reviewHints = getConsultationReviewHints(promptVariant);
   const promptProviderLabel = EXTERNAL_PROMPT_PROVIDER_LABELS[promptProvider];
+  const reviewHintId = 'consultation-review-hints';
+  const openQuestionsHintId = 'openQuestionsEditorHint';
+  const promptVariantHintId = 'consultationPromptVariantHint';
+  const promptProviderHintId = 'consultationPromptProviderHint';
+  const testTemplateHintId = 'consultationTestTemplateHint';
+  const consultationInputHintId = 'consultationInputHint';
+  const consultationCopyHintId = 'consultationCopyHint';
+  const consultationBuildHintId = 'consultationBuildHint';
 
   if (mode === 'draft' && draft) {
     return (
@@ -67,7 +75,7 @@ export function ConsultationSection({
 
         {message && <p className="consultation-message" role="status" aria-live="polite">{message}</p>}
 
-        <div className="consultation-guidance">
+        <div className="consultation-guidance" id={reviewHintId}>
           <h4>{reviewHints.title}</h4>
           <ul>
             {reviewHints.points.map((point) => <li key={point}>{point}</li>)}
@@ -101,9 +109,10 @@ export function ConsultationSection({
                 rows={5}
                 value={draft.review.openQuestions.join('\n')}
                 onChange={(e) => onChangeOpenQuestions(e.target.value)}
+                aria-describedby={`${reviewHintId} ${openQuestionsHintId}`}
                 placeholder={'例:\n外部APIが本当に必要か\n1リポジトリで十分か'}
               />
-              <p className="hint">1行に1つずつ書くと、そのまま open questions に反映されます。</p>
+              <p id={openQuestionsHintId} className="hint">1行に1つずつ書くと、そのまま open questions に反映されます。</p>
             </div>
           </div>
         </div>
@@ -141,6 +150,7 @@ export function ConsultationSection({
             id="consultationPromptVariant"
             value={promptVariant}
             onChange={(e) => onChangePromptVariant(e.target.value as ConsultationPromptVariant)}
+            aria-describedby={promptVariantHintId}
           >
             {CONSULTATION_PROMPT_OPTIONS.map((option) => (
               <option key={option.id} value={option.id}>
@@ -148,7 +158,7 @@ export function ConsultationSection({
               </option>
             ))}
           </select>
-            <p className="hint consultation-variant-hint">
+            <p id={promptVariantHintId} className="hint consultation-variant-hint">
               {CONSULTATION_PROMPT_OPTIONS.find((option) => option.id === promptVariant)?.description}
             </p>
           </div>
@@ -158,6 +168,7 @@ export function ConsultationSection({
               id="consultationPromptProvider"
               value={promptProvider}
               onChange={(e) => onChangePromptProvider(e.target.value as ExternalPromptProvider)}
+              aria-describedby={promptProviderHintId}
             >
               {EXTERNAL_PROMPT_PROVIDERS.map((provider) => (
                 <option key={provider} value={provider}>
@@ -165,7 +176,7 @@ export function ConsultationSection({
                 </option>
               ))}
             </select>
-            <p className="hint consultation-variant-hint">
+            <p id={promptProviderHintId} className="hint consultation-variant-hint">
               見出し構造は共通で、{promptProviderLabel} 向けの使い方だけを薄く上に重ねます。
             </p>
           </div>
@@ -176,6 +187,7 @@ export function ConsultationSection({
               id="consultationTestTemplate"
               value={selectedTestTemplateId}
               onChange={(e) => onChangeTestTemplateId(e.target.value)}
+              aria-describedby={testTemplateHintId}
             >
               <option value="">選択してください</option>
               {CONSULTATION_TEST_TEMPLATES.map((template) => (
@@ -184,7 +196,7 @@ export function ConsultationSection({
                 </option>
               ))}
             </select>
-            <p className="hint consultation-variant-hint">
+            <p id={testTemplateHintId} className="hint consultation-variant-hint">
               テストモード用です。Antigravity や本番確認で同じ入力を再利用したい時に使います。
             </p>
             <div className="output-actions">
@@ -193,6 +205,7 @@ export function ConsultationSection({
                 onClick={onApplyTestTemplate}
                 className="btn-secondary"
                 disabled={!selectedTestTemplateId}
+                aria-describedby={testTemplateHintId}
               >
                 テスト文章を貼り付け欄に反映
               </button>
@@ -202,14 +215,17 @@ export function ConsultationSection({
       </div>
 
       <div className="output-actions">
-        <button type="button" onClick={onCopyPrompt} className="btn-secondary">
+        <button type="button" onClick={onCopyPrompt} className="btn-secondary" aria-describedby={consultationCopyHintId}>
           {promptCopied ? 'コピーしました' : `${promptProviderLabel}向け相談用プロンプトをコピー`}
         </button>
       </div>
+      <p id={consultationCopyHintId} className="hint">
+        コピーした相談用プロンプトを外部 AI に渡し、整理された結果だけを下の貼り付け欄へ戻します。
+      </p>
 
       <div className="form-row">
         <label htmlFor="consultationInput">相談結果の貼り付け</label>
-        <p className="hint">
+        <p id={consultationInputHintId} className="hint">
           `## プロジェクト概要` のような見出し付きが理想ですが、多少崩れていても取り込めます。本文が空だと draft を作成できません。
         </p>
         <textarea
@@ -217,6 +233,7 @@ export function ConsultationSection({
           value={intakeText}
           onChange={(e) => onChangeText(e.target.value)}
           rows={16}
+          aria-describedby={consultationInputHintId}
           placeholder={'## プロジェクト概要\n...\n\n## 想定ユーザー\n...\n\n## 解決したい課題\n...\n\n## 扱うデータ\n...\n\n## 未確定事項\n...'}
         />
       </div>
@@ -224,10 +241,19 @@ export function ConsultationSection({
       {message && <p className="consultation-message" role="status" aria-live="polite">{message}</p>}
 
       <div className="output-actions consultation-submit-row">
-        <button type="button" onClick={onBuildDraft} className="btn-primary" disabled={!intakeText.trim()}>
+        <button
+          type="button"
+          onClick={onBuildDraft}
+          className="btn-primary"
+          disabled={!intakeText.trim()}
+          aria-describedby={consultationBuildHintId}
+        >
           ドラフトを作成
         </button>
       </div>
+      <p id={consultationBuildHintId} className="hint">
+        貼り付けた相談結果から、確認済み事項・仮置き内容・未確定事項を抽出して次の draft を作ります。
+      </p>
 
     </section>
   );
