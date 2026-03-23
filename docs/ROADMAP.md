@@ -152,6 +152,9 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Add a deployed cookie-session Playwright smoke for the support panel
 - [x] Verify the deployed cookie-session support panel against real support data
 - [x] Add smoke checks for deployed public environments after release
+- [ ] Move the current Vercel deployment URL to a stable production domain and align Firebase / Render settings
+- [ ] If Vercel Authentication is re-enabled, document and verify a bypass-based automation flow
+- [ ] Prepare public-facing launch copy / X post text after the stable hosted path is locked
 
 ### Track 3: Structural Separation
 - [x] Separate provider-neutral AI tooling policy into generated `docs/AI_TOOLING.md` and keep wrapper files thin

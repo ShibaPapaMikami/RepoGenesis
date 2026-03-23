@@ -82,3 +82,29 @@ test('fetchSupportSnapshot surfaces upstream errors', async () => {
     process.env.VITE_ORCHESTRATION_API_URL = previousApi;
   }
 });
+
+test('canViewSupportPanel only allows configured support viewers', async () => {
+  const previousEmails = process.env.VITE_SUPPORT_ALLOWED_EMAILS;
+  const previousDomains = process.env.VITE_SUPPORT_ALLOWED_DOMAINS;
+  process.env.VITE_SUPPORT_ALLOWED_EMAILS = 'owner@gugenka.jp, dev@example.com';
+  process.env.VITE_SUPPORT_ALLOWED_DOMAINS = 'support.gugenka.jp, ops.example.com';
+
+  const { canViewSupportPanel } = await import('../src/utils/supportAccess.ts');
+
+  assert.equal(canViewSupportPanel('owner@gugenka.jp'), true);
+  assert.equal(canViewSupportPanel('user@ops.example.com'), true);
+  assert.equal(canViewSupportPanel('member@gugenka.jp'), false);
+  assert.equal(canViewSupportPanel(null), false);
+
+  if (previousEmails === undefined) {
+    delete process.env.VITE_SUPPORT_ALLOWED_EMAILS;
+  } else {
+    process.env.VITE_SUPPORT_ALLOWED_EMAILS = previousEmails;
+  }
+
+  if (previousDomains === undefined) {
+    delete process.env.VITE_SUPPORT_ALLOWED_DOMAINS;
+  } else {
+    process.env.VITE_SUPPORT_ALLOWED_DOMAINS = previousDomains;
+  }
+});

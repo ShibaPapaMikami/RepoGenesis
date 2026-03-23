@@ -136,6 +136,7 @@ npm run dev
   - `GET /api/orchestration/support/feedback`
   - `GET /api/orchestration/support/audit`
   - backend 側の `SUPPORT_DATA_DB_PATH` に保存された feedback / generation audit を internal UI で確認できる
+  - UI に panel を出すのは `VITE_SUPPORT_ALLOWED_EMAILS` または `VITE_SUPPORT_ALLOWED_DOMAINS` に一致する support viewer だけ
 - レスポンスZIPをそのままダウンロードする
 - 失敗時は `Download Error JSON` でエラー情報を共有可能
 - フォーム下部の `Feedback` から bug/request を送信可能
@@ -157,6 +158,20 @@ echo 'LOCAL_ADMIN_MODE=enabled' >> .env
   - `/api/orchestration/support/audit`
 - loopback host (`localhost`, `127.0.0.1`, `::1`) では `LOCAL_ADMIN_MODE=enabled` がないと `403` を返す
 - production / preview の public path には影響しない
+
+### Support Viewer Gating
+
+運用ログは一般ユーザー向けではなく、support / admin viewer だけに表示する。
+
+```bash
+echo 'VITE_SUPPORT_ALLOWED_EMAILS=masafumi@gugenka.jp' >> .env
+# または
+echo 'VITE_SUPPORT_ALLOWED_DOMAINS=ops.example.com' >> .env
+```
+
+- どちらも未設定なら、support panel は UI に表示しない
+- `VITE_SUPPORT_ALLOWED_EMAILS` はカンマ区切り
+- `VITE_SUPPORT_ALLOWED_DOMAINS` は `user@domain` の domain 部分をカンマ区切りで指定する
 
 Cloudflare Pages 公開手順:
 - `docs/CLOUDFLARE_PAGES_DEPLOY.md`

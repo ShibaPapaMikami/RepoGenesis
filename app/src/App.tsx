@@ -34,6 +34,7 @@ import { AuthPanel } from './components/auth/AuthPanel';
 import { FeedbackWidget } from './components/feedback/FeedbackWidget';
 import { SupportPanel } from './components/support/SupportPanel';
 import { getGenerationMode, usesSameOriginOrchestrationProxy } from './utils/generateRepository';
+import { canViewSupportPanel } from './utils/supportAccess.ts';
 import {
   getConsultationPromptTemplate,
   parseConsultationIntake,
@@ -262,7 +263,9 @@ function App() {
   const exportable = canExport(state);
   const generationMode = getGenerationMode();
   const requiresRemoteLogin = generationMode === 'remote' && usesSameOriginOrchestrationProxy();
-  const showSupportPanel = requiresRemoteLogin && authSession.authenticated;
+  const showSupportPanel = requiresRemoteLogin
+    && authSession.authenticated
+    && canViewSupportPanel(authSession.email);
   const activeStep = guidedStep;
   const suggestedRepoType = consultationDraft?.suggestedState.structure.repo_type ?? state.structure.repo_type;
   const suggestedSecurity = consultationDraft?.suggestedState.securityLevelOverride ?? state.security.level;

@@ -94,6 +94,7 @@ Phase 6 / Hardening
 - Vercel serverless で落ちていた support/auth API の `.ts` import を修正し、`ERR_MODULE_NOT_FOUND` を解消した (`47896f2`)。
 - production の internal support panel で Render 上の real SQLite support store を読めることを確認した。
 - production の authenticated remote ZIP generation で実 artifact `/Users/masafumimikami/Downloads/faq-internal.zip` をダウンロードできることを確認した。
+- support panel は default-hidden に切り替え、`VITE_SUPPORT_ALLOWED_EMAILS` / `VITE_SUPPORT_ALLOWED_DOMAINS` に一致する support viewer だけに表示する形へ寄せた。
 - orchestration auth は production 相当環境で `AUTH_PROVIDER=mock` と `GENERATE_REQUIRE_AUTH=false` を 503 で止めるようにし、誤設定を code path で防ぐようにした。
 - public wizard には skip link / step focus / reduced-motion を追加し、キーボード操作と動き抑制の最低限を先に整えた。
 - consultation step の select / textarea / button は `aria-describedby` で説明文と結び、相談用 prompt / draft 化の意図が読み上げでも追えるようにした。
@@ -115,6 +116,8 @@ Phase 6 / Hardening
 - Keep deployed `smoke:deploy` aligned with BFF / support proxy checks so Vercel-side env regressions are caught quickly.
 - Move the current deployment-specific Vercel URL to a stable production domain and align Firebase Authorized Domains / `CORS_ALLOW_ORIGIN` with that stable host.
 - Keep the new provider-neutral `docs/AI_TOOLING.md` contract aligned across deployed public wizard / real remote ZIP paths after the upstream service is wired.
+- If Vercel Authentication is re-enabled, document and verify the bypass-based automation flow before turning protection back on.
+- Prepare public-facing launch copy / X post text after the stable hosted path is fixed.
 
 ## Next Three Tasks
 1. Move the current deployment-specific Vercel URL to a stable production domain, then update Firebase Authorized Domains and Render `CORS_ALLOW_ORIGIN`.

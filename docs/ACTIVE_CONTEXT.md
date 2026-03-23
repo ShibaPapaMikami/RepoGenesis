@@ -243,6 +243,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 - `healthz` は support path を返すが、mounted storage そのものの durability までは判定しない
 - `smoke:deploy` は未ログイン smoke なので、cookie-session の成功導線そのものまでは確認しない
 - checked-in `render.yaml` は Render `repogenesis-api` として live 化済みで、support store は `/var/data/repogenesis/support-data.sqlite` を指している
+- support panel は remote mode でも全員に見せず、`VITE_SUPPORT_ALLOWED_EMAILS` / `VITE_SUPPORT_ALLOWED_DOMAINS` に一致する support viewer だけに出す方針へ切り替えた
 
 ## Files That Exist
 - `claude.md`
@@ -276,3 +277,6 @@ Immediate next:
 - optional skill layer の deeper automation と CI/docs の残差分を別トラックで整理する
 - generated install script と provider-specific guidance の運用を整える
 - production/browser export で新しい runbook bundle と `docs/AI_TOOLING.md` を含む planning-aware ZIP が崩れないことを確認する
+- stable production domain に移し、Firebase Authorized Domains と Render `CORS_ALLOW_ORIGIN` を固定 host に寄せる
+- Vercel Authentication を再度有効化する場合は bypass 運用を runbook 化し、automation から smoke できる形にする
+- 公開告知用の X ポスト文面を hosted flow 完成版に合わせて整理する

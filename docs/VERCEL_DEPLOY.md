@@ -22,9 +22,12 @@ Project settings:
 Environment variables:
 - `VITE_ORCHESTRATION_API_URL=/api/orchestration`
 - `ORCHESTRATION_API_URL=https://<your-api-domain>` (Vercel server-side env for BFF proxy)
+- `VITE_SUPPORT_ALLOWED_EMAILS=<support-viewer@example.com>` (optional, comma-separated)
+- `VITE_SUPPORT_ALLOWED_DOMAINS=<ops.example.com>` (optional, comma-separated)
 
 Result:
 - UI から手動 Bearer 入力をなくし、同一オリジン(`/api/orchestration`)経由で API 呼び出し
+- support panel は一般ユーザーには出さず、`VITE_SUPPORT_ALLOWED_EMAILS` または `VITE_SUPPORT_ALLOWED_DOMAINS` に一致する support viewer だけに表示する
 
 ## 2. Deploy orchestration API
 
@@ -88,6 +91,7 @@ npm run smoke:api
 3. ZIP ダウンロード成功を確認
 4. ZIP 内に `docs/AI_TOOLING.md` と runbook bundle が含まれることを確認
 5. support panel で feedback / generation audit が読めることを確認
+   - これは support viewer allowlist に入ったユーザーだけが見る internal UI として扱う
 
 `GET /healthz` の確認ポイント:
 - `supportData.absolutePath` が mounted storage 配下になっている
@@ -149,6 +153,7 @@ npm run test:e2e:remote-support
 - `/api/orchestration/support/feedback` と `/api/orchestration/support/audit` も `500` ではない
 - `500 ORCHESTRATION_API_URL is not configured` が出たら、Vercel server env が未設定
 - wrapper script は upstream `healthz` / durable-support check と app smoke を連続で走らせる
+- support panel 自体は allowlist に一致する support viewer にだけ表示される
 
 ## Local Admin Mode (for localhost-only support/debug)
 
