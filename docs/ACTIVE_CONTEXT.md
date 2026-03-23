@@ -244,6 +244,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 - `smoke:deploy` は未ログイン smoke なので、cookie-session の成功導線そのものまでは確認しない
 - checked-in `render.yaml` は Render `repogenesis-api` として live 化済みで、support store は `/var/data/repogenesis/support-data.sqlite` を指している
 - support panel は remote mode でも全員に見せず、`VITE_SUPPORT_ALLOWED_EMAILS` / `VITE_SUPPORT_ALLOWED_DOMAINS` に一致する support viewer だけに出す方針へ切り替えた
+- generated `docs/AI_TOOLING.md` / tool wrapper guidance には、作業中の進捗チェックと残り時間の目安をデフォルトで共有するルールを追加した
 
 ## Files That Exist
 - `claude.md`

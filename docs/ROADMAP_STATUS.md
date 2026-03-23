@@ -95,6 +95,7 @@ Phase 6 / Hardening
 - production の internal support panel で Render 上の real SQLite support store を読めることを確認した。
 - production の authenticated remote ZIP generation で実 artifact `/Users/masafumimikami/Downloads/faq-internal.zip` をダウンロードできることを確認した。
 - support panel は default-hidden に切り替え、`VITE_SUPPORT_ALLOWED_EMAILS` / `VITE_SUPPORT_ALLOWED_DOMAINS` に一致する support viewer だけに表示する形へ寄せた。
+- generated `docs/AI_TOOLING.md` と tool wrapper guidance に、進捗チェックと残り時間の目安をデフォルトで出す運用ルールを追加した。
 - orchestration auth は production 相当環境で `AUTH_PROVIDER=mock` と `GENERATE_REQUIRE_AUTH=false` を 503 で止めるようにし、誤設定を code path で防ぐようにした。
 - public wizard には skip link / step focus / reduced-motion を追加し、キーボード操作と動き抑制の最低限を先に整えた。
 - consultation step の select / textarea / button は `aria-describedby` で説明文と結び、相談用 prompt / draft 化の意図が読み上げでも追えるようにした。

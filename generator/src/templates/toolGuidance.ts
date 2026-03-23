@@ -42,6 +42,7 @@ export function generateToolGuidance(
 - Keep project truth in \`PROJECT.md\` and \`docs/\`; \`${wrapperFile}\` is only the ${label}-specific overlay.
 - Treat \`${wrapperFile}\` as a thin adapter over the shared project constitution.
 ${providerSpecificLine}
+- During substantive progress updates, include a short checklist of done / remaining work and a rough remaining-time estimate by default.
 `;
   }
 
@@ -54,6 +55,7 @@ ${providerSpecificLine}
 - Treat \`${wrapperFile}\` as a thin adapter over the shared repository and workspace constitutions.
 - If work changes another repository, return to \`../GLOBAL_CONTEXT.md\` and update both repositories' context files.
 ${providerSpecificLine}
+- During substantive progress updates, include a short checklist of done / remaining work and a rough remaining-time estimate by default.
 `;
   }
 
@@ -64,5 +66,6 @@ ${providerSpecificLine}
 - Keep project truth in \`PROJECT.md\` and \`docs/\`; \`${wrapperFile}\` is only the ${label}-specific overlay.
 - Treat \`${wrapperFile}\` as a thin adapter over the shared project constitution.
 ${providerSpecificLine}
+- During substantive progress updates, include a short checklist of done / remaining work and a rough remaining-time estimate by default.
 `;
 }

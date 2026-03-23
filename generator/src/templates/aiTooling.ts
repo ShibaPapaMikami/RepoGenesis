@@ -27,6 +27,8 @@ ${wrapperPolicy}
 - Wrapper files may define provider-specific workflow preferences, but they must not replace project truth.
 - If the current AI tool has no wrapper file, follow \`PROJECT.md\`, \`docs/ACTIVE_CONTEXT.md\`, and \`docs/REQUIREMENTS.md\` directly.
 - Optional AI work guides should stay reviewable in the repository and must be pinned in \`repogenesis.skills.json\`.
+- During substantive work, prefer progress updates that include a short checklist of what is done / remaining and a rough time estimate.
+- Treat the progress checklist + time estimate as default-on guidance; only reduce it when the user explicitly prefers terser updates.
 
 ## Session Start Order
 1. Read \`PROJECT.md\`.
