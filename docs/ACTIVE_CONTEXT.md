@@ -235,7 +235,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 - interactive CLIなし（対話的プロンプト未対応）
 - skill injectionなし（テンプレートの外部差し込み未対応）
 - 選択 Skill の自動インストールなし（remote ZIP では同梱されるが、実行時セットアップは自動化していない）
-- support store は production で durable volume 接続済みだが、現在の公開 URL は deployment 固有で、認証設定が stable domain にまだ寄っていない
+- support store は production で durable volume 接続済み。stable production domain は `https://repo-genesis-omega.vercel.app` を使えるが、Firebase Authorized Domains と Render `CORS_ALLOW_ORIGIN` をこの固定 host に寄せ切る必要がある
 - planning 候補の語彙はまだルールベースで、AI API / OSS / notification provider の表現揺れを今後追加で吸収する必要がある
 - local ZIP 用 vendor bundle は `npm run sync:generator-bundle` で手動同期が必要
 - 標準 runbook bundle は generic baseline であり、実際の deploy command / dashboard URL / owner 名は project ごとに追記が必要
@@ -245,6 +245,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 - checked-in `render.yaml` は Render `repogenesis-api` として live 化済みで、support store は `/var/data/repogenesis/support-data.sqlite` を指している
 - support panel は remote mode でも全員に見せず、`VITE_SUPPORT_ALLOWED_EMAILS` / `VITE_SUPPORT_ALLOWED_DOMAINS` に一致する support viewer だけに出す方針へ切り替えた
 - generated `docs/AI_TOOLING.md` / tool wrapper guidance には、作業中の進捗チェックと残り時間の目安をデフォルトで共有するルールを追加した
+- stable production domain `https://repo-genesis-omega.vercel.app` を確認し、`smoke:deploy` も `pass=4 warn=0 fail=0` で通した
 
 ## Files That Exist
 - `claude.md`

@@ -77,7 +77,7 @@ npm run test:e2e
 ## Deployed Smoke
 
 ```bash
-APP_URL=https://app-eight-liart-88.vercel.app npm run smoke:deploy
+APP_URL=https://repo-genesis-omega.vercel.app npm run smoke:deploy
 ```
 
 確認内容:
@@ -93,7 +93,7 @@ APP_URL=https://app-eight-liart-88.vercel.app npm run smoke:deploy
 deployed support panel の UI 確認:
 
 ```bash
-APP_URL=https://app-eight-liart-88.vercel.app \
+APP_URL=https://repo-genesis-omega.vercel.app \
 REMOTE_SESSION_COOKIE_VALUE=<__session-cookie> \
 REMOTE_SESSION_EMAIL=<your@gugenka.jp> \
 npm run test:e2e:remote-support
