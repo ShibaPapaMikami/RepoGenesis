@@ -22,6 +22,7 @@ interface AuthPanelProps {
   enabled: boolean;
   onSessionChange: (session: { authenticated: boolean; email: string | null }) => void;
   compact?: boolean;
+  inline?: boolean;
 }
 
 type Status = 'disabled' | 'loading' | 'ready' | 'authenticated' | 'error';
@@ -81,7 +82,7 @@ async function fetchSessionState(): Promise<{ authenticated: boolean; email: str
   };
 }
 
-export function AuthPanel({ enabled, onSessionChange, compact = false }: AuthPanelProps) {
+export function AuthPanel({ enabled, onSessionChange, compact = false, inline = false }: AuthPanelProps) {
   const [status, setStatus] = useState<Status>(enabled ? 'loading' : 'disabled');
   const [message, setMessage] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -272,6 +273,42 @@ export function AuthPanel({ enabled, onSessionChange, compact = false }: AuthPan
   }
 
   if (!enabled) return null;
+
+  if (inline) {
+    return (
+      <div className="auth-inline">
+        <span
+          className={`auth-badge auth-badge-${status}`}
+          aria-label={`認証状態: ${status === 'authenticated' ? '認証済み' : status === 'loading' ? '確認中' : status === 'error' ? 'エラー' : '未認証'}`}
+        >
+          {status === 'authenticated' ? '認証済み' : status === 'loading' ? '確認中' : status === 'error' ? 'エラー' : '未認証'}
+        </span>
+        {!missingConfig && (
+          <div className="auth-inline-actions">
+            <button
+              type="button"
+              onClick={handleLogin}
+              disabled={isBusy || status === 'authenticated'}
+              className="btn-primary auth-inline-button"
+            >
+              {isBusy ? '処理中...' : 'Google でログイン'}
+            </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={isBusy || !email}
+              className="btn-secondary auth-inline-button"
+            >
+              ログアウト
+            </button>
+          </div>
+        )}
+        {status === 'error' && message && (
+          <p className="error auth-inline-message" role="status" aria-live="polite">{message}</p>
+        )}
+      </div>
+    );
+  }
 
   if (compact) {
     return (

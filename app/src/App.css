@@ -52,17 +52,47 @@
 }
 
 .app-topbar {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.95fr) minmax(320px, 1.15fr) auto auto;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
+  padding: 0;
+  border: 1px solid rgba(108, 87, 61, 0.14);
+  border-radius: 24px;
+  overflow: hidden;
+  background: rgba(255, 250, 244, 0.82);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 14px 34px rgba(58, 35, 16, 0.08);
+}
+
+.app-brand-lockup,
+.app-topbar-copy,
+.app-auth-slot,
+.app-devtools {
+  min-height: 88px;
   padding: 1rem 1.15rem;
-  border: 1px solid var(--rg-line);
-  border-radius: 999px;
-  background: rgba(255, 248, 241, 0.72);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 18px 40px rgba(58, 35, 16, 0.08);
+}
+
+.app-brand-lockup {
+  background: rgba(255, 252, 247, 0.72);
+  border-right: 1px solid rgba(108, 87, 61, 0.1);
+}
+
+.app-brand-title {
+  margin: 0;
+  font-family: 'Zen Old Mincho', serif;
+  font-size: clamp(2.4rem, 3.8vw, 4rem);
+  letter-spacing: -0.06em;
+  line-height: 0.92;
+  color: #221d17;
+}
+
+.app-brand-subtitle {
+  margin: 0.35rem 0 0;
+  color: #5d6b74;
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .app-topbar-copy {
@@ -70,6 +100,8 @@
   flex-wrap: wrap;
   gap: 0.65rem 1rem;
   align-items: center;
+  background: rgba(245, 236, 222, 0.48);
+  border-right: 1px solid rgba(108, 87, 61, 0.08);
 }
 
 .app-build-badge {
@@ -97,6 +129,14 @@
   color: var(--rg-muted);
 }
 
+.app-auth-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255, 248, 241, 0.78);
+  border-right: 1px solid rgba(108, 87, 61, 0.08);
+}
+
 .app-utility-toggle {
   display: inline-flex;
   align-items: center;
@@ -112,94 +152,12 @@
   gap: 0.75rem;
   flex-wrap: wrap;
   justify-content: flex-end;
+  background: rgba(255, 250, 244, 0.78);
 }
 
 .app-devtools-button {
   white-space: nowrap;
 }
-
-.app-hero-panel {
-  position: relative;
-  overflow: hidden;
-  padding: clamp(1.3rem, 1.8vw, 1.7rem);
-  border: 1px solid rgba(108, 87, 61, 0.2);
-  border-radius: 28px;
-  background:
-    linear-gradient(140deg, rgba(255, 250, 244, 0.94) 0%, rgba(249, 236, 217, 0.78) 56%, rgba(245, 231, 213, 0.92) 100%);
-  box-shadow: var(--rg-shadow);
-}
-
-.app-hero-panel::before {
-  content: '';
-  position: absolute;
-  inset: auto -8% -28% auto;
-  width: 320px;
-  height: 320px;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(180, 79, 43, 0.22), transparent 55%),
-    radial-gradient(circle at 70% 70%, rgba(26, 73, 91, 0.16), transparent 62%);
-  pointer-events: none;
-}
-
-.app-kicker {
-  margin: 0 0 0.55rem;
-  font-size: 0.74rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: var(--rg-accent-strong);
-}
-
-.app-hero-copy {
-  position: relative;
-  z-index: 1;
-  max-width: 860px;
-}
-
-.app-header h1 {
-  margin: 0;
-  font-family: 'Zen Old Mincho', serif;
-  font-size: clamp(3.1rem, 7vw, 4.8rem);
-  letter-spacing: -0.05em;
-  line-height: 0.92;
-  color: #221d17;
-}
-
-.app-hero-title {
-  margin: 0.5rem 0 0;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--rg-muted);
-}
-
-.app-hero-lead {
-  max-width: 58ch;
-  margin: 0.8rem 0 0;
-  font-size: 0.96rem;
-  line-height: 1.72;
-  color: #2f3e47;
-}
-
-.app-hero-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  margin-top: 0.95rem;
-}
-
-.app-hero-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.48rem 0.82rem;
-  border-radius: 999px;
-  border: 1px solid rgba(108, 87, 61, 0.16);
-  background: rgba(255, 255, 255, 0.72);
-  color: #42535d;
-  font-size: 0.84rem;
-  font-weight: 700;
-}
-
 
 .app-main {
   display: flex;
@@ -749,13 +707,15 @@
 }
 
 .auth-panel-compact {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .auth-panel-compact-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 1rem;
   align-items: center;
 }
@@ -766,6 +726,31 @@
   gap: 0.75rem;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.auth-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.auth-inline-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.auth-inline-button {
+  white-space: nowrap;
+}
+
+.auth-inline-message {
+  width: 100%;
+  margin: 0;
+  font-size: 0.82rem;
 }
 
 .support-modal-backdrop {
@@ -1626,12 +1611,24 @@
   }
 
   .app-topbar {
-    flex-direction: column;
-    align-items: flex-start;
+    grid-template-columns: 1fr;
   }
 
   .wizard-nav {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-brand-lockup,
+  .app-topbar-copy,
+  .app-auth-slot,
+  .app-devtools {
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid rgba(108, 87, 61, 0.08);
+  }
+
+  .app-devtools {
+    border-bottom: 0;
   }
 
   .auth-panel-header {
@@ -1640,10 +1637,17 @@
 
   .auth-panel-compact-row {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
   }
 
   .auth-panel-compact-actions {
+    justify-content: flex-start;
+  }
+
+  .app-auth-slot,
+  .app-devtools,
+  .auth-inline,
+  .auth-inline-actions {
     justify-content: flex-start;
   }
 

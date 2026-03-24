@@ -594,6 +594,14 @@ function App() {
         testMode={testMode}
         onToggleTestMode={setTestMode}
         buildLabel={buildLabel}
+        authControls={requiresRemoteLogin ? (
+          <AuthPanel
+            enabled={requiresRemoteLogin}
+            onSessionChange={setAuthSession}
+            compact
+            inline
+          />
+        ) : null}
         showDeveloperTools={showSupportPanel}
         onOpenSupportPanel={() => setSupportPanelOpen(true)}
         activeStep={activeStep}
@@ -601,8 +609,6 @@ function App() {
         canVisitStep={canVisitStep}
         onGoToStep={goToStep}
       />
-
-      <AuthPanel enabled={requiresRemoteLogin} onSessionChange={setAuthSession} compact />
 
       <main id="main-content" className="app-main" ref={mainRef} tabIndex={-1}>
         {guidedStep === 'intro' && (
