@@ -245,12 +245,12 @@
 
 /* === Section === */
 .form-section {
-  border: 1px solid var(--rg-line);
-  border-radius: 32px;
-  padding: clamp(1.35rem, 2.2vw, 2rem);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(249, 249, 251, 0.92) 100%);
-  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.06);
-  backdrop-filter: blur(12px);
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .form-section h2 {
