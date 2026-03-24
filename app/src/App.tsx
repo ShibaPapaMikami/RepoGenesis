@@ -1068,21 +1068,22 @@ function App() {
         )}
 
         <div className="app-footer-bar" aria-label="フッター操作">
-          <div className="app-footer-slot app-footer-slot-start">
-            {guidedStep === 'intro' ? (
-              <button type="button" onClick={handleStartFresh} className="btn-primary">
-                {hasSavedProgress ? '新しく始める' : '相談を始める'}
+          <div className="app-footer-actions-left">
+            {guidedStep === 'intro' && hasSavedProgress && (
+              <button type="button" onClick={handleResumeSavedProgress} className="btn-primary">
+                づづきから始める
               </button>
-            ) : (
-              <span className="app-footer-placeholder" aria-hidden="true" />
             )}
-          </div>
-          <div className="app-footer-slot app-footer-slot-center">
+            {guidedStep === 'intro' && !hasSavedProgress && (
+              <button type="button" onClick={handleStartFresh} className="btn-primary">
+                相談を始める
+              </button>
+            )}
             <button type="button" onClick={handleReset} className="btn-reset">
-              リセットして始めから
+              リセットして始める
             </button>
           </div>
-          <div className="app-footer-slot app-footer-slot-end">
+          <div className="app-footer-actions-right">
             <FeedbackWidget state={state} errorReport={latestErrorReport} inline />
           </div>
         </div>
