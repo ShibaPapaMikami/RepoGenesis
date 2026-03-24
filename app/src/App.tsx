@@ -1069,19 +1069,20 @@ function App() {
 
         <div className="app-footer-bar" aria-label="フッター操作">
           <div className="app-footer-actions-left">
+            {guidedStep === 'intro' && (
+              <button
+                type="button"
+                onClick={hasSavedProgress ? handleReset : handleStartFresh}
+                className="btn-primary"
+              >
+                新規に始める
+              </button>
+            )}
             {guidedStep === 'intro' && hasSavedProgress && (
-              <button type="button" onClick={handleResumeSavedProgress} className="btn-primary">
+              <button type="button" onClick={handleResumeSavedProgress} className="btn-reset">
                 づづきから始める
               </button>
             )}
-            {guidedStep === 'intro' && !hasSavedProgress && (
-              <button type="button" onClick={handleStartFresh} className="btn-primary">
-                相談を始める
-              </button>
-            )}
-            <button type="button" onClick={handleReset} className="btn-reset">
-              リセットして始める
-            </button>
           </div>
           <div className="app-footer-actions-right">
             <FeedbackWidget state={state} errorReport={latestErrorReport} inline />
