@@ -62,7 +62,7 @@ export function WizardChrome<TStep extends string>({
               </label>
               <button
                 type="button"
-                className="btn-secondary app-devtools-button"
+                className="app-inline-link app-devtools-button"
                 onClick={onOpenSupportPanel}
                 aria-haspopup="dialog"
               >

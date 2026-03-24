@@ -613,7 +613,6 @@ function App() {
       <main id="main-content" className="app-main" ref={mainRef} tabIndex={-1}>
         {guidedStep === 'intro' && (
           <IntroSection
-            onStart={handleStartFresh}
             onResume={handleResumeSavedProgress}
             hasSavedProgress={hasSavedProgress}
             resumeStepLabel={WIZARD_STEPS.find((step) => step.id === resumeTargetStep)?.label ?? '途中のステップ'}
@@ -1068,10 +1067,24 @@ function App() {
           </>
         )}
 
-        <div className="app-actions">
-          <button type="button" onClick={handleReset} className="btn-reset">
-            リセットして始めから
-          </button>
+        <div className="app-footer-bar" aria-label="フッター操作">
+          <div className="app-footer-slot app-footer-slot-start">
+            {guidedStep === 'intro' ? (
+              <button type="button" onClick={handleStartFresh} className="btn-primary">
+                {hasSavedProgress ? '新しく始める' : '相談を始める'}
+              </button>
+            ) : (
+              <span className="app-footer-placeholder" aria-hidden="true" />
+            )}
+          </div>
+          <div className="app-footer-slot app-footer-slot-center">
+            <button type="button" onClick={handleReset} className="btn-reset">
+              リセットして始めから
+            </button>
+          </div>
+          <div className="app-footer-slot app-footer-slot-end">
+            <FeedbackWidget state={state} errorReport={latestErrorReport} inline />
+          </div>
         </div>
       </main>
 
@@ -1108,8 +1121,6 @@ function App() {
           </section>
         </div>
       )}
-
-      <FeedbackWidget state={state} errorReport={latestErrorReport} />
     </div>
   );
 }

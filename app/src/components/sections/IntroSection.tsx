@@ -1,5 +1,4 @@
 interface IntroSectionProps {
-  onStart: () => void;
   onResume: () => void;
   hasSavedProgress: boolean;
   resumeStepLabel: string;
@@ -30,7 +29,6 @@ const FLOW_POINTS = [
 ];
 
 export function IntroSection({
-  onStart,
   onResume,
   hasSavedProgress,
   resumeStepLabel,
@@ -93,12 +91,6 @@ export function IntroSection({
           </div>
         </div>
       )}
-
-      <div className="output-actions">
-        <button type="button" onClick={onStart} className="btn-primary">
-          {hasSavedProgress ? '新しく始める' : '相談を始める'}
-        </button>
-      </div>
     </section>
   );
 }

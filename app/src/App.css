@@ -162,6 +162,23 @@
   white-space: nowrap;
 }
 
+.app-inline-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #8a3f21;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.app-inline-link:hover {
+  color: #6f2f13;
+  text-decoration: underline;
+}
+
 .app-main {
   display: flex;
   flex-direction: column;
@@ -751,6 +768,10 @@
   padding-inline: 1rem;
 }
 
+.auth-inline-link {
+  padding-inline: 0.15rem;
+}
+
 .auth-inline-message {
   width: 100%;
   margin: 0;
@@ -992,6 +1013,17 @@
   box-shadow: 0 16px 36px rgba(13, 71, 161, 0.28);
 }
 
+.feedback-inline-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.9rem 1.7rem;
+  background: #0d47a1;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  box-shadow: 0 16px 36px rgba(13, 71, 161, 0.2);
+}
+
 .feedback-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1026,11 +1058,30 @@
   margin: 0;
 }
 
-.app-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
+.app-footer-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
   margin-top: 0.5rem;
+}
+
+.app-footer-slot-start {
+  justify-self: start;
+}
+
+.app-footer-slot-center {
+  justify-self: center;
+}
+
+.app-footer-slot-end {
+  justify-self: end;
+}
+
+.app-footer-placeholder {
+  display: block;
+  width: 1px;
+  height: 1px;
 }
 
 .mode-switcher {
@@ -1617,6 +1668,16 @@
   .app-topbar {
     grid-template-columns: 1fr;
     gap: 0;
+  }
+
+  .app-footer-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .app-footer-slot-start,
+  .app-footer-slot-center,
+  .app-footer-slot-end {
+    justify-self: stretch;
   }
 
   .wizard-nav {

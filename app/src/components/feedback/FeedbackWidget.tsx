@@ -5,9 +5,10 @@ import { submitFeedback, type ErrorReportPayload, type FeedbackType } from '../.
 interface FeedbackWidgetProps {
   state: FormState;
   errorReport: ErrorReportPayload | null;
+  inline?: boolean;
 }
 
-export function FeedbackWidget({ state, errorReport }: FeedbackWidgetProps) {
+export function FeedbackWidget({ state, errorReport, inline = false }: FeedbackWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('bug');
   const [feedbackTitle, setFeedbackTitle] = useState('');
@@ -51,7 +52,7 @@ export function FeedbackWidget({ state, errorReport }: FeedbackWidgetProps) {
 
   return (
     <>
-      <button type="button" className="feedback-fab" onClick={() => setIsOpen(true)}>
+      <button type="button" className={inline ? 'feedback-inline-button' : 'feedback-fab'} onClick={() => setIsOpen(true)}>
         フィードバック
       </button>
 

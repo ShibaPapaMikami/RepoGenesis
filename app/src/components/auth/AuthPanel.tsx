@@ -285,22 +285,26 @@ export function AuthPanel({ enabled, onSessionChange, compact = false, inline = 
         </span>
         {!missingConfig && (
           <div className="auth-inline-actions">
-            <button
-              type="button"
-              onClick={handleLogin}
-              disabled={isBusy || status === 'authenticated'}
-              className="btn-primary auth-inline-button"
-            >
-              {isBusy ? '処理中...' : 'Google でログイン'}
-            </button>
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={isBusy || !email}
-              className="btn-secondary auth-inline-button"
-            >
-              ログアウト
-            </button>
+            {status !== 'authenticated' && (
+              <button
+                type="button"
+                onClick={handleLogin}
+                disabled={isBusy}
+                className="btn-primary auth-inline-button"
+              >
+                {isBusy ? '処理中...' : 'Google でログイン'}
+              </button>
+            )}
+            {email && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={isBusy}
+                className="app-inline-link auth-inline-link"
+              >
+                ログアウト
+              </button>
+            )}
           </div>
         )}
         {status === 'error' && message && (
