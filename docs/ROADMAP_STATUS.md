@@ -1,7 +1,7 @@
 # ROADMAP_STATUS.md — Current Position
 
 ## Last Updated
-2026-03-23
+2026-03-25
 
 ## Roadmap Position
 Phase 6 / Hardening
@@ -98,6 +98,8 @@ Phase 6 / Hardening
 - generated `docs/AI_TOOLING.md` と tool wrapper guidance に、進捗チェックと残り時間の目安をデフォルトで出す運用ルールを追加した。
 - stable production domain `https://repo-genesis-omega.vercel.app` を確認し、`smoke:deploy` も `pass=4 warn=0 fail=0` で通した。
 - Vercel Authentication を戻す場合の bypass runbook (`docs/VERCEL_AUTH_BYPASS_RUNBOOK.md`) と、stable domain 前提の X ポスト下書き (`docs/X_POST_DRAFT.md`) を追加した。
+- stable production domain `https://repo-genesis-omega.vercel.app` で Google ログインと authenticated ZIP 生成を再確認し、`/Users/masafumimikami/Downloads/faq-internal (1).zip` を取得した。
+- hosted UI は support panel を internal viewer だけに限定したまま、ヘッダー/フッター/フレーム/配色を public-facing に調整した。
 - orchestration auth は production 相当環境で `AUTH_PROVIDER=mock` と `GENERATE_REQUIRE_AUTH=false` を 503 で止めるようにし、誤設定を code path で防ぐようにした。
 - public wizard には skip link / step focus / reduced-motion を追加し、キーボード操作と動き抑制の最低限を先に整えた。
 - consultation step の select / textarea / button は `aria-describedby` で説明文と結び、相談用 prompt / draft 化の意図が読み上げでも追えるようにした。
@@ -117,14 +119,13 @@ Phase 6 / Hardening
 - Keep optional skill layer separate from the intake/generator core while hardening local export behavior and provider-specific guidance.
 - Keep deployed `healthz` / `smoke:api` aligned with support store checks so default-path regressions are caught quickly.
 - Keep deployed `smoke:deploy` aligned with BFF / support proxy checks so Vercel-side env regressions are caught quickly.
-- Finish aligning Firebase Authorized Domains / `CORS_ALLOW_ORIGIN` / public links around the stable production domain `https://repo-genesis-omega.vercel.app`.
 - Keep the new provider-neutral `docs/AI_TOOLING.md` contract aligned across deployed public wizard / real remote ZIP paths after the upstream service is wired.
-- If Vercel Authentication is re-enabled, document and verify the bypass-based automation flow before turning protection back on.
+- Keep the optional Vercel Authentication bypass runbook ready in case the hosted app is later switched back to closed access.
 - Prepare public-facing launch copy / X post text after the stable hosted path is fixed.
 
 ## Next Three Tasks
-1. Update Firebase Authorized Domains and Render `CORS_ALLOW_ORIGIN` so they are fully aligned with `https://repo-genesis-omega.vercel.app`.
-2. Run the checked-in deployed smoke flow (`deployed-smoke.yml` / `stack-health.yml`) against the live Render + Vercel pair and capture the first green production baseline.
+1. Run the checked-in deployed smoke flow (`deployed-smoke.yml` / `stack-health.yml`) against the live Render + Vercel pair and capture the first green production baseline.
+2. Finalize public-facing launch copy / X post text around the stable hosted path.
 3. Split pending large changes into separate tracks:
    - skill layer deeper automation
    - CI / docs

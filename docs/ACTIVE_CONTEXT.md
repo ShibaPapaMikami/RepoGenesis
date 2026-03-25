@@ -1,7 +1,7 @@
 # ACTIVE_CONTEXT.md — Current Project State
 
 ## Last Updated
-2026-03-23
+2026-03-25
 
 ## Current Phase
 Phase 6 — AI-Assisted Spec Authoring (Hardening)
@@ -206,7 +206,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - skill layer は provider-aware contract / installer / Web selection / remote ZIP 同梱まで反映。自動インストールと local ZIP 同梱は未反映
   - `doctor` は core file / wrapper / installed skill artifact / planning docs / `.env.example` の整合検査まで実装済み。残りは browser export や production ZIP 生成後の実地確認
   - production での planning-aware な public wizard / remote ZIP / support panel の実地確認は完了した
-  - いま残る実運用課題は deployment 固有 URL 依存で、Firebase Authorized Domains / Render `CORS_ALLOW_ORIGIN` / 公開導線を stable production domain へ寄せること
+  - stable production domain は固定できたので、いま残る実運用課題は green baseline の自動記録と公開向け launch copy の確定
   - deployed verification は repo root の `scripts/smoke-deployed-stack.sh` で upstream smoke と app smoke をまとめて回せる状態までできているが、live pair に対する green baseline の記録はこれから
   - app 側の vendored generator bundle drift は `app/scripts/check-generator-bundle-sync.mjs` と CI の bundle-sync job で検知できるようにした
   - generator dist と app vendored bundle の出力互換は fixture 比較で CI に固定した
@@ -235,7 +235,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 - interactive CLIなし（対話的プロンプト未対応）
 - skill injectionなし（テンプレートの外部差し込み未対応）
 - 選択 Skill の自動インストールなし（remote ZIP では同梱されるが、実行時セットアップは自動化していない）
-- support store は production で durable volume 接続済み。stable production domain は `https://repo-genesis-omega.vercel.app` を使えるが、Firebase Authorized Domains と Render `CORS_ALLOW_ORIGIN` をこの固定 host に寄せ切る必要がある
+- support store は production で durable volume 接続済み。stable production domain は `https://repo-genesis-omega.vercel.app` に固定できている
 - planning 候補の語彙はまだルールベースで、AI API / OSS / notification provider の表現揺れを今後追加で吸収する必要がある
 - local ZIP 用 vendor bundle は `npm run sync:generator-bundle` で手動同期が必要
 - 標準 runbook bundle は generic baseline であり、実際の deploy command / dashboard URL / owner 名は project ごとに追記が必要
@@ -246,6 +246,8 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
 - support panel は remote mode でも全員に見せず、`VITE_SUPPORT_ALLOWED_EMAILS` / `VITE_SUPPORT_ALLOWED_DOMAINS` に一致する support viewer だけに出す方針へ切り替えた
 - generated `docs/AI_TOOLING.md` / tool wrapper guidance には、作業中の進捗チェックと残り時間の目安をデフォルトで共有するルールを追加した
 - stable production domain `https://repo-genesis-omega.vercel.app` を確認し、`smoke:deploy` も `pass=4 warn=0 fail=0` で通した
+- stable production domain `https://repo-genesis-omega.vercel.app` で Google ログインと authenticated ZIP 生成を再確認し、`/Users/masafumimikami/Downloads/faq-internal (1).zip` を取得した
+- hosted UI は support panel を internal viewer 向けのまま、ヘッダー/フッター/フレーム/配色を public-facing な方向へ調整した
 - Vercel Authentication を戻す場合の bypass runbook と、stable domain 前提の X ポスト下書きを docs に追加した
 
 ## Files That Exist

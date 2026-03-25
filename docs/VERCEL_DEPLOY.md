@@ -2,7 +2,10 @@
 
 ## Purpose
 
-`app/` を Vercel で公開し、`generator` orchestration API を gugenka セッション認証で保護して、Gugenka スタッフのみに生成を許可する。
+`app/` を Vercel で公開し、public wizard として見せつつ、`generator` orchestration API は gugenka セッション認証で保護する。
+
+Current stable production domain:
+- `https://repo-genesis-omega.vercel.app`
 
 ## Architecture (Recommended)
 
@@ -28,6 +31,7 @@ Environment variables:
 Result:
 - UI から手動 Bearer 入力をなくし、同一オリジン(`/api/orchestration`)経由で API 呼び出し
 - support panel は一般ユーザーには出さず、`VITE_SUPPORT_ALLOWED_EMAILS` または `VITE_SUPPORT_ALLOWED_DOMAINS` に一致する support viewer だけに表示する
+- Vercel Authentication は現時点では戻さず、public landing + logged-in generation で運用する
 
 ## 2. Deploy orchestration API
 
@@ -155,7 +159,7 @@ npm run test:e2e:remote-support
 - wrapper script は upstream `healthz` / durable-support check と app smoke を連続で走らせる
 - support panel 自体は allowlist に一致する support viewer にだけ表示される
 
-Vercel Authentication を戻す場合:
+Vercel Authentication を必要に応じて戻す場合:
 - `docs/VERCEL_AUTH_BYPASS_RUNBOOK.md` を参照
 - stable domain は `https://repo-genesis-omega.vercel.app` を前提にする
 
