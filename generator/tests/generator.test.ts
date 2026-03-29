@@ -142,6 +142,66 @@ const CODEX_SINGLE_BRIEF = {
   },
 };
 
+const PYTHON_CLI_TTS_BRIEF = {
+  ...SINGLE_BRIEF,
+  project: {
+    ...SINGLE_BRIEF.project,
+    name: 'Irodori Voice CLI',
+    slug: 'irodori-voice-cli',
+    description: 'A CLI tool that generates emotion parameters, runs TTS synthesis, and post-processes wav output for Unity handoff.',
+  },
+  tech: {
+    ...SINGLE_BRIEF.tech,
+    domains: ['ai', 'cli', 'unity'],
+    primary_language: 'python' as const,
+    frameworks: [],
+    ai_tools: ['claude_code'],
+    ai_tool: 'claude_cli' as const,
+    ai_tool_detail: '',
+  },
+  workflow: {
+    phases_count: 4,
+  },
+  planning: {
+    tech_decisions: [
+      {
+        topic: 'Post-processing library',
+        choice: '',
+        status: 'open' as const,
+        rationale: 'Need to choose the first wav post-processing library.',
+        decision_date: '',
+        notes: '',
+      },
+    ],
+    external_dependencies: [
+      {
+        name: 'Irodori-TTS',
+        category: 'github_repo' as const,
+        status: 'adopted' as const,
+        purpose: 'Primary synthesis engine',
+        owner: 'Audio Team',
+        source: 'https://github.com/example/irodori-tts',
+        license: 'Custom',
+        env_vars: [],
+        data_outbound: false,
+        notes: '',
+      },
+      {
+        name: 'wav post-processing library',
+        category: 'oss' as const,
+        status: 'open' as const,
+        purpose: 'Normalize generated wav output',
+        owner: 'Audio Team',
+        source: '',
+        license: '',
+        env_vars: [],
+        data_outbound: false,
+        notes: '',
+      },
+    ],
+  },
+};
+
 let tmpDir: string;
 
 beforeEach(() => {
@@ -316,6 +376,31 @@ describe('generator — single-repo', () => {
     expect(architecture).toContain('## Infrastructure');
   });
 
+  it('should enrich requirements and roadmap from domains, dependencies, and open planning items', () => {
+    const inputPath = writeInputFile(PYTHON_CLI_TTS_BRIEF);
+    const result = generate({ inputPath, outputPath: tmpDir, force: true });
+
+    const requirements = fs.readFileSync(path.join(result.outputDir, 'docs/REQUIREMENTS.md'), 'utf-8');
+    const roadmap = fs.readFileSync(path.join(result.outputDir, 'docs/ROADMAP.md'), 'utf-8');
+
+    expect(requirements).toContain('### R3: Keep the processing pipeline explicit and testable');
+    expect(requirements).toContain('parameter preparation -> synthesis / generation -> post-processing / export');
+    expect(requirements).toContain('Audio-related parameters and output format requirements are documented');
+    expect(requirements).toContain('### R4: Provide a stable operator-facing CLI contract');
+    expect(requirements).toContain('### R5: Integrate adopted external dependencies intentionally');
+    expect(requirements).toContain('Irodori-TTS');
+    expect(requirements).toContain('License or usage terms are reviewed for adopted dependencies before release.');
+    expect(requirements).toContain('Open decision: Post-processing library.');
+    expect(requirements).toContain('Open dependency: wav post-processing library (oss).');
+
+    expect(roadmap).toContain('Resolve the highest-risk open planning items first');
+    expect(roadmap).toContain('Resolve Post-processing library');
+    expect(roadmap).toContain('Implement the first working pipeline: parameter preparation -> synthesis / generation -> post-processing / export.');
+    expect(roadmap).toContain('Integrate adopted dependencies needed for the first workflow: Irodori-TTS.');
+    expect(roadmap).toContain('Verify synthesis parameters, output format, and post-processing quality gates.');
+    expect(roadmap).not.toContain('Define concrete goals for this phase before implementation starts.');
+  });
+
   it('should generate AGENTS.md for Codex projects and reference it from starter docs', () => {
     const inputPath = writeInputFile(CODEX_SINGLE_BRIEF);
     const result = generate({ inputPath, outputPath: tmpDir, force: true });
@@ -335,6 +420,18 @@ describe('generator — single-repo', () => {
     expect(activeContext).toContain('`AGENTS.md`');
     expect(restart).toContain('Read docs/AI_TOOLING.md if it exists');
     expect(restart).toContain('AGENTS.md');
+  });
+
+  it('should add CLI- and language-specific guidance to CLAUDE.md when the project calls for it', () => {
+    const inputPath = writeInputFile(PYTHON_CLI_TTS_BRIEF);
+    const result = generate({ inputPath, outputPath: tmpDir, force: true });
+
+    const claude = fs.readFileSync(path.join(result.outputDir, 'CLAUDE.md'), 'utf-8');
+
+    expect(claude).toContain('Treat the CLI contract as first-class');
+    expect(claude).toContain('prefer `pyproject.toml` and default to `argparse`');
+    expect(claude).toContain('Keep the first processing pipeline explicit end to end');
+    expect(claude).toContain('Keep the Unity integration boundary explicit');
   });
 });
 

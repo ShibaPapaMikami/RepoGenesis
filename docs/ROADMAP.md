@@ -163,6 +163,12 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Remove `manual_bearer` support from public-facing paths
 - [x] Clarify which Phase 6 items belong to intake abstraction vs. later AI assistance
 
+### Track 4: Generator Specificity Hardening
+- [x] Add deterministic domain-aware requirement generation for pipeline-heavy projects such as `ai + cli`
+- [x] Reflect adopted external dependencies and open planning items into `REQUIREMENTS.md`
+- [x] Generate concrete `ROADMAP.md` phase goals from workflow, dependencies, and unresolved planning items
+- [x] Add CLI / language-aware wrapper guidance for generated `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`
+
 ### CI / Docs Hardening
 - [x] Add CI coverage for vendored generator bundle drift
 - [x] Add CI coverage for generator-dist vs vendored-bundle output compatibility

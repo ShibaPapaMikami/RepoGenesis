@@ -70,6 +70,7 @@ Phase 6 / Hardening
 - draft / 最終確認から外部 AI へ持ち出す provider-neutral な要件整理プロンプトを copy / markdown export できるようにし、相談結果の再整理導線を RepoGenesis UI 内に追加した。
 - 相談用 prompt と要件再整理 prompt の両方で、ChatGPT / Claude / Gemini 向けの guided wrapper を切り替えられるようにし、provider ごとの差分を prompt 本文ではなく薄い wrapper に閉じ込めた。
 - consultation intake に `参考実装・関連リンク` section を追加し、GitHub リポジトリや実装参考 URL を相談用 prompt / parser / 要件再整理 prompt / draft summary に保持できるようにした。
+- generator の `REQUIREMENTS.md` / `ROADMAP.md` / tool wrapper guidance を deterministic に強化し、`ai + cli` の pipeline 要件、adopted dependency 条件、open planning item、`cli + python` guidance を starter docs へ流し込めるようにした。
 - repo root に [`render.yaml`](/Users/masafumimikami/Documents/WebApp/RepoGenesis/render.yaml) を追加し、Node 22.17+・`/healthz`・durable disk・support store path を含む Render Blueprint baseline を固定した。
 - `generator/tests/renderBlueprint.test.ts` を追加し、Blueprint baseline の service contract / Node floor / support-store mount path を drift しないようにした。
 - repo root に [`scripts/smoke-deployed-stack.sh`](/Users/masafumimikami/Documents/WebApp/RepoGenesis/scripts/smoke-deployed-stack.sh) を追加し、Render upstream smoke と Vercel app smoke を 1 コマンドで連続実行できるようにした。

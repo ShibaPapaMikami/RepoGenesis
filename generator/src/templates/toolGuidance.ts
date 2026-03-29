@@ -1,5 +1,6 @@
 import type { ProjectBrief } from '../schema';
 import type { SupportedAiTool } from '../aiTools';
+import { inferBriefSignals } from '../templateSignals';
 import { getToolWrapperFile } from '../aiTools';
 
 interface RepoEntry {
@@ -24,7 +25,7 @@ const PROVIDER_SPECIFIC_LINES: Record<SupportedAiTool, string> = {
 };
 
 export function generateToolGuidance(
-  _brief: ProjectBrief,
+  brief: ProjectBrief,
   tool: SupportedAiTool,
   options: GenerateToolGuidanceOptions = {},
 ): string {
@@ -32,6 +33,27 @@ export function generateToolGuidance(
   const label = TOOL_LABELS[tool];
   const wrapperFile = getToolWrapperFile(tool);
   const providerSpecificLine = PROVIDER_SPECIFIC_LINES[tool];
+  const signals = inferBriefSignals(brief);
+  const domainSpecificLines = [
+    signals.hasCli
+      ? '- Treat the CLI contract as first-class: keep command examples, flags, exit behavior, and output locations explicit.'
+      : null,
+    signals.hasCli && brief.tech.primary_language === 'python'
+      ? '- For Python CLI projects, prefer `pyproject.toml` and default to `argparse` unless a richer subcommand tree is clearly justified.'
+      : null,
+    signals.hasPipeline
+      ? '- Keep the first processing pipeline explicit end to end, including stage inputs, outputs, and tunable parameters that affect results.'
+      : null,
+    signals.hasTts || signals.hasAudio
+      ? '- When synthesis or media quality depends on parameters such as voice, speed, pitch, breath, or break, document their defaults and intended effect next to the implementation.'
+      : null,
+    signals.hasUnity
+      ? '- Keep the Unity integration boundary explicit: define handoff artifacts, expected file formats, and runtime assumptions before coding across the boundary.'
+      : null,
+  ].filter(Boolean) as string[];
+  const domainSpecificBlock = domainSpecificLines.length > 0
+    ? `${domainSpecificLines.join('\n')}\n`
+    : '';
 
   if (scope === 'workspace') {
     return `# Read PROJECT.md first.
@@ -42,6 +64,7 @@ export function generateToolGuidance(
 - Keep project truth in \`PROJECT.md\` and \`docs/\`; \`${wrapperFile}\` is only the ${label}-specific overlay.
 - Treat \`${wrapperFile}\` as a thin adapter over the shared project constitution.
 ${providerSpecificLine}
+${domainSpecificBlock}
 - During substantive progress updates, include a short checklist of done / remaining work and a rough remaining-time estimate by default.
 `;
   }
@@ -55,6 +78,7 @@ ${providerSpecificLine}
 - Treat \`${wrapperFile}\` as a thin adapter over the shared repository and workspace constitutions.
 - If work changes another repository, return to \`../GLOBAL_CONTEXT.md\` and update both repositories' context files.
 ${providerSpecificLine}
+${domainSpecificBlock}
 - During substantive progress updates, include a short checklist of done / remaining work and a rough remaining-time estimate by default.
 `;
   }
@@ -66,6 +90,7 @@ ${providerSpecificLine}
 - Keep project truth in \`PROJECT.md\` and \`docs/\`; \`${wrapperFile}\` is only the ${label}-specific overlay.
 - Treat \`${wrapperFile}\` as a thin adapter over the shared project constitution.
 ${providerSpecificLine}
+${domainSpecificBlock}
 - During substantive progress updates, include a short checklist of done / remaining work and a rough remaining-time estimate by default.
 `;
 }
