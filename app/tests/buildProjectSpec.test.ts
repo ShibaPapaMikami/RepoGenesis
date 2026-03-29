@@ -264,8 +264,9 @@ test('buildProjectSpec should feed TTS-style intake into generator-specific docs
 - dependency に GitHub上の Irodori-TTS を含む
 - audio processing に librosa / numpy / soundfile を含む
 - architecture は text → emotion parameter generation → TTS synthesis → audio post-processing → wav output
-- core feature は emotion parameter layer / audio post-processing
-- 実行形態は CLI`;
+- core feature は emotion parameter layer と audio post-processing
+- 実行形態は CLI
+- security は low〜medium（社内利用想定）`;
 
   const draft = parseConsultationIntake(intake, makeState());
   const spec = buildProjectSpec(draft.suggestedState);
@@ -273,10 +274,13 @@ test('buildProjectSpec should feed TTS-style intake into generator-specific docs
   const requirements = files.get('docs/REQUIREMENTS.md') ?? '';
   const architecture = files.get('docs/ARCHITECTURE.md') ?? '';
   const roadmap = files.get('docs/ROADMAP.md') ?? '';
+  const techDecisions = files.get('docs/TECH_DECISIONS.md') ?? '';
+  const externalDependencies = files.get('docs/EXTERNAL_DEPENDENCIES.md') ?? '';
 
   assert.deepEqual(spec.tech.domains, ['ai', 'unity', 'cli']);
   assert.equal(spec.tech.primary_language, 'python');
   assert.deepEqual(spec.tech.frameworks, ['Typer']);
+  assert.equal(spec.security.level, 'medium');
   assert.equal(
     spec.planning.external_dependencies.some((item) =>
       item.name === 'Aratako/Irodori-TTS' && item.status === 'adopted'),
@@ -285,6 +289,22 @@ test('buildProjectSpec should feed TTS-style intake into generator-specific docs
   assert.equal(
     spec.planning.external_dependencies.some((item) =>
       item.name === 'librosa' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    spec.planning.tech_decisions.filter((item) => item.topic === 'Audio processing stack').length,
+    1,
+  );
+  assert.equal(
+    spec.planning.tech_decisions.some((item) =>
+      item.topic === 'Audio processing stack'
+      && item.choice === 'librosa, numpy, soundfile'
+      && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    spec.planning.tech_decisions.some((item) =>
+      item.topic === 'Security level' && item.choice === 'medium'),
     true,
   );
   assert.equal(requirements.includes('R4: Preserve the differentiating workflow features'), true);
@@ -304,4 +324,15 @@ test('buildProjectSpec should feed TTS-style intake into generator-specific docs
     roadmap.includes('Integrate adopted dependencies needed for the first workflow: Aratako/Irodori-TTS, librosa, numpy, soundfile.'),
     true,
   );
+  assert.equal(techDecisions.includes('### Audio processing stack'), true);
+  assert.equal(techDecisions.includes('### Audio processing\n'), false);
+  assert.equal(externalDependencies.includes('### librosa'), true);
+  assert.equal(externalDependencies.includes('- **Source**: https://librosa.org/'), true);
+  assert.equal(externalDependencies.includes('- **License / Terms**: ISC'), true);
+  assert.equal(externalDependencies.includes('### numpy'), true);
+  assert.equal(externalDependencies.includes('- **Source**: https://numpy.org/'), true);
+  assert.equal(externalDependencies.includes('- **License / Terms**: BSD-3-Clause'), true);
+  assert.equal(externalDependencies.includes('### soundfile'), true);
+  assert.equal(externalDependencies.includes('- **Source**: https://python-soundfile.readthedocs.io/'), true);
+  assert.equal(externalDependencies.includes('- **License / Terms**: BSD-3-Clause'), true);
 });

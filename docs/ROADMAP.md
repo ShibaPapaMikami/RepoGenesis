@@ -175,6 +175,7 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Promote GitHub references plus explicit dependency hints into adopted planning dependencies when the brief clearly requests them
 - [x] Convert `未確定事項` into open planning items so generated `ROADMAP.md` Phase 1 goals reflect the real unresolved questions
 - [x] Parse `framework` / `audio processing` / `architecture` / `core feature` hints into structured planning entries
+- [x] Normalize TTS/CLI-specific core feature splitting, audio dependency metadata, and security phrasing so generated docs stay internally consistent
 
 ### CI / Docs Hardening
 - [x] Add CI coverage for vendored generator bundle drift

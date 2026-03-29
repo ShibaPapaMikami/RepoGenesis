@@ -121,6 +121,8 @@ Phase 6 / Hardening
 - generator は open planning items を 5 件まで `REQUIREMENTS.md` / `ROADMAP.md` へ反映し、Phase 1 の unresolved work が bullet 単位で読みやすくなった。
 - intake hardening は `framework=Typer`、`audio processing`、`architecture`、`core feature` も structured planning として保持し、`dependency に GitHub上の ... を含む` を `github_repo` へ正規化できるようになった。
 - generator は explicit workflow architecture と differentiating core features を `REQUIREMENTS.md` / `ARCHITECTURE.md` / tool guidance に反映し、TTS/CLI briefs の project-specific value を generic text に落としにくくした。
+- intake hardening は TTS/CLI briefs で `core feature` の `と` 区切りも分割し、`audio processing` は individual decision の重複を避けつつ `Audio processing stack` と OSS dependency metadata (`source` / `license` / `purpose`) を補完するようになった。
+- `security は low〜medium` のような表現は planning / generated docs 上で `medium` へ正規化され、TTS sample の `TECH_DECISIONS.md` / `EXTERNAL_DEPENDENCIES.md` の内部表記揺れを減らした。
 
 ## What This Phase Still Needs
 - Refine the public UI so non-engineers can understand planning fields without reading internal terminology.

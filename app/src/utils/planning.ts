@@ -321,11 +321,38 @@ function inferDependencySource(name: string): string {
   if (lowered.includes('openai')) return 'https://platform.openai.com/';
   if (lowered.includes('anthropic')) return 'https://www.anthropic.com/api';
   if (lowered.includes('gemini')) return 'https://ai.google.dev/';
+  if (lowered === 'librosa') return 'https://librosa.org/';
+  if (lowered === 'numpy') return 'https://numpy.org/';
+  if (lowered === 'soundfile') return 'https://python-soundfile.readthedocs.io/';
   if (lowered.includes('supabase')) return 'https://supabase.com/';
   if (lowered.includes('slack')) return 'https://api.slack.com/';
   if (lowered.includes('resend')) return 'https://resend.com/';
   if (lowered.includes('sendgrid')) return 'https://sendgrid.com/';
   return '';
+}
+
+function inferDependencyLicense(name: string): string {
+  const lowered = name.toLowerCase();
+  if (lowered === 'librosa') return 'ISC';
+  if (lowered === 'numpy') return 'BSD-3-Clause';
+  if (lowered === 'soundfile') return 'BSD-3-Clause';
+  return '';
+}
+
+function inferAudioProcessingPurpose(name: string): string {
+  const lowered = name.toLowerCase();
+  if (lowered === 'librosa') return 'Audio analysis and feature extraction for expressive post-processing';
+  if (lowered === 'numpy') return 'Numeric processing for parameter and waveform operations';
+  if (lowered === 'soundfile') return 'Read and write wav artifacts for the first workflow';
+  return 'Support the first audio post-processing workflow';
+}
+
+function normalizeSecurityDecisionChoice(value: string): string {
+  const normalized = value.trim().toLowerCase();
+  if (/\bhigh\b|高/.test(normalized)) return 'high';
+  if (/\bmedium\b|中/.test(normalized)) return 'medium';
+  if (/\blow\b|低/.test(normalized)) return 'low';
+  return value;
 }
 
 function normalizeGithubRepoUrl(repoUrl: string): string | null {
@@ -537,7 +564,7 @@ function normalizeStructuredValue(value: string): string {
 
 function splitStructuredListValue(value: string): string[] {
   return value
-    .split(/\s*(?:、|,|\/|・|\band\b|\n)\s*/i)
+    .split(/\s*(?:、|,|\/|・|\band\b|\n|\s+と\s+)\s*/i)
     .map((item) => item.trim().replace(/^[-*]\s*/, '').replace(/[.)。]+$/, ''))
     .filter(Boolean);
 }
@@ -585,7 +612,7 @@ function addDependency(
     purpose: line,
     owner: '',
     source: matcher.source ?? '',
-    license: '',
+    license: inferDependencyLicense(matcher.name),
     env_vars: matcher.env_vars,
     data_outbound: matcher.data_outbound,
     notes: '',
@@ -694,15 +721,15 @@ function extractGenericDependencies(
           : 'oss';
       mergeDependency(dependencyBucket, {
         name: candidate,
-        category,
-        status,
-        purpose: line,
-        owner: '',
-        source: '',
-        license: '',
-        env_vars: [],
-        data_outbound: false,
-        notes: '',
+      category,
+      status,
+      purpose: line,
+      owner: '',
+      source: '',
+      license: inferDependencyLicense(candidate),
+      env_vars: [],
+      data_outbound: false,
+      notes: '',
       });
     }
   }
@@ -743,7 +770,7 @@ function addStructuredDependency(
     purpose,
     owner: '',
     source: inferDependencySource(canonicalName),
-    license: '',
+    license: inferDependencyLicense(canonicalName),
     env_vars: inferEnvVars(canonicalName, category),
     data_outbound: !['oss', 'npm_package', 'github_repo'].includes(category),
     notes: '',
@@ -915,7 +942,19 @@ function extractStructuredHints(
       });
 
       for (const library of libraries) {
-        addStructuredDependency(dependencyBucket, decisionBucket, library, 'oss', status, line, 'Audio processing');
+        const canonicalName = canonicalizeStructuredDependencyName(library, 'oss');
+        mergeDependency(dependencyBucket, {
+          name: canonicalName,
+          category: 'oss',
+          status,
+          purpose: inferAudioProcessingPurpose(canonicalName),
+          owner: '',
+          source: inferDependencySource(canonicalName),
+          license: inferDependencyLicense(canonicalName),
+          env_vars: [],
+          data_outbound: false,
+          notes: line,
+        });
       }
       return true;
     }
@@ -932,7 +971,7 @@ function extractStructuredHints(
     case 'security_level':
       mergeDecision(decisionBucket, {
         topic: 'Security level',
-        choice: value,
+        choice: normalizeSecurityDecisionChoice(value),
         status,
         rationale: line,
         decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',

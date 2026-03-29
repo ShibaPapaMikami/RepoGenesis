@@ -73,6 +73,8 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - `参考実装・関連リンク` の GitHub URL と依存ヒントを planning の adopted dependency へ寄せ、`未確定事項` は open planning item に変換して generated `REQUIREMENTS.md` / `ROADMAP.md` に反映されるようにした
   - `environment=local` / `FastAPI candidate` / `Data sensitivity boundary` も planning へ落とし、generator 側は open item を 5 件まで docs に反映するようにして、CLI/TTS 系 brief の取りこぼしをさらに減らした
   - `framework=Typer`、`audio processing`、`architecture`、`core feature` を structured planning に昇格し、explicit pipeline / differentiating features を generated `REQUIREMENTS.md` / `ARCHITECTURE.md` / wrapper guidance に流し込めるようにした
+  - TTS/CLI briefs では `core feature` の `と` 区切りも分割し、`audio processing` は `Audio processing stack` 1件に集約しつつ `librosa / numpy / soundfile` の `source` / `license` / `purpose` を external dependency metadata として補完するようにした
+  - `security は low〜medium` のような候補表現は planning / generated docs 上で `medium` へ正規化し、`TECH_DECISIONS.md` と requirement 側の表記揺れを減らした
   - `責任者` と `技術ドメイン` は AI-first flow では blocking validation から外した
   - `技術ドメイン` 未確定は warning 扱いで ZIP を止めないようにした
   - skill layer contract を provider-aware に更新し、Codex / Claude Code / Gemini CLI を並列で扱う設計に整理した

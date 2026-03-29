@@ -557,7 +557,7 @@ test('parseConsultationIntake should treat explicit candidate inputs as authorit
 - dependency に GitHub上の Irodori-TTS を含む
 - audio processing に librosa / numpy / soundfile を含む
 - architecture は text → emotion parameter generation → TTS synthesis → audio post-processing → wav output
-- core feature は emotion parameter layer / audio post-processing
+- core feature は emotion parameter layer と audio post-processing
 - 実行形態は CLI
 - 将来API化する場合は FastAPI が候補
 - security は low〜medium（社内利用想定）`;
@@ -592,17 +592,40 @@ test('parseConsultationIntake should treat explicit candidate inputs as authorit
   );
   assert.equal(
     planning.external_dependencies.some((item) =>
-      item.name === 'librosa' && item.category === 'oss' && item.status === 'adopted'),
+      item.name === 'librosa'
+      && item.category === 'oss'
+      && item.status === 'adopted'
+      && item.source === 'https://librosa.org/'
+      && item.license === 'ISC'),
     true,
   );
   assert.equal(
     planning.external_dependencies.some((item) =>
-      item.name === 'numpy' && item.category === 'oss' && item.status === 'adopted'),
+      item.name === 'numpy'
+      && item.category === 'oss'
+      && item.status === 'adopted'
+      && item.source === 'https://numpy.org/'
+      && item.license === 'BSD-3-Clause'),
     true,
   );
   assert.equal(
     planning.external_dependencies.some((item) =>
-      item.name === 'soundfile' && item.category === 'oss' && item.status === 'adopted'),
+      item.name === 'soundfile'
+      && item.category === 'oss'
+      && item.status === 'adopted'
+      && item.source === 'https://python-soundfile.readthedocs.io/'
+      && item.license === 'BSD-3-Clause'),
+    true,
+  );
+  assert.equal(
+    planning.tech_decisions.filter((item) => item.topic === 'Audio processing stack').length,
+    1,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'Audio processing stack'
+      && item.choice === 'librosa, numpy, soundfile'
+      && item.status === 'adopted'),
     true,
   );
   assert.equal(
@@ -643,6 +666,12 @@ test('parseConsultationIntake should treat explicit candidate inputs as authorit
   assert.equal(
     planning.tech_decisions.some((item) =>
       item.status === 'open' && item.topic === 'Data sensitivity boundary'),
+    true,
+  );
+  assert.equal(draft.suggestedState.security.level, 'medium');
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'Security level' && item.choice === 'medium'),
     true,
   );
 });
