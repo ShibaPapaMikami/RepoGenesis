@@ -15,6 +15,8 @@ interface PlanningSuggestionInput {
   currentState: FormState;
   candidateText: string;
   externalText: string;
+  referenceText?: string;
+  openQuestionText?: string;
   combinedText: string;
 }
 
@@ -35,10 +37,16 @@ type StructuredHintKey =
   | 'security_level'
   | 'repo_style'
   | 'phases'
-  | 'scheduled_jobs';
+  | 'scheduled_jobs'
+  | 'dependency';
 
 type TechDecisionItem = FormState['planning']['tech_decisions'][number];
 type ExternalDependencyItem = FormState['planning']['external_dependencies'][number];
+
+interface ReferenceRepoMatch {
+  name: string;
+  source: string;
+}
 
 const DEPENDENCY_MATCHERS: DependencyMatcher[] = [
   {
@@ -213,6 +221,7 @@ function normalizeStructuredHintKey(label: string): StructuredHintKey | null {
   if (/^(repo style|repo_style|repository style|リポジトリ構成)$/.test(normalized)) return 'repo_style';
   if (/^(phase|phases|進め方の段階数|段階数)$/.test(normalized)) return 'phases';
   if (/^(scheduled_jobs|scheduled jobs|batch|cron|定期実行|バッチ)$/.test(normalized)) return 'scheduled_jobs';
+  if (/^(dependency|dependencies|external dependency|external dependencies|外部依存|外部依存候補)$/.test(normalized)) return 'dependency';
   return null;
 }
 
@@ -309,6 +318,166 @@ function inferDependencySource(name: string): string {
   if (lowered.includes('resend')) return 'https://resend.com/';
   if (lowered.includes('sendgrid')) return 'https://sendgrid.com/';
   return '';
+}
+
+function normalizeGithubRepoUrl(repoUrl: string): string | null {
+  const trimmed = repoUrl.trim().replace(/[),.]+$/, '');
+  const match = trimmed.match(/^https?:\/\/github\.com\/([^/\s?#]+\/[^/\s?#]+)(?:[/?#].*)?$/i);
+  if (!match) return null;
+  return `https://github.com/${match[1]}`;
+}
+
+function buildReferenceRepoIndex(lines: string[]): Map<string, ReferenceRepoMatch> {
+  const index = new Map<string, ReferenceRepoMatch>();
+
+  for (const line of lines) {
+    const repoUrlMatches = line.match(/https?:\/\/github\.com\/[^\s)]+/gi) ?? [];
+    for (const rawRepoUrl of repoUrlMatches) {
+      const normalizedUrl = normalizeGithubRepoUrl(rawRepoUrl);
+      if (!normalizedUrl) continue;
+
+      const repoName = normalizedUrl.replace(/^https?:\/\/github\.com\//i, '');
+      const repoBaseName = repoName.split('/').at(-1);
+      const match = { name: repoName, source: normalizedUrl };
+
+      index.set(repoName.toLowerCase(), match);
+      if (repoBaseName) index.set(repoBaseName.toLowerCase(), match);
+    }
+  }
+
+  return index;
+}
+
+function addGithubDependency(
+  dependencyBucket: Map<string, ExternalDependencyItem>,
+  decisionBucket: Map<string, TechDecisionItem>,
+  repo: ReferenceRepoMatch,
+  line: string,
+  status: TechDecisionStatus,
+) {
+  mergeDependency(dependencyBucket, {
+    name: repo.name,
+    category: 'github_repo',
+    status,
+    purpose: line,
+    owner: '',
+    source: repo.source,
+    license: '',
+    env_vars: [],
+    data_outbound: false,
+    notes: '',
+  });
+  mergeDecision(decisionBucket, {
+    topic: 'External Code',
+    choice: repo.name,
+    status,
+    rationale: line,
+    decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+    notes: '',
+  });
+}
+
+function resolveNamedReferenceRepos(line: string, referenceRepoIndex: Map<string, ReferenceRepoMatch>): ReferenceRepoMatch[] {
+  if (referenceRepoIndex.size === 0) return [];
+
+  const lowered = line.toLowerCase();
+  const matches = new Map<string, ReferenceRepoMatch>();
+
+  for (const [alias, repo] of referenceRepoIndex.entries()) {
+    if (lowered.includes(alias)) {
+      matches.set(repo.name.toLowerCase(), repo);
+    }
+  }
+
+  return Array.from(matches.values());
+}
+
+function extractMentionedGithubRepoNames(line: string): string[] {
+  const candidates = new Set<string>();
+  const namedMatches = Array.from(
+    line.matchAll(/github(?:上)?(?:の|にある)?\s+([A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)?)/gi),
+  );
+
+  for (const match of namedMatches) {
+    const candidate = match[1]?.trim().replace(/[),.]+$/, '');
+    if (candidate) candidates.add(candidate);
+  }
+
+  return Array.from(candidates);
+}
+
+function extractReferencedGithubDependencies(
+  line: string,
+  dependencyBucket: Map<string, ExternalDependencyItem>,
+  decisionBucket: Map<string, TechDecisionItem>,
+  fallbackStatus: TechDecisionStatus,
+  referenceRepoIndex: Map<string, ReferenceRepoMatch>,
+) {
+  const status = normalizeStatus(line, fallbackStatus);
+  const resolved = new Map<string, ReferenceRepoMatch>();
+
+  for (const repo of resolveNamedReferenceRepos(line, referenceRepoIndex)) {
+    resolved.set(repo.name.toLowerCase(), repo);
+  }
+
+  for (const repoName of extractMentionedGithubRepoNames(line)) {
+    const indexed = referenceRepoIndex.get(repoName.toLowerCase());
+    const normalizedName = indexed?.name ?? repoName;
+    resolved.set(normalizedName.toLowerCase(), {
+      name: normalizedName,
+      source: indexed?.source ?? '',
+    });
+  }
+
+  for (const repo of resolved.values()) {
+    addGithubDependency(dependencyBucket, decisionBucket, repo, line, status);
+  }
+}
+
+function inferOpenQuestionDecision(line: string): { topic: string; choice: string } | null {
+  if (/ライセンス|商用利用/i.test(line)) {
+    return { topic: 'Licensing', choice: '商用利用条件' };
+  }
+  if (/(unity|ユニティ)/i.test(line) && /(連携|api|ファイル)/i.test(line)) {
+    return { topic: 'Unity handoff', choice: 'Unity連携方式' };
+  }
+  if (/リアルタイム|real-?time/i.test(line)) {
+    return { topic: 'Runtime mode', choice: 'リアルタイム対応' };
+  }
+  if (/感情パラメータ|emotion|ルールベース|llm/i.test(line)) {
+    return { topic: 'Emotion parameter generation', choice: '感情パラメータ生成方式' };
+  }
+  if (/話者|speaker/i.test(line)) {
+    return { topic: 'Speaker support', choice: '単一話者 / 複数話者' };
+  }
+  if (/(^|[^a-z])ui([^a-z]|$)|画面|interface/i.test(line)) {
+    return { topic: 'Operator interface', choice: 'CLI / UI の優先度' };
+  }
+  if (/(tts|irodori)/i.test(line) && /(ローカル実行|他方式|利用|実行方式)/i.test(line)) {
+    return { topic: 'External Code', choice: 'TTS利用方式' };
+  }
+  return null;
+}
+
+function extractOpenQuestionHints(
+  line: string,
+  decisionBucket: Map<string, TechDecisionItem>,
+  dependencyBucket: Map<string, ExternalDependencyItem>,
+  referenceRepoIndex: Map<string, ReferenceRepoMatch>,
+) {
+  extractReferencedGithubDependencies(line, dependencyBucket, decisionBucket, 'open', referenceRepoIndex);
+
+  const inferred = inferOpenQuestionDecision(line);
+  if (!inferred) return;
+
+  mergeDecision(decisionBucket, {
+    topic: inferred.topic,
+    choice: inferred.choice,
+    status: 'open',
+    rationale: line,
+    decision_date: '',
+    notes: '',
+  });
 }
 
 function parseStructuredLine(line: string): { key: StructuredHintKey; value: string } | null {
@@ -604,6 +773,15 @@ function extractStructuredHints(
       addStructuredDependency(dependencyBucket, decisionBucket, value, category, status, line, 'PDF extraction');
       return true;
     }
+    case 'dependency': {
+      const category: DependencyCategory = /^https?:\/\/github\.com\//i.test(value)
+        ? 'github_repo'
+        : /^[a-z0-9][a-z0-9._/-]+$/i.test(value)
+          ? 'npm_package'
+          : 'oss';
+      addStructuredDependency(dependencyBucket, decisionBucket, value, category, status, line, 'External Code');
+      return true;
+    }
     case 'notification':
       addNotificationDependencies(value, line, fallbackStatus, dependencyBucket, decisionBucket);
       return true;
@@ -706,12 +884,16 @@ export function derivePlanningSuggestions(input: PlanningSuggestionInput): FormS
 
   const candidateLines = splitLines(input.candidateText);
   const externalLines = splitLines(input.externalText);
-  const knownLines = new Set([...candidateLines, ...externalLines]);
+  const referenceLines = splitLines(input.referenceText);
+  const openQuestionLines = splitLines(input.openQuestionText);
+  const knownLines = new Set([...candidateLines, ...externalLines, ...referenceLines, ...openQuestionLines]);
   const combinedLines = splitLines(input.combinedText).filter((line) => !knownLines.has(line));
+  const referenceRepoIndex = buildReferenceRepoIndex(referenceLines);
 
   for (const line of candidateLines) {
     if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'adopted')) continue;
     extractInlineDecision(line, decisionBucket, dependencyBucket, 'adopted');
+    extractReferencedGithubDependencies(line, dependencyBucket, decisionBucket, 'adopted', referenceRepoIndex);
     extractGenericDependencies(line, dependencyBucket, decisionBucket, 'adopted');
     extractModelDecisions(line, decisionBucket, 'adopted');
   }
@@ -719,13 +901,28 @@ export function derivePlanningSuggestions(input: PlanningSuggestionInput): FormS
   for (const line of externalLines) {
     if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'candidate')) continue;
     extractInlineDecision(line, decisionBucket, dependencyBucket, 'candidate');
+    extractReferencedGithubDependencies(line, dependencyBucket, decisionBucket, 'candidate', referenceRepoIndex);
     extractGenericDependencies(line, dependencyBucket, decisionBucket, 'candidate');
     extractModelDecisions(line, decisionBucket, 'candidate');
+  }
+
+  for (const line of referenceLines) {
+    extractReferencedGithubDependencies(line, dependencyBucket, decisionBucket, 'candidate', referenceRepoIndex);
+    extractGenericDependencies(line, dependencyBucket, decisionBucket, 'candidate');
+  }
+
+  for (const line of openQuestionLines) {
+    if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'open')) continue;
+    extractInlineDecision(line, decisionBucket, dependencyBucket, 'open');
+    extractOpenQuestionHints(line, decisionBucket, dependencyBucket, referenceRepoIndex);
+    extractGenericDependencies(line, dependencyBucket, decisionBucket, 'open');
+    extractModelDecisions(line, decisionBucket, 'open');
   }
 
   for (const line of combinedLines) {
     if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'candidate')) continue;
     extractInlineDecision(line, decisionBucket, dependencyBucket, 'candidate');
+    extractReferencedGithubDependencies(line, dependencyBucket, decisionBucket, 'candidate', referenceRepoIndex);
     extractGenericDependencies(line, dependencyBucket, decisionBucket, 'candidate');
     extractModelDecisions(line, decisionBucket, 'candidate');
   }

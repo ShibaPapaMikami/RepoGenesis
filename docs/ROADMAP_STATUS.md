@@ -115,6 +115,8 @@ Phase 6 / Hardening
 - support data store の schema migration は whitelist 化した identifier だけで `ALTER TABLE` するようにし、内部 SQL 組み立てを限定した。
 - support data store reader は壊れた JSON metadata / selected skill list を無視して継続するようにし、破損行でプロセスが落ちないようにした。
 - generate / feedback / server fallback の request id は `Date.now()` ではなく UUID ベースへ切り替えた。
+- consultation parser / planning suggestion は explicit `RepoGenesis入力候補` を優先して `domains` / `primary_language` / `CLI` signal を反映し、GitHub reference と依存ヒントから adopted dependency を組み立てられるようになった。
+- `未確定事項` は open planning item へ橋渡しされ、generated `ROADMAP.md` Phase 1 goals と `REQUIREMENTS.md` Known TBDs に実際の未解決論点が出るようになった。
 
 ## What This Phase Still Needs
 - Refine the public UI so non-engineers can understand planning fields without reading internal terminology.

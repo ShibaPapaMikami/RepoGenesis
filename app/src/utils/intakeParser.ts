@@ -1,7 +1,7 @@
 import { slugify } from './slugify.ts';
 import { createIntakeEnvelope, type IntakeProviderMetadata } from './intakeProvider.ts';
 import type { FormState } from '../state/actions.ts';
-import type { Domain, RepoType, SecurityLevel } from '../constants/enums.ts';
+import type { Domain, PrimaryLanguage, RepoType, SecurityLevel } from '../constants/enums.ts';
 import { calculateMinSecurityLevel } from './securityCalc.ts';
 import { derivePlanningSuggestions } from './planning.ts';
 
@@ -57,6 +57,8 @@ interface IntakeExtractionInput {
   problem: string | null;
   firstDeliverable: string | null;
   integrations: string[];
+  referenceLinks?: string[];
+  openQuestions?: string[];
   candidateInputs: string[];
   candidateText: string;
   externalText: string;
@@ -348,12 +350,22 @@ function inferDomains(text: string): Domain[] {
   return [...new Set(domains)];
 }
 
+function mergeDomains(...lists: Domain[][]): Domain[] {
+  const merged: Domain[] = [];
+  for (const list of lists) {
+    for (const domain of list) {
+      if (!merged.includes(domain)) merged.push(domain);
+    }
+  }
+  return merged;
+}
+
 function parseExplicitDomainValue(value: string | null): Domain[] {
   if (!value) return [];
 
-  return value
+  const tokenized = value
     .split(/[、,\s/]+/)
-    .map((part) => part.trim().toLowerCase())
+    .map((part) => part.trim().toLowerCase().replace(/[()（）「」『』[\]]/g, ''))
     .filter(Boolean)
     .flatMap((part): Domain[] => {
       if (part === 'web' || part === 'ウェブ') return ['web'];
@@ -367,11 +379,45 @@ function parseExplicitDomainValue(value: string | null): Domain[] {
       return [];
     })
     .filter((domain, index, list) => list.indexOf(domain) === index);
+
+  return mergeDomains(inferDomains(value), tokenized);
 }
 
 function inferDomainsFromCandidateInputs(items: string[]): Domain[] {
   const explicitValue = extractCandidateInputValue(items, ['domain', 'domains', '技術ドメイン']);
   return parseExplicitDomainValue(explicitValue);
+}
+
+function parsePrimaryLanguageValue(value: string | null): PrimaryLanguage | null {
+  if (!value) return null;
+
+  const normalized = value.trim().toLowerCase();
+  if (/\btypescript\b|type\s*script/.test(normalized)) return 'typescript';
+  if (/\bpython\b|python\s*3/.test(normalized)) return 'python';
+  if (/\bc#\b|\bcsharp\b|c\s*sharp/.test(normalized)) return 'csharp';
+  if (/\bswift\b/.test(normalized)) return 'swift';
+  if (/\bgo\b|golang/.test(normalized)) return 'go';
+  if (/\brust\b/.test(normalized)) return 'rust';
+  if (/\bkotlin\b/.test(normalized)) return 'kotlin';
+  if (/その他|other/.test(normalized)) return 'other';
+  return null;
+}
+
+function inferPrimaryLanguageFromCandidateInputs(items: string[]): PrimaryLanguage | null {
+  const explicitValue = extractCandidateInputValue(items, ['language', 'primary language', 'primary_language', '言語']);
+  return parsePrimaryLanguageValue(explicitValue);
+}
+
+function inferFrameworksFromCandidateInputs(items: string[]): string[] | null {
+  const explicitValue = extractCandidateInputValue(items, ['framework', 'frameworks', 'フレームワーク']);
+  if (!explicitValue) return null;
+
+  const frameworks = explicitValue
+    .split(/[、,\n/]+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  return frameworks.length > 0 ? frameworks : null;
 }
 
 function inferSecurityLevelFromCandidateInputs(items: string[]): SecurityLevel | null {
@@ -707,18 +753,23 @@ export function deriveDraftSuggestions(
     problem,
     firstDeliverable,
     integrations,
+    referenceLinks = [],
+    openQuestions = [],
     candidateInputs,
-    candidateText,
-    externalText,
-    combinedText,
+    candidateText = '',
+    externalText = '',
+    combinedText = '',
   } = extracted;
 
   const explicitName = cleanFieldValue(extractCandidateInputValue(candidateInputs, ['name', 'project name', 'project_name', 'プロジェクト名']));
   const explicitSlug = cleanFieldValue(extractCandidateInputValue(candidateInputs, ['slug', 'project slug', 'project_slug', 'スラッグ']));
   const explicitCandidateDomains = inferDomainsFromCandidateInputs(candidateInputs);
+  const candidateSignalDomains = inferDomains(candidateText || candidateInputs.join('\n'));
   const inferredDomains = explicitCandidateDomains.length > 0
-    ? explicitCandidateDomains
+    ? mergeDomains(explicitCandidateDomains, candidateSignalDomains)
     : inferDomains(combinedText);
+  const explicitPrimaryLanguage = inferPrimaryLanguageFromCandidateInputs(candidateInputs);
+  const explicitFrameworks = inferFrameworksFromCandidateInputs(candidateInputs);
   const inferenceSource = [
     summary ?? '',
     problem ?? '',
@@ -750,6 +801,14 @@ export function deriveDraftSuggestions(
   const inferredRepoType = candidateRepoType ?? inferRepoType(inferenceSource);
   const inferredPhasesCount = inferPhasesCount(inferenceSource, integrations);
   const inferredSecurityLevel = inferSecurityLevelFromCandidateInputs(candidateInputs);
+  const primaryLanguage = explicitPrimaryLanguage ?? currentState.tech.primary_language;
+  const shouldResetFrameworks =
+    explicitFrameworks === null
+    && (
+      (explicitPrimaryLanguage !== null && explicitPrimaryLanguage !== currentState.tech.primary_language)
+      || (explicitCandidateDomains.length > 0 && !inferredDomains.includes('web'))
+    );
+  const frameworks = explicitFrameworks ?? (shouldResetFrameworks ? [] : currentState.tech.frameworks);
   const minimumSecurityLevel = calculateMinSecurityLevel({
     has_api_keys: hasApiKeys,
     has_user_data: hasUserData,
@@ -762,6 +821,49 @@ export function deriveDraftSuggestions(
     inferredSecurityLevel ?? currentState.securityLevelOverride,
     currentState.security.level,
   );
+  const suggestedBaseState: FormState = {
+    ...currentState,
+    project: {
+      ...currentState.project,
+      name: projectName,
+      slug,
+      description: projectDescription,
+      owner,
+    },
+    tech: {
+      ...currentState.tech,
+      domains: inferredDomains,
+      primary_language: primaryLanguage,
+      frameworks,
+    },
+    security: {
+      ...currentState.security,
+      level: resolvedSecurityLevel,
+      has_user_data: hasUserData,
+      has_ip_sensitive: hasIpSensitive,
+      has_api_keys: hasApiKeys,
+    },
+    structure: {
+      ...currentState.structure,
+      repo_type: inferredRepoType,
+      repos: inferSuggestedRepos(currentState, inferredRepoType, firstDeliverable),
+    },
+    workflow: {
+      ...currentState.workflow,
+      phases_count: inferredPhasesCount,
+    },
+    planning: currentState.planning,
+    slugManuallyEdited: currentState.slugManuallyEdited,
+    securityLevelOverride: resolvedSecurityLevel,
+  };
+  const planning = derivePlanningSuggestions({
+    currentState: suggestedBaseState,
+    candidateText,
+    externalText,
+    referenceText: referenceLinks.join('\n'),
+    openQuestionText: openQuestions.join('\n'),
+    combinedText,
+  });
 
   return {
     projectName,
@@ -769,42 +871,8 @@ export function deriveDraftSuggestions(
     inferredRepoType,
     inferredPhasesCount,
     suggestedState: {
-      ...currentState,
-      project: {
-        ...currentState.project,
-        name: projectName,
-        slug,
-        description: projectDescription,
-        owner,
-      },
-      tech: {
-        ...currentState.tech,
-        domains: inferredDomains,
-      },
-      security: {
-        ...currentState.security,
-        level: resolvedSecurityLevel,
-        has_user_data: hasUserData,
-        has_ip_sensitive: hasIpSensitive,
-        has_api_keys: hasApiKeys,
-      },
-      structure: {
-        ...currentState.structure,
-        repo_type: inferredRepoType,
-        repos: inferSuggestedRepos(currentState, inferredRepoType, firstDeliverable),
-      },
-      workflow: {
-        ...currentState.workflow,
-        phases_count: inferredPhasesCount,
-      },
-      planning: derivePlanningSuggestions({
-        currentState,
-        candidateText,
-        externalText,
-        combinedText,
-      }),
-      slugManuallyEdited: currentState.slugManuallyEdited,
-      securityLevelOverride: resolvedSecurityLevel,
+      ...suggestedBaseState,
+      planning,
     },
   };
 }
@@ -841,6 +909,8 @@ export function parseConsultationIntake(
     problem,
     firstDeliverable,
     integrations,
+    referenceLinks,
+    openQuestions,
     candidateInputs,
     candidateText: sections['RepoGenesis入力候補'] ?? '',
     externalText: sections['外部連携候補'] ?? '',

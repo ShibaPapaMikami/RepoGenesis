@@ -69,6 +69,8 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - Phase 6 hardening 継続:
   - AI-first guided flow を整理し、production 上で `v0.1.1 (5e344e8)` の ZIP 生成成功を確認
   - consultation parser は heading の型ゆれを吸収し、stale domain を保持しないように修正
+  - explicit `RepoGenesis入力候補` を優先して `domains` / `primary_language` / `CLI` signal を suggested state に反映し、stale `typescript` / `React` 既定値を引きずりにくくした
+  - `参考実装・関連リンク` の GitHub URL と依存ヒントを planning の adopted dependency へ寄せ、`未確定事項` は open planning item に変換して generated `REQUIREMENTS.md` / `ROADMAP.md` に反映されるようにした
   - `責任者` と `技術ドメイン` は AI-first flow では blocking validation から外した
   - `技術ドメイン` 未確定は warning 扱いで ZIP を止めないようにした
   - skill layer contract を provider-aware に更新し、Codex / Claude Code / Gemini CLI を並列で扱う設計に整理した

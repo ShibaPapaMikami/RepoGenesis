@@ -6,6 +6,9 @@ import { parseConsultationIntake } from '../src/utils/intakeParser.ts';
 import { buildSimpleIntakeDraft, initialSimpleIntakeState } from '../src/utils/simpleIntake.ts';
 import type { FormState } from '../src/state/actions.ts';
 import { getConsultationTestTemplate } from './fixtures/consultationTemplates.ts';
+import bundledGenerator from '../src/vendor/generateFromSpec.js';
+
+const generateFromSpec = bundledGenerator.generateFromSpec as (input: unknown, options?: unknown) => Map<string, string>;
 
 function makeState(): FormState {
   return {
@@ -221,4 +224,62 @@ test('buildProjectSpec should raise security level to the minimum required by fl
 
   const spec = buildProjectSpec(state);
   assert.equal(spec.security.level, 'medium');
+});
+
+test('buildProjectSpec should feed TTS-style intake into generator-specific docs without stale defaults', () => {
+  const intake = `## プロジェクト概要
+日本語TTS音声を人間らしい演技表現に変換する社内ツール。既存TTSで生成した音声に対し、感情・揺らぎ・息・声の崩れを後処理で付与し、XRやNPC、配信用途で利用可能な品質にする。
+
+## 想定ユーザー
+- XRコンテンツ制作チーム
+- Unityエンジニア
+
+## 解決したい課題
+- TTS音声が平坦で演技用途に使えない
+
+## 最初に作るべきもの
+テキスト入力から加工済み音声（wav）を出力するCLIツール。感情パラメータ生成→TTS生成→音声後処理までを一括実行する最小構成。
+
+## 扱うデータ
+- 入力テキスト
+- 感情パラメータ（emotion, pitch, speed, breath, break）
+- 生成音声データ（wav）
+
+## 外部連携候補
+- GitHub上のIrodori-TTSリポジトリ
+- Unity
+
+## 参考実装・関連リンク
+- https://github.com/Aratako/Irodori-TTS
+
+## 未確定事項
+- Irodori-TTSのローカル実行か他方式での利用か
+- 感情パラメータ生成をルールベースかLLMか
+- Unity連携の方法（ファイル連携かAPIか）
+
+## RepoGenesis入力候補
+- domain は ai（将来的に unity を追加）
+- primary_language は Python
+- dependency に GitHub上の Irodori-TTS を含む
+- 実行形態は CLI`;
+
+  const draft = parseConsultationIntake(intake, makeState());
+  const spec = buildProjectSpec(draft.suggestedState);
+  const files = generateFromSpec(spec);
+  const requirements = files.get('docs/REQUIREMENTS.md') ?? '';
+  const roadmap = files.get('docs/ROADMAP.md') ?? '';
+
+  assert.deepEqual(spec.tech.domains, ['ai', 'unity', 'cli']);
+  assert.equal(spec.tech.primary_language, 'python');
+  assert.deepEqual(spec.tech.frameworks, []);
+  assert.equal(
+    spec.planning.external_dependencies.some((item) =>
+      item.name === 'Aratako/Irodori-TTS' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(requirements.includes('R4: Provide a stable operator-facing CLI contract'), true);
+  assert.equal(requirements.includes('R5: Integrate adopted external dependencies intentionally'), true);
+  assert.equal(requirements.includes('Aratako/Irodori-TTS'), true);
+  assert.equal(roadmap.includes('Resolve the highest-risk open planning items'), true);
+  assert.equal(roadmap.includes('Integrate adopted dependencies needed for the first workflow: Aratako/Irodori-TTS.'), true);
 });

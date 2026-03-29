@@ -169,6 +169,11 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Generate concrete `ROADMAP.md` phase goals from workflow, dependencies, and unresolved planning items
 - [x] Add CLI / language-aware wrapper guidance for generated `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`
 
+### Track 5: Intake Parsing Hardening
+- [x] Treat explicit `RepoGenesis入力候補` as authoritative overrides for domains, primary language, and execution style
+- [x] Promote GitHub references plus explicit dependency hints into adopted planning dependencies when the brief clearly requests them
+- [x] Convert `未確定事項` into open planning items so generated `ROADMAP.md` Phase 1 goals reflect the real unresolved questions
+
 ### CI / Docs Hardening
 - [x] Add CI coverage for vendored generator bundle drift
 - [x] Add CI coverage for generator-dist vs vendored-bundle output compatibility

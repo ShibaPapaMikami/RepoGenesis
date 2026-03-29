@@ -504,6 +504,90 @@ test('parseConsultationIntake should apply candidate inputs for domain security 
   assert.equal(draft.suggestedState.structure.repo_type, 'single');
 });
 
+test('parseConsultationIntake should treat explicit candidate inputs as authoritative for TTS-style briefs', () => {
+  const state = makeState();
+  state.tech.domains = ['web'];
+  state.tech.primary_language = 'typescript';
+  state.tech.frameworks = ['React', 'Vite'];
+
+  const input = `## プロジェクト概要
+日本語TTS音声を人間らしい演技表現に変換する社内ツール。既存TTSで生成した音声に対し、感情・揺らぎ・息・声の崩れを後処理で付与し、XRやNPC、配信用途で利用可能な品質にする。
+
+## 想定ユーザー
+- XRコンテンツ制作チーム
+- Unityエンジニア
+- テクニカルアーティスト
+- 企画・演出担当
+
+## 解決したい課題
+- TTS音声が平坦で演技用途に使えない
+- ボイス収録コストが高く、差し替えや量産が非効率
+
+## 最初に作るべきもの
+テキスト入力から加工済み音声（wav）を出力するCLIツール。感情パラメータ生成→TTS生成→音声後処理までを一括実行する最小構成。
+
+## 扱うデータ
+- 入力テキスト
+- 感情パラメータ（emotion, pitch, speed, breath, break）
+- 生成音声データ（wav）
+- 加工後音声データ
+
+## 外部連携候補
+- GitHub上のIrodori-TTSリポジトリ
+- Unity
+- VRChat
+
+## 参考実装・関連リンク
+- https://github.com/Aratako/Irodori-TTS
+
+## 未確定事項
+- Irodori-TTSのローカル実行か他方式での利用か
+- 感情パラメータ生成をルールベースかLLMか
+- リアルタイム処理を初期スコープに含めるか
+- Unity連携の方法（ファイル連携かAPIか）
+- 商用利用時のライセンス整理
+- UIの有無と優先度
+
+## RepoGenesis入力候補
+- domain は ai（将来的に unity を追加）
+- primary_language は Python
+- dependency に GitHub上の Irodori-TTS を含む
+- 実行形態は CLI
+- security は low〜medium（社内利用想定）`;
+
+  const draft = parseConsultationIntake(input, state);
+  const planning = draft.suggestedState.planning;
+
+  assert.deepEqual(draft.suggestedState.tech.domains, ['ai', 'unity', 'cli']);
+  assert.equal(draft.suggestedState.tech.primary_language, 'python');
+  assert.deepEqual(draft.suggestedState.tech.frameworks, []);
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'Primary language' && item.choice === 'python' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) => item.choice === 'typescript'),
+    false,
+  );
+  assert.equal(
+    planning.external_dependencies.some((item) =>
+      item.name === 'Aratako/Irodori-TTS'
+      && item.category === 'github_repo'
+      && item.status === 'adopted'
+      && item.source === 'https://github.com/Aratako/Irodori-TTS'),
+    true,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) => item.status === 'open' && item.topic === 'Unity handoff'),
+    true,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) => item.status === 'open' && item.topic === 'Licensing'),
+    true,
+  );
+});
+
 test('deriveDraftSuggestions should build provider-independent suggested state', () => {
   const suggestions = deriveDraftSuggestions(makeState(), {
     summary: '社内の案件相談を整理するツール',
