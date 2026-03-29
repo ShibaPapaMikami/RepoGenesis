@@ -93,7 +93,7 @@ export function summarizeDependencyNames(
     .slice(0, max);
 }
 
-export function summarizeOpenPlanningItems(brief: ProjectBrief, max = 3): string[] {
+export function summarizeOpenPlanningItems(brief: ProjectBrief, max = 5): string[] {
   const planning = brief.planning ?? { tech_decisions: [], external_dependencies: [] };
   const items = [
     ...planning.tech_decisions

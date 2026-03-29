@@ -40,7 +40,8 @@ export function generateRoadmap(brief: ProjectBrief): string {
           'Define the first end-to-end workflow and the smallest useful release scope.',
         ];
         if (openPlanningItems.length > 0) {
-          goals.push(`Resolve the highest-risk open planning items first: ${openPlanningItems.join('; ')}.`);
+          goals.push('Resolve the highest-risk open planning items first.');
+          goals.push(...openPlanningItems.map((item) => item.endsWith('.') ? item : `${item}.`));
         }
         return {
           goals,

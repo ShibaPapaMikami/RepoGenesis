@@ -547,12 +547,15 @@ test('parseConsultationIntake should treat explicit candidate inputs as authorit
 - Unity連携の方法（ファイル連携かAPIか）
 - 商用利用時のライセンス整理
 - UIの有無と優先度
+- 機密情報の扱い範囲（社内限定か外部展開を想定するか）
 
 ## RepoGenesis入力候補
 - domain は ai（将来的に unity を追加）
 - primary_language は Python
+- environment は local（Mac想定）
 - dependency に GitHub上の Irodori-TTS を含む
 - 実行形態は CLI
+- 将来API化する場合は FastAPI が候補
 - security は low〜medium（社内利用想定）`;
 
   const draft = parseConsultationIntake(input, state);
@@ -584,6 +587,21 @@ test('parseConsultationIntake should treat explicit candidate inputs as authorit
   );
   assert.equal(
     planning.tech_decisions.some((item) => item.status === 'open' && item.topic === 'Licensing'),
+    true,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'Execution environment' && item.choice === 'local（Mac想定）' && item.status === 'candidate'),
+    true,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'API framework' && item.choice === 'FastAPI' && item.status === 'candidate'),
+    true,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.status === 'open' && item.topic === 'Data sensitivity boundary'),
     true,
   );
 });

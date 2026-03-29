@@ -280,6 +280,7 @@ test('buildProjectSpec should feed TTS-style intake into generator-specific docs
   assert.equal(requirements.includes('R4: Provide a stable operator-facing CLI contract'), true);
   assert.equal(requirements.includes('R5: Integrate adopted external dependencies intentionally'), true);
   assert.equal(requirements.includes('Aratako/Irodori-TTS'), true);
+  assert.equal(requirements.includes('Framework choice is still TBD.'), false);
   assert.equal(roadmap.includes('Resolve the highest-risk open planning items'), true);
   assert.equal(roadmap.includes('Integrate adopted dependencies needed for the first workflow: Aratako/Irodori-TTS.'), true);
 });

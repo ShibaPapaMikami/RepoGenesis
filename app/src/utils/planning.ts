@@ -38,7 +38,8 @@ type StructuredHintKey =
   | 'repo_style'
   | 'phases'
   | 'scheduled_jobs'
-  | 'dependency';
+  | 'dependency'
+  | 'environment';
 
 type TechDecisionItem = FormState['planning']['tech_decisions'][number];
 type ExternalDependencyItem = FormState['planning']['external_dependencies'][number];
@@ -222,6 +223,7 @@ function normalizeStructuredHintKey(label: string): StructuredHintKey | null {
   if (/^(phase|phases|進め方の段階数|段階数)$/.test(normalized)) return 'phases';
   if (/^(scheduled_jobs|scheduled jobs|batch|cron|定期実行|バッチ)$/.test(normalized)) return 'scheduled_jobs';
   if (/^(dependency|dependencies|external dependency|external dependencies|外部依存|外部依存候補)$/.test(normalized)) return 'dependency';
+  if (/^(environment|execution environment|target environment|実行環境|対象環境)$/.test(normalized)) return 'environment';
   return null;
 }
 
@@ -435,6 +437,9 @@ function extractReferencedGithubDependencies(
 }
 
 function inferOpenQuestionDecision(line: string): { topic: string; choice: string } | null {
+  if (/機密情報|社内限定|外部展開|情報の扱い範囲|公開範囲/i.test(line)) {
+    return { topic: 'Data sensitivity boundary', choice: '社内限定 / 外部展開の境界' };
+  }
   if (/ライセンス|商用利用/i.test(line)) {
     return { topic: 'Licensing', choice: '商用利用条件' };
   }
@@ -478,6 +483,25 @@ function extractOpenQuestionHints(
     decision_date: '',
     notes: '',
   });
+}
+
+function extractImplicitDecisionHints(
+  line: string,
+  decisionBucket: Map<string, TechDecisionItem>,
+  fallbackStatus: TechDecisionStatus,
+) {
+  const status = normalizeStatus(line, fallbackStatus);
+
+  if (/fastapi/i.test(line)) {
+    mergeDecision(decisionBucket, {
+      topic: 'API framework',
+      choice: 'FastAPI',
+      status,
+      rationale: line,
+      decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+      notes: '',
+    });
+  }
 }
 
 function parseStructuredLine(line: string): { key: StructuredHintKey; value: string } | null {
@@ -818,6 +842,16 @@ function extractStructuredHints(
     case 'scheduled_jobs':
       addStructuredDependency(dependencyBucket, decisionBucket, value, 'batch', status, line, 'Batch / Scheduled Jobs');
       return true;
+    case 'environment':
+      mergeDecision(decisionBucket, {
+        topic: 'Execution environment',
+        choice: value,
+        status,
+        rationale: line,
+        decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+        notes: '',
+      });
+      return true;
     case 'repo_style':
     case 'name':
     case 'slug':
@@ -893,6 +927,7 @@ export function derivePlanningSuggestions(input: PlanningSuggestionInput): FormS
   for (const line of candidateLines) {
     if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'adopted')) continue;
     extractInlineDecision(line, decisionBucket, dependencyBucket, 'adopted');
+    extractImplicitDecisionHints(line, decisionBucket, 'adopted');
     extractReferencedGithubDependencies(line, dependencyBucket, decisionBucket, 'adopted', referenceRepoIndex);
     extractGenericDependencies(line, dependencyBucket, decisionBucket, 'adopted');
     extractModelDecisions(line, decisionBucket, 'adopted');
@@ -901,12 +936,14 @@ export function derivePlanningSuggestions(input: PlanningSuggestionInput): FormS
   for (const line of externalLines) {
     if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'candidate')) continue;
     extractInlineDecision(line, decisionBucket, dependencyBucket, 'candidate');
+    extractImplicitDecisionHints(line, decisionBucket, 'candidate');
     extractReferencedGithubDependencies(line, dependencyBucket, decisionBucket, 'candidate', referenceRepoIndex);
     extractGenericDependencies(line, dependencyBucket, decisionBucket, 'candidate');
     extractModelDecisions(line, decisionBucket, 'candidate');
   }
 
   for (const line of referenceLines) {
+    extractImplicitDecisionHints(line, decisionBucket, 'candidate');
     extractReferencedGithubDependencies(line, dependencyBucket, decisionBucket, 'candidate', referenceRepoIndex);
     extractGenericDependencies(line, dependencyBucket, decisionBucket, 'candidate');
   }
@@ -914,6 +951,7 @@ export function derivePlanningSuggestions(input: PlanningSuggestionInput): FormS
   for (const line of openQuestionLines) {
     if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'open')) continue;
     extractInlineDecision(line, decisionBucket, dependencyBucket, 'open');
+    extractImplicitDecisionHints(line, decisionBucket, 'open');
     extractOpenQuestionHints(line, decisionBucket, dependencyBucket, referenceRepoIndex);
     extractGenericDependencies(line, dependencyBucket, decisionBucket, 'open');
     extractModelDecisions(line, decisionBucket, 'open');
@@ -922,6 +960,7 @@ export function derivePlanningSuggestions(input: PlanningSuggestionInput): FormS
   for (const line of combinedLines) {
     if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'candidate')) continue;
     extractInlineDecision(line, decisionBucket, dependencyBucket, 'candidate');
+    extractImplicitDecisionHints(line, decisionBucket, 'candidate');
     extractReferencedGithubDependencies(line, dependencyBucket, decisionBucket, 'candidate', referenceRepoIndex);
     extractGenericDependencies(line, dependencyBucket, decisionBucket, 'candidate');
     extractModelDecisions(line, decisionBucket, 'candidate');

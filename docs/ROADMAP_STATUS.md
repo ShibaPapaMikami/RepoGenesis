@@ -117,6 +117,8 @@ Phase 6 / Hardening
 - generate / feedback / server fallback の request id は `Date.now()` ではなく UUID ベースへ切り替えた。
 - consultation parser / planning suggestion は explicit `RepoGenesis入力候補` を優先して `domains` / `primary_language` / `CLI` signal を反映し、GitHub reference と依存ヒントから adopted dependency を組み立てられるようになった。
 - `未確定事項` は open planning item へ橋渡しされ、generated `ROADMAP.md` Phase 1 goals と `REQUIREMENTS.md` Known TBDs に実際の未解決論点が出るようになった。
+- intake hardening は `environment=local` / `FastAPI candidate` / `Data sensitivity boundary` も planning に反映し、pipeline-heavy CLI briefs で stale な `Framework choice is still TBD.` を出しにくくした。
+- generator は open planning items を 5 件まで `REQUIREMENTS.md` / `ROADMAP.md` へ反映し、Phase 1 の unresolved work が bullet 単位で読みやすくなった。
 
 ## What This Phase Still Needs
 - Refine the public UI so non-engineers can understand planning fields without reading internal terminology.

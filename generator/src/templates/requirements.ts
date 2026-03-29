@@ -9,6 +9,9 @@ export function generateRequirements(brief: ProjectBrief): string {
   const signals = inferBriefSignals(brief);
   const pipelineStages = inferPipelineStages(brief);
   const adoptedDependencies = summarizeDependencyNames(brief, 'adopted');
+  const hasFrameworkSignal = tech.domains.includes('web')
+    || tech.frameworks.length > 0
+    || planning.tech_decisions.some((item) => item.topic === 'Framework');
 
   const frameworkLine = tech.frameworks.length > 0
     ? `- Frameworks: ${tech.frameworks.join(', ')}\n`
@@ -114,13 +117,13 @@ export function generateRequirements(brief: ProjectBrief): string {
   const knownTbdLines = [
     project.owner.trim() ? null : '- Project owner is still TBD.',
     tech.domains.length > 0 ? null : '- Technical domain is still TBD.',
-    tech.frameworks.length > 0 ? null : '- Framework choice is still TBD.',
+    hasFrameworkSignal && tech.frameworks.length === 0 ? '- Framework choice is still TBD.' : null,
     ...planning.tech_decisions
       .filter((item) => item.status === 'open' && item.topic.trim())
-      .slice(0, 3)
+      .slice(0, 5)
       .map((item) => `- Open decision: ${item.topic}${item.choice ? ` -> ${item.choice}` : ''}.`),
     ...getDependenciesByStatus(brief, 'open')
-      .slice(0, 3)
+      .slice(0, 5)
       .map((item) => `- Open dependency: ${item.name} (${item.category}).`),
   ].filter(Boolean) as string[];
 

@@ -172,6 +172,38 @@ const PYTHON_CLI_TTS_BRIEF = {
         decision_date: '',
         notes: '',
       },
+      {
+        topic: 'Runtime mode',
+        choice: 'リアルタイム対応',
+        status: 'open' as const,
+        rationale: 'Need to decide whether realtime synthesis is in scope.',
+        decision_date: '',
+        notes: '',
+      },
+      {
+        topic: 'Unity handoff',
+        choice: 'Unity連携方式',
+        status: 'open' as const,
+        rationale: 'Need to define how Unity receives generated audio.',
+        decision_date: '',
+        notes: '',
+      },
+      {
+        topic: 'Licensing',
+        choice: '商用利用条件',
+        status: 'open' as const,
+        rationale: 'Need to confirm commercial usage constraints.',
+        decision_date: '',
+        notes: '',
+      },
+      {
+        topic: 'Operator interface',
+        choice: 'CLI / UI の優先度',
+        status: 'open' as const,
+        rationale: 'Need to decide whether a UI is required before release.',
+        decision_date: '',
+        notes: '',
+      },
     ],
     external_dependencies: [
       {
@@ -391,10 +423,19 @@ describe('generator — single-repo', () => {
     expect(requirements).toContain('Irodori-TTS');
     expect(requirements).toContain('License or usage terms are reviewed for adopted dependencies before release.');
     expect(requirements).toContain('Open decision: Post-processing library.');
+    expect(requirements).toContain('Open decision: Runtime mode -> リアルタイム対応.');
+    expect(requirements).toContain('Open decision: Unity handoff -> Unity連携方式.');
+    expect(requirements).toContain('Open decision: Licensing -> 商用利用条件.');
+    expect(requirements).toContain('Open decision: Operator interface -> CLI / UI の優先度.');
     expect(requirements).toContain('Open dependency: wav post-processing library (oss).');
+    expect(requirements).not.toContain('Framework choice is still TBD.');
 
     expect(roadmap).toContain('Resolve the highest-risk open planning items first');
     expect(roadmap).toContain('Resolve Post-processing library');
+    expect(roadmap).toContain('Resolve Runtime mode -> リアルタイム対応.');
+    expect(roadmap).toContain('Resolve Unity handoff -> Unity連携方式.');
+    expect(roadmap).toContain('Resolve Licensing -> 商用利用条件.');
+    expect(roadmap).toContain('Resolve Operator interface -> CLI / UI の優先度.');
     expect(roadmap).toContain('Implement the first working pipeline: parameter preparation -> synthesis / generation -> post-processing / export.');
     expect(roadmap).toContain('Integrate adopted dependencies needed for the first workflow: Irodori-TTS.');
     expect(roadmap).toContain('Verify synthesis parameters, output format, and post-processing quality gates.');
