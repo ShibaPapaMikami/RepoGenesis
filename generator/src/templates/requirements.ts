@@ -1,6 +1,6 @@
 import type { ProjectBrief } from '../schema';
 import { getDependenciesByStatus } from '../planning';
-import { inferBriefSignals, inferPipelineStages, summarizeDependencyNames } from '../templateSignals';
+import { inferBriefSignals, inferPipelineStages, summarizeCoreFeatures, summarizeDependencyNames } from '../templateSignals';
 import { formatDomains, formatOwner, formatProjectDescription } from '../templateDisplay';
 
 export function generateRequirements(brief: ProjectBrief): string {
@@ -8,6 +8,7 @@ export function generateRequirements(brief: ProjectBrief): string {
   const planning = brief.planning ?? { tech_decisions: [], external_dependencies: [] };
   const signals = inferBriefSignals(brief);
   const pipelineStages = inferPipelineStages(brief);
+  const coreFeatures = summarizeCoreFeatures(brief);
   const adoptedDependencies = summarizeDependencyNames(brief, 'adopted');
   const hasFrameworkSignal = tech.domains.includes('web')
     || tech.frameworks.length > 0
@@ -78,6 +79,18 @@ export function generateRequirements(brief: ProjectBrief): string {
       title: `R${requirementSections.length + 1}: Keep the processing pipeline explicit and testable`,
       description: `${project.name} must describe and validate the ordered processing stages needed for the first useful output.`,
       criteria,
+    });
+  }
+
+  if (coreFeatures.length > 0) {
+    requirementSections.push({
+      title: `R${requirementSections.length + 1}: Preserve the differentiating workflow features`,
+      description: `${project.name} must keep the project-specific features that make the first workflow valuable explicit from the first release.`,
+      criteria: [
+        `The first release preserves these differentiating features: ${coreFeatures.join(', ')}.`,
+        'Each feature is mapped to code, configuration, or acceptance checks rather than being left as a generic quality goal.',
+        'Feature-specific behavior is documented close to the first workflow so implementation and review use the same language.',
+      ],
     });
   }
 

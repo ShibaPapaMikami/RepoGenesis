@@ -7,6 +7,40 @@ const AUDIO_PATTERN = /\baudio\b|\bvoice\b|\bspeech\b|\bwav\b|\bmp3\b|音声/i;
 const UNITY_PATTERN = /\bunity\b|ユニティ/i;
 const PIPELINE_PATTERN = /pipeline|パイプライン|前処理|後処理|post[- ]?process|post[- ]?processing|pre[- ]?process|pre[- ]?processing/i;
 const TUNABLE_PARAMETER_PATTERN = /pitch|speed|rate|tempo|breath|break|prosody|emotion|感情|パラメータ/i;
+const EXPLICIT_PIPELINE_TOPIC_PATTERN = /core workflow architecture|workflow architecture|pipeline architecture/i;
+const CORE_FEATURE_TOPIC_PATTERN = /core feature/i;
+
+function splitListChoice(choice: string): string[] {
+  return choice
+    .split(/\s*(?:、|,|\/|・|\band\b|\n)\s*/i)
+    .map((item) => item.trim().replace(/^[-*]\s*/, '').replace(/[.)。]+$/, ''))
+    .filter(Boolean);
+}
+
+function extractPlanningChoiceValues(
+  brief: ProjectBrief,
+  topicPattern: RegExp,
+  statuses: Array<ProjectBrief['planning']['tech_decisions'][number]['status']> = ['adopted', 'candidate'],
+): string[] {
+  const planning = brief.planning ?? { tech_decisions: [], external_dependencies: [] };
+  return planning.tech_decisions
+    .filter((item) => statuses.includes(item.status) && topicPattern.test(item.topic) && item.choice.trim())
+    .map((item) => item.choice.trim());
+}
+
+function extractExplicitPipelineStages(brief: ProjectBrief): string[] {
+  const pipelineChoices = extractPlanningChoiceValues(brief, EXPLICIT_PIPELINE_TOPIC_PATTERN);
+  for (const choice of pipelineChoices) {
+    if (!/(->|→|⇒|=>)/.test(choice)) continue;
+    const stages = choice
+      .replace(/\s*(?:→|⇒|=>)\s*/g, ' -> ')
+      .split(/\s*->\s*/)
+      .map((stage) => stage.trim().replace(/^[-*]\s*/, '').replace(/[.)。]+$/, ''))
+      .filter(Boolean);
+    if (stages.length > 1) return stages;
+  }
+  return [];
+}
 
 export interface BriefSignals {
   hasAi: boolean;
@@ -61,6 +95,11 @@ export function inferBriefSignals(brief: ProjectBrief): BriefSignals {
 }
 
 export function inferPipelineStages(brief: ProjectBrief): string[] {
+  const explicitStages = extractExplicitPipelineStages(brief);
+  if (explicitStages.length > 0) {
+    return explicitStages;
+  }
+
   const signals = inferBriefSignals(brief);
 
   if (signals.hasTts || signals.hasAudio) {
@@ -80,6 +119,12 @@ export function inferPipelineStages(brief: ProjectBrief): string[] {
   }
 
   return [];
+}
+
+export function summarizeCoreFeatures(brief: ProjectBrief, max = 4): string[] {
+  const features = extractPlanningChoiceValues(brief, CORE_FEATURE_TOPIC_PATTERN)
+    .flatMap((choice) => splitListChoice(choice));
+  return Array.from(new Set(features)).slice(0, max);
 }
 
 export function summarizeDependencyNames(

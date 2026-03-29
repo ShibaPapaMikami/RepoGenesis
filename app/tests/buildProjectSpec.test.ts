@@ -260,27 +260,48 @@ test('buildProjectSpec should feed TTS-style intake into generator-specific docs
 ## RepoGenesis入力候補
 - domain は ai（将来的に unity を追加）
 - primary_language は Python
+- framework は Typer
 - dependency に GitHub上の Irodori-TTS を含む
+- audio processing に librosa / numpy / soundfile を含む
+- architecture は text → emotion parameter generation → TTS synthesis → audio post-processing → wav output
+- core feature は emotion parameter layer / audio post-processing
 - 実行形態は CLI`;
 
   const draft = parseConsultationIntake(intake, makeState());
   const spec = buildProjectSpec(draft.suggestedState);
   const files = generateFromSpec(spec);
   const requirements = files.get('docs/REQUIREMENTS.md') ?? '';
+  const architecture = files.get('docs/ARCHITECTURE.md') ?? '';
   const roadmap = files.get('docs/ROADMAP.md') ?? '';
 
   assert.deepEqual(spec.tech.domains, ['ai', 'unity', 'cli']);
   assert.equal(spec.tech.primary_language, 'python');
-  assert.deepEqual(spec.tech.frameworks, []);
+  assert.deepEqual(spec.tech.frameworks, ['Typer']);
   assert.equal(
     spec.planning.external_dependencies.some((item) =>
       item.name === 'Aratako/Irodori-TTS' && item.status === 'adopted'),
     true,
   );
-  assert.equal(requirements.includes('R4: Provide a stable operator-facing CLI contract'), true);
-  assert.equal(requirements.includes('R5: Integrate adopted external dependencies intentionally'), true);
+  assert.equal(
+    spec.planning.external_dependencies.some((item) =>
+      item.name === 'librosa' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(requirements.includes('R4: Preserve the differentiating workflow features'), true);
+  assert.equal(requirements.includes('R5: Provide a stable operator-facing CLI contract'), true);
+  assert.equal(requirements.includes('R6: Integrate adopted external dependencies intentionally'), true);
   assert.equal(requirements.includes('Aratako/Irodori-TTS'), true);
+  assert.equal(requirements.includes('emotion parameter layer'), true);
+  assert.equal(
+    roadmap.includes('Implement the first working pipeline: text -> emotion parameter generation -> TTS synthesis -> audio post-processing -> wav output.'),
+    true,
+  );
+  assert.equal(architecture.includes('## First Workflow Shape'), true);
+  assert.equal(architecture.includes('emotion parameter layer'), true);
   assert.equal(requirements.includes('Framework choice is still TBD.'), false);
   assert.equal(roadmap.includes('Resolve the highest-risk open planning items'), true);
-  assert.equal(roadmap.includes('Integrate adopted dependencies needed for the first workflow: Aratako/Irodori-TTS.'), true);
+  assert.equal(
+    roadmap.includes('Integrate adopted dependencies needed for the first workflow: Aratako/Irodori-TTS, librosa, numpy, soundfile.'),
+    true,
+  );
 });

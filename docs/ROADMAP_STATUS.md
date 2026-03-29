@@ -119,6 +119,8 @@ Phase 6 / Hardening
 - `未確定事項` は open planning item へ橋渡しされ、generated `ROADMAP.md` Phase 1 goals と `REQUIREMENTS.md` Known TBDs に実際の未解決論点が出るようになった。
 - intake hardening は `environment=local` / `FastAPI candidate` / `Data sensitivity boundary` も planning に反映し、pipeline-heavy CLI briefs で stale な `Framework choice is still TBD.` を出しにくくした。
 - generator は open planning items を 5 件まで `REQUIREMENTS.md` / `ROADMAP.md` へ反映し、Phase 1 の unresolved work が bullet 単位で読みやすくなった。
+- intake hardening は `framework=Typer`、`audio processing`、`architecture`、`core feature` も structured planning として保持し、`dependency に GitHub上の ... を含む` を `github_repo` へ正規化できるようになった。
+- generator は explicit workflow architecture と differentiating core features を `REQUIREMENTS.md` / `ARCHITECTURE.md` / tool guidance に反映し、TTS/CLI briefs の project-specific value を generic text に落としにくくした。
 
 ## What This Phase Still Needs
 - Refine the public UI so non-engineers can understand planning fields without reading internal terminology.

@@ -34,11 +34,16 @@ export function generateToolGuidance(
   const wrapperFile = getToolWrapperFile(tool);
   const providerSpecificLine = PROVIDER_SPECIFIC_LINES[tool];
   const signals = inferBriefSignals(brief);
+  const hasTyperFramework = brief.tech.frameworks.some((framework) => /typer/i.test(framework))
+    || (brief.planning?.tech_decisions ?? []).some((item) => /framework/i.test(item.topic) && /typer/i.test(item.choice));
   const domainSpecificLines = [
     signals.hasCli
       ? '- Treat the CLI contract as first-class: keep command examples, flags, exit behavior, and output locations explicit.'
       : null,
-    signals.hasCli && brief.tech.primary_language === 'python'
+    signals.hasCli && brief.tech.primary_language === 'python' && hasTyperFramework
+      ? '- For Python CLI projects using `Typer`, keep command groups, help text, option types, and generated CLI help aligned with the documented contract.'
+      : null,
+    signals.hasCli && brief.tech.primary_language === 'python' && !hasTyperFramework
       ? '- For Python CLI projects, prefer `pyproject.toml` and default to `argparse` unless a richer subcommand tree is clearly justified.'
       : null,
     signals.hasPipeline

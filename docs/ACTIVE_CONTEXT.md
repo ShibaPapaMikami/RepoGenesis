@@ -72,6 +72,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - explicit `RepoGenesis入力候補` を優先して `domains` / `primary_language` / `CLI` signal を suggested state に反映し、stale `typescript` / `React` 既定値を引きずりにくくした
   - `参考実装・関連リンク` の GitHub URL と依存ヒントを planning の adopted dependency へ寄せ、`未確定事項` は open planning item に変換して generated `REQUIREMENTS.md` / `ROADMAP.md` に反映されるようにした
   - `environment=local` / `FastAPI candidate` / `Data sensitivity boundary` も planning へ落とし、generator 側は open item を 5 件まで docs に反映するようにして、CLI/TTS 系 brief の取りこぼしをさらに減らした
+  - `framework=Typer`、`audio processing`、`architecture`、`core feature` を structured planning に昇格し、explicit pipeline / differentiating features を generated `REQUIREMENTS.md` / `ARCHITECTURE.md` / wrapper guidance に流し込めるようにした
   - `責任者` と `技術ドメイン` は AI-first flow では blocking validation から外した
   - `技術ドメイン` 未確定は warning 扱いで ZIP を止めないようにした
   - skill layer contract を provider-aware に更新し、Codex / Claude Code / Gemini CLI を並列で扱う設計に整理した

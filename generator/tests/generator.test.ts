@@ -154,7 +154,7 @@ const PYTHON_CLI_TTS_BRIEF = {
     ...SINGLE_BRIEF.tech,
     domains: ['ai', 'cli', 'unity'],
     primary_language: 'python' as const,
-    frameworks: [],
+    frameworks: ['Typer'],
     ai_tools: ['claude_code'],
     ai_tool: 'claude_cli' as const,
     ai_tool_detail: '',
@@ -164,6 +164,30 @@ const PYTHON_CLI_TTS_BRIEF = {
   },
   planning: {
     tech_decisions: [
+      {
+        topic: 'Core workflow architecture',
+        choice: 'text -> emotion parameter generation -> TTS synthesis -> audio post-processing -> wav output',
+        status: 'adopted' as const,
+        rationale: 'The first useful workflow is explicitly defined as a pipeline.',
+        decision_date: '2026-03-29',
+        notes: '',
+      },
+      {
+        topic: 'Core feature',
+        choice: 'emotion parameter layer',
+        status: 'adopted' as const,
+        rationale: 'Emotion shaping is one of the key differentiators for the first release.',
+        decision_date: '2026-03-29',
+        notes: '',
+      },
+      {
+        topic: 'Core feature',
+        choice: 'audio post-processing',
+        status: 'adopted' as const,
+        rationale: 'Post-processing is required to reach the intended audio quality.',
+        decision_date: '2026-03-29',
+        notes: '',
+      },
       {
         topic: 'Post-processing library',
         choice: '',
@@ -214,6 +238,42 @@ const PYTHON_CLI_TTS_BRIEF = {
         owner: 'Audio Team',
         source: 'https://github.com/example/irodori-tts',
         license: 'Custom',
+        env_vars: [],
+        data_outbound: false,
+        notes: '',
+      },
+      {
+        name: 'librosa',
+        category: 'oss' as const,
+        status: 'adopted' as const,
+        purpose: 'Audio feature extraction and post-processing support',
+        owner: 'Audio Team',
+        source: 'https://librosa.org/',
+        license: 'ISC',
+        env_vars: [],
+        data_outbound: false,
+        notes: '',
+      },
+      {
+        name: 'numpy',
+        category: 'oss' as const,
+        status: 'adopted' as const,
+        purpose: 'Core numeric processing for parameter and waveform operations',
+        owner: 'Audio Team',
+        source: 'https://numpy.org/',
+        license: 'BSD-3-Clause',
+        env_vars: [],
+        data_outbound: false,
+        notes: '',
+      },
+      {
+        name: 'soundfile',
+        category: 'oss' as const,
+        status: 'adopted' as const,
+        purpose: 'Read and write wav artifacts for the first release',
+        owner: 'Audio Team',
+        source: 'https://python-soundfile.readthedocs.io/',
+        license: 'BSD-3-Clause',
         env_vars: [],
         data_outbound: false,
         notes: '',
@@ -413,14 +473,21 @@ describe('generator — single-repo', () => {
     const result = generate({ inputPath, outputPath: tmpDir, force: true });
 
     const requirements = fs.readFileSync(path.join(result.outputDir, 'docs/REQUIREMENTS.md'), 'utf-8');
+    const architecture = fs.readFileSync(path.join(result.outputDir, 'docs/ARCHITECTURE.md'), 'utf-8');
     const roadmap = fs.readFileSync(path.join(result.outputDir, 'docs/ROADMAP.md'), 'utf-8');
 
     expect(requirements).toContain('### R3: Keep the processing pipeline explicit and testable');
-    expect(requirements).toContain('parameter preparation -> synthesis / generation -> post-processing / export');
+    expect(requirements).toContain('text -> emotion parameter generation -> TTS synthesis -> audio post-processing -> wav output');
     expect(requirements).toContain('Audio-related parameters and output format requirements are documented');
-    expect(requirements).toContain('### R4: Provide a stable operator-facing CLI contract');
-    expect(requirements).toContain('### R5: Integrate adopted external dependencies intentionally');
+    expect(requirements).toContain('### R4: Preserve the differentiating workflow features');
+    expect(requirements).toContain('emotion parameter layer');
+    expect(requirements).toContain('audio post-processing');
+    expect(requirements).toContain('### R5: Provide a stable operator-facing CLI contract');
+    expect(requirements).toContain('### R6: Integrate adopted external dependencies intentionally');
     expect(requirements).toContain('Irodori-TTS');
+    expect(requirements).toContain('librosa');
+    expect(requirements).toContain('numpy');
+    expect(requirements).toContain('soundfile');
     expect(requirements).toContain('License or usage terms are reviewed for adopted dependencies before release.');
     expect(requirements).toContain('Open decision: Post-processing library.');
     expect(requirements).toContain('Open decision: Runtime mode -> リアルタイム対応.');
@@ -429,6 +496,11 @@ describe('generator — single-repo', () => {
     expect(requirements).toContain('Open decision: Operator interface -> CLI / UI の優先度.');
     expect(requirements).toContain('Open dependency: wav post-processing library (oss).');
     expect(requirements).not.toContain('Framework choice is still TBD.');
+    expect(architecture).toContain('## First Workflow Shape');
+    expect(architecture).toContain('1. text');
+    expect(architecture).toContain('emotion parameter layer');
+    expect(architecture).toContain('audio post-processing');
+    expect(architecture).toContain('Typer');
 
     expect(roadmap).toContain('Resolve the highest-risk open planning items first');
     expect(roadmap).toContain('Resolve Post-processing library');
@@ -436,8 +508,8 @@ describe('generator — single-repo', () => {
     expect(roadmap).toContain('Resolve Unity handoff -> Unity連携方式.');
     expect(roadmap).toContain('Resolve Licensing -> 商用利用条件.');
     expect(roadmap).toContain('Resolve Operator interface -> CLI / UI の優先度.');
-    expect(roadmap).toContain('Implement the first working pipeline: parameter preparation -> synthesis / generation -> post-processing / export.');
-    expect(roadmap).toContain('Integrate adopted dependencies needed for the first workflow: Irodori-TTS.');
+    expect(roadmap).toContain('Implement the first working pipeline: text -> emotion parameter generation -> TTS synthesis -> audio post-processing -> wav output.');
+    expect(roadmap).toContain('Integrate adopted dependencies needed for the first workflow: Irodori-TTS, librosa, numpy, soundfile.');
     expect(roadmap).toContain('Verify synthesis parameters, output format, and post-processing quality gates.');
     expect(roadmap).not.toContain('Define concrete goals for this phase before implementation starts.');
   });
@@ -470,7 +542,7 @@ describe('generator — single-repo', () => {
     const claude = fs.readFileSync(path.join(result.outputDir, 'CLAUDE.md'), 'utf-8');
 
     expect(claude).toContain('Treat the CLI contract as first-class');
-    expect(claude).toContain('prefer `pyproject.toml` and default to `argparse`');
+    expect(claude).toContain('using `Typer`');
     expect(claude).toContain('Keep the first processing pipeline explicit end to end');
     expect(claude).toContain('Keep the Unity integration boundary explicit');
   });

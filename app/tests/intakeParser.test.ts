@@ -552,8 +552,12 @@ test('parseConsultationIntake should treat explicit candidate inputs as authorit
 ## RepoGenesis入力候補
 - domain は ai（将来的に unity を追加）
 - primary_language は Python
+- framework は Typer
 - environment は local（Mac想定）
 - dependency に GitHub上の Irodori-TTS を含む
+- audio processing に librosa / numpy / soundfile を含む
+- architecture は text → emotion parameter generation → TTS synthesis → audio post-processing → wav output
+- core feature は emotion parameter layer / audio post-processing
 - 実行形態は CLI
 - 将来API化する場合は FastAPI が候補
 - security は low〜medium（社内利用想定）`;
@@ -563,10 +567,15 @@ test('parseConsultationIntake should treat explicit candidate inputs as authorit
 
   assert.deepEqual(draft.suggestedState.tech.domains, ['ai', 'unity', 'cli']);
   assert.equal(draft.suggestedState.tech.primary_language, 'python');
-  assert.deepEqual(draft.suggestedState.tech.frameworks, []);
+  assert.deepEqual(draft.suggestedState.tech.frameworks, ['Typer']);
   assert.equal(
     planning.tech_decisions.some((item) =>
       item.topic === 'Primary language' && item.choice === 'python' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'Framework' && item.choice === 'Typer' && item.status === 'adopted'),
     true,
   );
   assert.equal(
@@ -579,6 +588,38 @@ test('parseConsultationIntake should treat explicit candidate inputs as authorit
       && item.category === 'github_repo'
       && item.status === 'adopted'
       && item.source === 'https://github.com/Aratako/Irodori-TTS'),
+    true,
+  );
+  assert.equal(
+    planning.external_dependencies.some((item) =>
+      item.name === 'librosa' && item.category === 'oss' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    planning.external_dependencies.some((item) =>
+      item.name === 'numpy' && item.category === 'oss' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    planning.external_dependencies.some((item) =>
+      item.name === 'soundfile' && item.category === 'oss' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'Core workflow architecture'
+      && item.choice === 'text -> emotion parameter generation -> TTS synthesis -> audio post-processing -> wav output'
+      && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'Core feature' && item.choice === 'emotion parameter layer' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'Core feature' && item.choice === 'audio post-processing' && item.status === 'adopted'),
     true,
   );
   assert.equal(

@@ -26,6 +26,9 @@ type StructuredHintKey =
   | 'domains'
   | 'language'
   | 'framework'
+  | 'architecture'
+  | 'core_feature'
+  | 'audio_processing'
   | 'database'
   | 'storage'
   | 'db_storage'
@@ -210,6 +213,9 @@ function normalizeStructuredHintKey(label: string): StructuredHintKey | null {
   if (/^(domain|domains|技術ドメイン)$/.test(normalized)) return 'domains';
   if (/^(language|primary language|primary_language|言語)$/.test(normalized)) return 'language';
   if (/^(framework|frameworks|フレームワーク)$/.test(normalized)) return 'framework';
+  if (/^(architecture|workflow architecture|pipeline architecture|処理構造|処理フロー|処理パイプライン|アーキテクチャ)$/.test(normalized)) return 'architecture';
+  if (/^(core feature|core features|key feature|key features|主要機能|コア機能)$/.test(normalized)) return 'core_feature';
+  if (/^(audio processing|audio processing library|audio processing libraries|audio dependencies|audio stack|音声処理|音声処理ライブラリ|音声処理依存)$/.test(normalized)) return 'audio_processing';
   if (/^(db|database|データベース)$/.test(normalized)) return 'database';
   if (/^(storage|ストレージ|ファイル保存|file保存)$/.test(normalized)) return 'storage';
   if (/^(db\/storage|database\/storage)$/.test(normalized)) return 'db_storage';
@@ -492,6 +498,17 @@ function extractImplicitDecisionHints(
 ) {
   const status = normalizeStatus(line, fallbackStatus);
 
+  if (/\btyper\b/i.test(line)) {
+    mergeDecision(decisionBucket, {
+      topic: 'Framework',
+      choice: 'Typer',
+      status,
+      rationale: line,
+      decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+      notes: '',
+    });
+  }
+
   if (/fastapi/i.test(line)) {
     mergeDecision(decisionBucket, {
       topic: 'API framework',
@@ -504,29 +521,52 @@ function extractImplicitDecisionHints(
   }
 }
 
+function normalizeStructuredValue(value: string): string {
+  return value
+    .trim()
+    .replace(/\s*(を|が|に)?\s*(採用|利用|使用)(する|したい|予定)?$/u, '')
+    .replace(/\s*(を|が|に)?\s*想定(する|したい|です)?$/u, '')
+    .replace(/\s*(が|は)\s*候補(です)?$/u, '')
+    .replace(/\s*(は|が)\s*未確定(です)?$/u, '')
+    .replace(/\s*(を|が)?\s*必須(です)?$/u, '')
+    .replace(/\s*(を|に)?\s*含む(こと)?$/u, '')
+    .replace(/\s*(を|に)?\s*追加(する|したい|予定)?$/u, '')
+    .replace(/\s*(を|に)?\s*入れる(こと)?$/u, '')
+    .trim();
+}
+
+function splitStructuredListValue(value: string): string[] {
+  return value
+    .split(/\s*(?:、|,|\/|・|\band\b|\n)\s*/i)
+    .map((item) => item.trim().replace(/^[-*]\s*/, '').replace(/[.)。]+$/, ''))
+    .filter(Boolean);
+}
+
 function parseStructuredLine(line: string): { key: StructuredHintKey; value: string } | null {
   const colonMatch = line.match(/^([^:：]{2,80})[:：]\s*(.+)$/);
   if (colonMatch) {
     const key = normalizeStructuredHintKey(colonMatch[1]);
-    const value = colonMatch[2].trim();
+    const value = normalizeStructuredValue(colonMatch[2]);
     if (key && value) return { key, value };
   }
 
   const waMatch = line.match(/^(.{2,80}?)\s*は\s*(.+)$/u);
-  if (!waMatch) return null;
+  if (waMatch) {
+    const key = normalizeStructuredHintKey(waMatch[1]);
+    if (!key) return null;
 
-  const key = normalizeStructuredHintKey(waMatch[1]);
+    const value = normalizeStructuredValue(waMatch[2]);
+    if (!value) return null;
+    return { key, value };
+  }
+
+  const niMatch = line.match(/^(.{2,80}?)\s*に\s*(.+)$/u);
+  if (!niMatch) return null;
+
+  const key = normalizeStructuredHintKey(niMatch[1]);
   if (!key) return null;
 
-  const value = waMatch[2]
-    .trim()
-    .replace(/\s*(を|が)?\s*(採用|利用|使用)(する|したい|予定)?$/u, '')
-    .replace(/\s*(を|が)?\s*想定(する|したい|です)?$/u, '')
-    .replace(/\s*(が|は)\s*候補(です)?$/u, '')
-    .replace(/\s*(は|が)\s*未確定(です)?$/u, '')
-    .replace(/\s*(を|が)?\s*必須(です)?$/u, '')
-    .trim();
-
+  const value = normalizeStructuredValue(niMatch[2]);
   if (!value) return null;
   return { key, value };
 }
@@ -753,6 +793,7 @@ function extractStructuredHints(
   decisionBucket: Map<string, TechDecisionItem>,
   dependencyBucket: Map<string, ExternalDependencyItem>,
   fallbackStatus: TechDecisionStatus,
+  referenceRepoIndex: Map<string, ReferenceRepoMatch>,
 ): boolean {
   const parsed = parseStructuredLine(line);
   if (!parsed) return false;
@@ -798,6 +839,25 @@ function extractStructuredHints(
       return true;
     }
     case 'dependency': {
+      const referencedRepos = new Map<string, ReferenceRepoMatch>();
+      for (const repo of resolveNamedReferenceRepos(line, referenceRepoIndex)) {
+        referencedRepos.set(repo.name.toLowerCase(), repo);
+      }
+      for (const repoName of extractMentionedGithubRepoNames(line)) {
+        const indexed = referenceRepoIndex.get(repoName.toLowerCase());
+        const normalizedName = indexed?.name ?? repoName;
+        referencedRepos.set(normalizedName.toLowerCase(), {
+          name: normalizedName,
+          source: indexed?.source ?? '',
+        });
+      }
+      if (referencedRepos.size > 0) {
+        for (const repo of referencedRepos.values()) {
+          addGithubDependency(dependencyBucket, decisionBucket, repo, line, status);
+        }
+        return true;
+      }
+
       const category: DependencyCategory = /^https?:\/\/github\.com\//i.test(value)
         ? 'github_repo'
         : /^[a-z0-9][a-z0-9._/-]+$/i.test(value)
@@ -819,6 +879,46 @@ function extractStructuredHints(
         notes: '',
       });
       return true;
+    case 'architecture':
+      mergeDecision(decisionBucket, {
+        topic: 'Core workflow architecture',
+        choice: value.replace(/\s*(?:→|⇒|=>)\s*/g, ' -> '),
+        status,
+        rationale: line,
+        decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+        notes: '',
+      });
+      return true;
+    case 'core_feature':
+      for (const feature of splitStructuredListValue(value)) {
+        mergeDecision(decisionBucket, {
+          topic: 'Core feature',
+          choice: feature,
+          status,
+          rationale: line,
+          decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+          notes: '',
+        });
+      }
+      return true;
+    case 'audio_processing': {
+      const libraries = splitStructuredListValue(value);
+      if (libraries.length === 0) return true;
+
+      mergeDecision(decisionBucket, {
+        topic: 'Audio processing stack',
+        choice: libraries.join(', '),
+        status,
+        rationale: line,
+        decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+        notes: '',
+      });
+
+      for (const library of libraries) {
+        addStructuredDependency(dependencyBucket, decisionBucket, library, 'oss', status, line, 'Audio processing');
+      }
+      return true;
+    }
     case 'language':
       mergeDecision(decisionBucket, {
         topic: 'Primary language',
@@ -925,7 +1025,7 @@ export function derivePlanningSuggestions(input: PlanningSuggestionInput): FormS
   const referenceRepoIndex = buildReferenceRepoIndex(referenceLines);
 
   for (const line of candidateLines) {
-    if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'adopted')) continue;
+    if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'adopted', referenceRepoIndex)) continue;
     extractInlineDecision(line, decisionBucket, dependencyBucket, 'adopted');
     extractImplicitDecisionHints(line, decisionBucket, 'adopted');
     extractReferencedGithubDependencies(line, dependencyBucket, decisionBucket, 'adopted', referenceRepoIndex);
@@ -934,7 +1034,7 @@ export function derivePlanningSuggestions(input: PlanningSuggestionInput): FormS
   }
 
   for (const line of externalLines) {
-    if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'candidate')) continue;
+    if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'candidate', referenceRepoIndex)) continue;
     extractInlineDecision(line, decisionBucket, dependencyBucket, 'candidate');
     extractImplicitDecisionHints(line, decisionBucket, 'candidate');
     extractReferencedGithubDependencies(line, dependencyBucket, decisionBucket, 'candidate', referenceRepoIndex);
@@ -949,7 +1049,7 @@ export function derivePlanningSuggestions(input: PlanningSuggestionInput): FormS
   }
 
   for (const line of openQuestionLines) {
-    if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'open')) continue;
+    if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'open', referenceRepoIndex)) continue;
     extractInlineDecision(line, decisionBucket, dependencyBucket, 'open');
     extractImplicitDecisionHints(line, decisionBucket, 'open');
     extractOpenQuestionHints(line, decisionBucket, dependencyBucket, referenceRepoIndex);
@@ -958,7 +1058,7 @@ export function derivePlanningSuggestions(input: PlanningSuggestionInput): FormS
   }
 
   for (const line of combinedLines) {
-    if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'candidate')) continue;
+    if (extractStructuredHints(line, decisionBucket, dependencyBucket, 'candidate', referenceRepoIndex)) continue;
     extractInlineDecision(line, decisionBucket, dependencyBucket, 'candidate');
     extractImplicitDecisionHints(line, decisionBucket, 'candidate');
     extractReferencedGithubDependencies(line, dependencyBucket, decisionBucket, 'candidate', referenceRepoIndex);

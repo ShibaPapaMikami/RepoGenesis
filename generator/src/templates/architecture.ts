@@ -1,11 +1,14 @@
 import type { ProjectBrief } from '../schema';
 import { getAdoptedDependencyBulletLines, getAdoptedTechBulletLines } from '../planning';
+import { inferPipelineStages, summarizeCoreFeatures } from '../templateSignals';
 import { formatDomains, formatOwner } from '../templateDisplay';
 
 export function generateArchitecture(brief: ProjectBrief): string {
   const { project, tech, structure } = brief;
   const adoptedDecisions = getAdoptedTechBulletLines(brief);
   const adoptedDependencies = getAdoptedDependencyBulletLines(brief);
+  const pipelineStages = inferPipelineStages(brief);
+  const coreFeatures = summarizeCoreFeatures(brief);
 
   const frameworkLine = tech.frameworks.length > 0
     ? `- Frameworks: ${tech.frameworks.join(', ')}\n`
@@ -32,9 +35,14 @@ ${repoLines}`;
     ? `${project.name} starts as a single-repository project focused on the first usable workflow. The architecture should keep product logic, planning docs, security rules, and release traceability close together until the system proves it needs further separation.`
     : `${project.name} starts as a multi-repository workspace so each major responsibility can evolve with a clear boundary. Workspace-level docs define shared rules, while repository-level docs define local architecture and execution details.`;
 
+  const differentiators = coreFeatures.length > 0
+    ? ` The first release should preserve these differentiating features explicitly: ${coreFeatures.join(', ')}.`
+    : '';
+
   const keyComponents = structure.repo_type === 'single'
     ? [
         `- **Core product workflow**: the main implementation for ${project.name}, built in \`${tech.primary_language}\` and expanded from the generated starter repository.`,
+        ...coreFeatures.map((feature) => `- **Differentiating feature**: ${feature} stays explicit in the first workflow, not implicit in generic quality language.`),
         `- **Documentation and planning layer**: \`PROJECT.md\`, \`docs/REQUIREMENTS.md\`, \`docs/ACTIVE_CONTEXT.md\`, and \`docs/ROADMAP.md\` hold current truth and execution context.`,
         `- **Security and configuration layer**: \`SECURITY.md\` and \`.env.example\` define setup boundaries and secret-handling expectations.`,
         `- **Version traceability layer**: \`docs/VERSIONING_STANDARD.md\` and \`.repogenesis/manifest.json\` define how release and commit identity should be exposed.`,
@@ -46,12 +54,20 @@ ${repoLines}`;
       ].join('\n');
 
   const dataFlow = structure.repo_type === 'single'
-    ? [
-        `1. A user or operator starts the primary workflow described for ${project.name}.`,
-        `2. The application validates and transforms inputs using the core ${tech.primary_language} codebase.`,
-        '3. Domain-specific processing runs inside the same repository with shared docs and security rules nearby.',
-        '4. Outputs are returned to the user, persisted by the application, or documented for the next phase of work.',
-      ].join('\n')
+    ? pipelineStages.length > 0
+      ? pipelineStages
+        .map((stage, index) => {
+          if (index === 0) return `1. The first workflow starts with \`${stage}\`.`;
+          if (index === pipelineStages.length - 1) return `${index + 1}. The system emits the first usable result through \`${stage}\`.`;
+          return `${index + 1}. The workflow advances through \`${stage}\` before moving to the next stage.`;
+        })
+        .join('\n')
+      : [
+          `1. A user or operator starts the primary workflow described for ${project.name}.`,
+          `2. The application validates and transforms inputs using the core ${tech.primary_language} codebase.`,
+          '3. Domain-specific processing runs inside the same repository with shared docs and security rules nearby.',
+          '4. Outputs are returned to the user, persisted by the application, or documented for the next phase of work.',
+        ].join('\n')
     : [
         `1. Inputs enter through one or more workspace repositories for ${project.name}.`,
         '2. Each repository handles its own bounded responsibility and uses declared dependencies for cross-repo interactions.',
@@ -91,7 +107,10 @@ ${adoptedDecisions.length > 0 ? adoptedDecisions.join('\n') : '- No adopted tech
 ${adoptedDependencies.length > 0 ? adoptedDependencies.join('\n') : '- No adopted external dependencies were captured at generation time.'}
 
 ## Architecture Overview
-${overview}
+${overview}${differentiators}
+
+## First Workflow Shape
+${pipelineStages.length > 0 ? pipelineStages.map((stage, index) => `${index + 1}. ${stage}`).join('\n') : '- The first workflow shape has not been made explicit yet.'}
 
 ## Key Components
 ${keyComponents}
