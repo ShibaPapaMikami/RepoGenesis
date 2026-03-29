@@ -19,6 +19,7 @@ const REFINEMENT_HEADINGS = [
   '最初に作るべきもの',
   '扱うデータ',
   '外部連携候補',
+  '参考実装・関連リンク',
   '未確定事項',
   'RepoGenesis入力候補',
 ] as const;
@@ -111,6 +112,9 @@ ${formatBullets(draft.review.assumptions)}
 
 ### 未確定事項
 ${formatBullets(draft.review.openQuestions)}
+
+### 現在の参考リンク
+${formatBullets(draft.extracted.referenceLinks, '- 未記載')}
 
 ### 現在のフォーム設定
 - project 名: ${state.project.name || '未確定'}

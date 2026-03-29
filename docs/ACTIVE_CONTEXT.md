@@ -1,7 +1,7 @@
 # ACTIVE_CONTEXT.md — Current Project State
 
 ## Last Updated
-2026-03-25
+2026-03-29
 
 ## Current Phase
 Phase 6 — AI-Assisted Spec Authoring (Hardening)
@@ -140,6 +140,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - local loopback host の auth / support debug path は `LOCAL_ADMIN_MODE=enabled` がないと `403` を返すようにし、localhost-only debug access を explicit admin mode に切り出した
   - draft / 最終確認の両方から provider-neutral な要件整理プロンプトを copy / markdown export できるようにし、外部 AI での再相談導線を追加した
   - 相談用 prompt と要件再整理 prompt の両方で ChatGPT / Claude / Gemini を切り替えられるようにし、provider-specific guidance は薄い wrapper として扱うようにした
+  - consultation intake に `参考実装・関連リンク` section を追加し、GitHub リポジトリや実装参考 URL を相談用 prompt / parser / 要件再整理 prompt / draft summary に保持できるようにした
   - options step に AI recommendation の `未確認 / 採用 / 上書き済み` を追加し、repo 構成 / security 水準 / 段階数について user-confirmed override を review まで保持できるようにした
   - `createIntakeEnvelope` を draft 作成導線まで通し、選んだ ChatGPT / Claude / Gemini を provider metadata として `IntakeDraft` に保持するようにした
   - generated output の provider-neutral AI tooling contract として `docs/AI_TOOLING.md` を追加し、single repo / workspace / per-repo の `PROJECT.md`・`ACTIVE_CONTEXT.md`・`prompts/restart.md` から参照するようにした

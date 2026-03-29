@@ -36,6 +36,7 @@
 ### Optional Sections
 - `## 最初に作るべきもの`
 - `## 外部連携候補`
+- `## 参考実装・関連リンク`
 - `## RepoGenesis入力候補`
 
 ### Structured Candidate Hints
@@ -71,6 +72,7 @@
 - `最初に作るべきもの`
 - `扱うデータ`
 - `外部連携候補`
+- `参考実装・関連リンク`
 - `未確定事項`
 - `RepoGenesis入力候補`
 
@@ -93,6 +95,10 @@
 
 ## 外部連携候補
 Slack、Google Drive、将来的には社内DB。
+
+## 参考実装・関連リンク
+- https://github.com/example/internal-sales-dashboard
+- https://ui.shadcn.com/docs/components/data-table
 
 ## 未確定事項
 APIを先に作るべきか、1リポジトリで十分かは未確定。
@@ -132,6 +138,7 @@ type IntakeDraft = {
     firstDeliverable: string | null;
     dataKinds: string[];
     integrations: string[];
+    referenceLinks: string[];
     openQuestions: string[];
     candidateInputs: string[];
   };

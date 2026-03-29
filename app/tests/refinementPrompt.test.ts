@@ -87,6 +87,9 @@ test('buildRequirementRefinementPrompt creates provider-neutral markdown prompt 
 ## 外部連携候補
 - Slack
 
+## 参考実装・関連リンク
+- https://github.com/example/contract-ledger-starter
+
 ## 未確定事項
 - Slack 通知を初回から入れるか未確定
 
@@ -106,6 +109,8 @@ test('buildRequirementRefinementPrompt creates provider-neutral markdown prompt 
   assert.match(prompt, /React \+ Vite/);
   assert.match(prompt, /### 採用済み外部依存/);
   assert.match(prompt, /OPENAI_API_KEY/);
+  assert.match(prompt, /### 現在の参考リンク/);
+  assert.match(prompt, /https:\/\/github.com\/example\/contract-ledger-starter/);
   assert.match(prompt, /## RepoGenesis入力候補/);
 });
 

@@ -1,7 +1,7 @@
 # ROADMAP_STATUS.md — Current Position
 
 ## Last Updated
-2026-03-25
+2026-03-29
 
 ## Roadmap Position
 Phase 6 / Hardening
@@ -69,6 +69,7 @@ Phase 6 / Hardening
 - local loopback host の auth / support debug path は `LOCAL_ADMIN_MODE=enabled` がないと `403` を返すようにし、localhost-only debug access を explicit admin mode に切り出した。
 - draft / 最終確認から外部 AI へ持ち出す provider-neutral な要件整理プロンプトを copy / markdown export できるようにし、相談結果の再整理導線を RepoGenesis UI 内に追加した。
 - 相談用 prompt と要件再整理 prompt の両方で、ChatGPT / Claude / Gemini 向けの guided wrapper を切り替えられるようにし、provider ごとの差分を prompt 本文ではなく薄い wrapper に閉じ込めた。
+- consultation intake に `参考実装・関連リンク` section を追加し、GitHub リポジトリや実装参考 URL を相談用 prompt / parser / 要件再整理 prompt / draft summary に保持できるようにした。
 - repo root に [`render.yaml`](/Users/masafumimikami/Documents/WebApp/RepoGenesis/render.yaml) を追加し、Node 22.17+・`/healthz`・durable disk・support store path を含む Render Blueprint baseline を固定した。
 - `generator/tests/renderBlueprint.test.ts` を追加し、Blueprint baseline の service contract / Node floor / support-store mount path を drift しないようにした。
 - repo root に [`scripts/smoke-deployed-stack.sh`](/Users/masafumimikami/Documents/WebApp/RepoGenesis/scripts/smoke-deployed-stack.sh) を追加し、Render upstream smoke と Vercel app smoke を 1 コマンドで連続実行できるようにした。

@@ -27,6 +27,7 @@ export interface IntakeDraft {
     firstDeliverable: string | null;
     dataKinds: string[];
     integrations: string[];
+    referenceLinks: string[];
     openQuestions: string[];
     candidateInputs: string[];
   };
@@ -131,6 +132,7 @@ const ALL_SECTION_KEYS = [
   '最初に作るべきもの',
   '扱うデータ',
   '外部連携候補',
+  '参考実装・関連リンク',
   '未確定事項',
   'RepoGenesis入力候補',
 ] as const;
@@ -147,6 +149,8 @@ const PROMPT_SKELETON = `## プロジェクト概要
 
 ## 外部連携候補
 
+## 参考実装・関連リンク
+
 ## 未確定事項
 
 ## RepoGenesis入力候補`;
@@ -156,6 +160,7 @@ const PROMPT_OUTPUT_RULES = `出力ルール:
 - 各見出しの本文を最低1行は書いてください。空欄のまま返さないでください。
 - 分からない内容を「未入力」「なし」で埋めないでください。分からない場合は ` + '`## 未確定事項`' + ` に移してください。
 - 箇条書きでも文章でも構いませんが、RepoGenesis に貼り付けやすいように簡潔にしてください。
+- ` + '`## 参考実装・関連リンク`' + ` には、参考にした GitHub リポジトリ、公式ドキュメント、実装記事があれば URL 付きで書いてください。具体リンクがない場合は、その見出しだけ省略して構いません。
 - 前置き、まとめ、注意書きは不要です。出力は見出しブロックだけにしてください。
 - 空欄の見出しを作らず、内容が不明なものは ` + '`## 未確定事項`' + ` にまとめてください。
 
@@ -183,6 +188,10 @@ ${PROMPT_SKELETON}
 
 ## 外部連携候補
 - Slack
+
+## 参考実装・関連リンク
+- https://github.com/example/internal-sales-dashboard
+- https://ui.shadcn.com/docs/components/data-table
 
 ## 未確定事項
 - 外部API連携を初回スコープに含めるか未確定
@@ -275,7 +284,7 @@ function parseSections(input: string): Record<string, string> {
 
   for (const line of lines) {
     const trimmed = line.trim();
-    const headingMatch = trimmed.match(/^(?:#+\s*)?(プロジェクト概要|想定ユーザー|解決したい課題|最初に作るべきもの|扱うデータ|外部連携候補|未確定事項|RepoGenesis入力候補)\s*([:：]\s*(.*))?$/);
+    const headingMatch = trimmed.match(/^(?:#+\s*)?(プロジェクト概要|想定ユーザー|解決したい課題|最初に作るべきもの|扱うデータ|外部連携候補|参考実装・関連リンク|未確定事項|RepoGenesis入力候補)\s*([:：]\s*(.*))?$/);
     if (headingMatch) {
       current = headingMatch[1].trim();
       if (!sections[current]) sections[current] = [];
@@ -312,6 +321,15 @@ function toCandidateList(text: string | undefined): string[] {
     .split('\n')
     .map((line) => line.replace(/^[-*]\s*/, '').trim())
     .filter(Boolean);
+}
+
+function toReferenceList(text: string | undefined): string[] {
+  if (!text) return [];
+  return text
+    .split('\n')
+    .map((line) => line.replace(/^[-*]\s*/, '').trim())
+    .filter(Boolean)
+    .filter((line) => !/^(現時点で具体リンクなし|参考リンクは未整理)$/i.test(line));
 }
 
 function inferDomains(text: string): Domain[] {
@@ -569,6 +587,7 @@ function toFactList(
   firstDeliverable: string | null,
   dataKinds: string[],
   integrations: string[],
+  referenceLinks: string[],
 ): string[] {
   const facts: string[] = [];
   if (summary) facts.push(`概要: ${summary}`);
@@ -577,6 +596,7 @@ function toFactList(
   if (firstDeliverable) facts.push(`最初に作るもの: ${firstDeliverable}`);
   if (dataKinds.length > 0) facts.push(`扱うデータ: ${dataKinds.join(' / ')}`);
   if (integrations.length > 0) facts.push(`外部連携候補: ${integrations.join(' / ')}`);
+  if (referenceLinks.length > 0) facts.push(`参考リンク: ${referenceLinks.join(' / ')}`);
   return facts;
 }
 
@@ -803,6 +823,7 @@ export function parseConsultationIntake(
   const firstDeliverable = sections['最初に作るべきもの'] || null;
   const dataKinds = toList(sections['扱うデータ']);
   const integrations = toList(sections['外部連携候補']);
+  const referenceLinks = toReferenceList(sections['参考実装・関連リンク']);
   const openQuestions = toList(sections['未確定事項']);
   const candidateInputs = toCandidateList(sections['RepoGenesis入力候補']);
   const inferenceText = [
@@ -812,6 +833,7 @@ export function parseConsultationIntake(
     firstDeliverable ?? '',
     dataKinds.join('\n'),
     integrations.join('\n'),
+    referenceLinks.join('\n'),
     candidateInputs.join('\n'),
   ].join('\n');
   const suggestions = deriveDraftSuggestions(currentState, {
@@ -866,7 +888,7 @@ export function parseConsultationIntake(
     rawText,
     sections,
     review: {
-      facts: toFactList(summary, users, problem, firstDeliverable, dataKinds, integrations),
+      facts: toFactList(summary, users, problem, firstDeliverable, dataKinds, integrations, referenceLinks),
       assumptions: toAssumptionList([...new Set(provisional)], suggestions.inferredRepoType, suggestions.inferredPhasesCount),
       openQuestions: toOpenQuestionList([...new Set(unresolved)], openQuestions),
     },
@@ -877,6 +899,7 @@ export function parseConsultationIntake(
       firstDeliverable,
       dataKinds,
       integrations,
+      referenceLinks,
       openQuestions,
       candidateInputs,
     },

@@ -74,6 +74,9 @@ const SAMPLE_INPUT = `## プロジェクト概要
 Slack
 Google Drive
 
+## 参考実装・関連リンク
+- https://github.com/example/internal-sales-dashboard
+
 ## 未確定事項
 1リポジトリで十分かは未確定
 外部APIが本当に必要かは未確定`;
@@ -86,6 +89,7 @@ test('parseConsultationIntake should extract core sections into a draft', () => 
   assert.equal(draft.extracted.problem, '案件ごとの相談履歴と進行状況が分散している');
   assert.equal(draft.extracted.firstDeliverable, '案件一覧と相談履歴を見られる画面');
   assert.deepEqual(draft.extracted.integrations, ['Slack', 'Google Drive']);
+  assert.deepEqual(draft.extracted.referenceLinks, ['https://github.com/example/internal-sales-dashboard']);
   assert.equal(draft.review.facts.some((item) => item.includes('概要: 社内向けのAI活用案件管理ツールを作りたい')), true);
   assert.equal(draft.review.openQuestions.some((item) => item.includes('1リポジトリで十分かは未確定')), true);
 });
@@ -155,6 +159,45 @@ AI で契約を要約する社内ツール
   assert.equal(
     draft.suggestedState.planning.external_dependencies.some((item) =>
       item.name === 'Supabase Storage' && item.category === 'storage' && item.status === 'adopted'),
+    true,
+  );
+});
+
+test('parseConsultationIntake should retain reference links and convert GitHub URLs into planning dependencies', () => {
+  const input = `## プロジェクト概要
+社内向けFAQ整備ツール
+
+## 想定ユーザー
+- CS
+
+## 解決したい課題
+回答テンプレートが散在している
+
+## 最初に作るべきもの
+FAQ一覧と編集画面
+
+## 扱うデータ
+- FAQ本文
+
+## 外部連携候補
+- Slack
+
+## 参考実装・関連リンク
+- https://github.com/example/faq-starter
+- https://example.com/how-to-build-faq
+
+## 未確定事項
+- 権限管理を初回から入れるか未確定`;
+
+  const draft = parseConsultationIntake(input, makeState());
+
+  assert.deepEqual(draft.extracted.referenceLinks, [
+    'https://github.com/example/faq-starter',
+    'https://example.com/how-to-build-faq',
+  ]);
+  assert.equal(
+    draft.suggestedState.planning.external_dependencies.some((item) =>
+      item.name === 'example/faq-starter' && item.category === 'github_repo' && item.source === 'https://github.com/example/faq-starter'),
     true,
   );
 });
@@ -514,6 +557,7 @@ test('getConsultationPromptTemplate should return variant-specific guidance', ()
   assert.equal(/新規事業/.test(businessPrompt), true);
   assert.equal(/個人プロジェクト/.test(personalPrompt), true);
   assert.equal(/## プロジェクト概要/.test(internalPrompt), true);
+  assert.equal(/## 参考実装・関連リンク/.test(internalPrompt), true);
 });
 
 test('getConsultationReviewHints should return variant-specific review points', () => {

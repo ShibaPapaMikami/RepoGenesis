@@ -124,6 +124,16 @@ export function ConsultationSection({
           <p><strong>技術ドメイン候補:</strong> {draft.suggestedState.tech.domains.join(', ') || '未確定'}</p>
           <p><strong>最初に作るべきもの:</strong> {draft.extracted.firstDeliverable || '未記載'}</p>
           <p><strong>外部連携候補:</strong> {draft.extracted.integrations.join(', ') || '未記載'}</p>
+          <p><strong>参考リンク数:</strong> {draft.extracted.referenceLinks.length}</p>
+          {draft.extracted.referenceLinks.length > 0 && (
+            <ul>
+              {draft.extracted.referenceLinks.map((item) => (
+                <li key={item}>
+                  <a href={item} target="_blank" rel="noreferrer">{item}</a>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div className="output-actions">
@@ -234,7 +244,7 @@ export function ConsultationSection({
           onChange={(e) => onChangeText(e.target.value)}
           rows={16}
           aria-describedby={consultationInputHintId}
-          placeholder={'## プロジェクト概要\n...\n\n## 想定ユーザー\n...\n\n## 解決したい課題\n...\n\n## 扱うデータ\n...\n\n## 未確定事項\n...'}
+          placeholder={'## プロジェクト概要\n...\n\n## 想定ユーザー\n...\n\n## 解決したい課題\n...\n\n## 扱うデータ\n...\n\n## 参考実装・関連リンク\n- https://github.com/...\n\n## 未確定事項\n...'}
         />
       </div>
 
