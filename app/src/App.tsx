@@ -1075,7 +1075,7 @@ function App() {
                 onClick={hasSavedProgress ? handleReset : handleStartFresh}
                 className="btn-primary"
               >
-                新規に始める
+                {hasSavedProgress ? 'リセット' : '新規に始める'}
               </button>
             )}
             {guidedStep === 'intro' && hasSavedProgress && (
