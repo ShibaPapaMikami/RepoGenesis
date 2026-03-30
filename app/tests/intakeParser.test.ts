@@ -678,7 +678,7 @@ test('parseConsultationIntake should treat explicit candidate inputs as authorit
 
 test('parseConsultationIntake should parse bullet-style framework hints and dedupe model decisions for distributed audio web briefs', () => {
   const input = `## プロジェクト概要
-ローカル推論（Windows RTX4090）で動作するTTS・リアルタイム会話を統合したWebUI。Macからブラウザ操作可能。音声収録・参照音声・生成音声の管理とノイズ処理を一体化。
+ローカル推論（Windows RTX4090）で動作するTTS・リアルタイム会話を統合したWebUI。Macからブラウザ操作可能。FastAPI で Windows 推論機を制御し、音声収録・参照音声・生成音声の管理とノイズ処理を一体化。
 
 ## 想定ユーザー
 • 音声制作チーム
@@ -706,6 +706,7 @@ test('parseConsultationIntake should parse bullet-style framework hints and dedu
 
 ## RepoGenesis入力候補
 • domain は web と ai と xr が候補
+• primary_language は typescript + python
 • framework は Next.js + FastAPI 想定
 • model は Qwen
 • security は medium を想定`;
@@ -713,11 +714,32 @@ test('parseConsultationIntake should parse bullet-style framework hints and dedu
   const draft = parseConsultationIntake(input, makeState());
   const planning = draft.suggestedState.planning;
 
+  assert.equal(draft.suggestedState.tech.primary_language, 'typescript');
   assert.deepEqual(draft.suggestedState.tech.frameworks, ['Next.js', 'FastAPI']);
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'Primary language' && item.choice === 'typescript'),
+    true,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'Supporting language' && item.choice === 'python'),
+    true,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'Primary language' && item.choice === 'typescript + python'),
+    false,
+  );
   assert.equal(
     planning.tech_decisions.some((item) =>
       item.topic === 'Framework' && item.choice === 'Next.js, FastAPI'),
     true,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'API framework' && item.choice === 'FastAPI'),
+    false,
   );
   assert.equal(
     planning.tech_decisions.some((item) =>

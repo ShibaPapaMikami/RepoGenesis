@@ -84,6 +84,31 @@ function stripListMarker(line: string): string {
   return line.replace(/^(?:[-*•・]\s*|\d+[.)]\s*)/, '').trim();
 }
 
+function normalizePrimaryLanguageName(value: string): PrimaryLanguage | null {
+  const normalized = value.trim().toLowerCase().replace(/[()（）「」『』[\]]/g, ' ');
+  if (!normalized) return null;
+
+  if (/\btypescript\b|type\s*script/.test(normalized)) return 'typescript';
+  if (/\bpython\b|python\s*3/.test(normalized)) return 'python';
+  if (/\bc#\b|\bcsharp\b|c\s*sharp/.test(normalized)) return 'csharp';
+  if (/\bswift\b/.test(normalized)) return 'swift';
+  if (/\bgo\b|golang/.test(normalized)) return 'go';
+  if (/\brust\b/.test(normalized)) return 'rust';
+  if (/\bkotlin\b/.test(normalized)) return 'kotlin';
+  if (/その他|other/.test(normalized)) return 'other';
+  return null;
+}
+
+function parsePrimaryLanguageList(value: string | null): PrimaryLanguage[] {
+  if (!value) return [];
+
+  return value
+    .split(/\s*(?:、|,|\/|\n|\s+\+\s+|\s+＆\s+|\s*&\s+|\sand\s)\s*/i)
+    .map((part) => normalizePrimaryLanguageName(part))
+    .filter((language): language is PrimaryLanguage => language !== null)
+    .filter((language, index, list) => list.indexOf(language) === index);
+}
+
 function normalizeOpenQuestionLines(input: string): string[] {
   return input
     .split('\n')
@@ -393,18 +418,7 @@ function inferDomainsFromCandidateInputs(items: string[]): Domain[] {
 }
 
 function parsePrimaryLanguageValue(value: string | null): PrimaryLanguage | null {
-  if (!value) return null;
-
-  const normalized = value.trim().toLowerCase();
-  if (/\btypescript\b|type\s*script/.test(normalized)) return 'typescript';
-  if (/\bpython\b|python\s*3/.test(normalized)) return 'python';
-  if (/\bc#\b|\bcsharp\b|c\s*sharp/.test(normalized)) return 'csharp';
-  if (/\bswift\b/.test(normalized)) return 'swift';
-  if (/\bgo\b|golang/.test(normalized)) return 'go';
-  if (/\brust\b/.test(normalized)) return 'rust';
-  if (/\bkotlin\b/.test(normalized)) return 'kotlin';
-  if (/その他|other/.test(normalized)) return 'other';
-  return null;
+  return parsePrimaryLanguageList(value)[0] ?? null;
 }
 
 function inferPrimaryLanguageFromCandidateInputs(items: string[]): PrimaryLanguage | null {

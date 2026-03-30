@@ -79,6 +79,8 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - `Qwen` は planning 上で `self-hosted Qwen` へ正規化し、model decision の重複を減らした
   - generator は `Windows GPU host + Mac/browser client` の distributed runtime boundary を signal 化し、generated `REQUIREMENTS.md` / `ARCHITECTURE.md` / `ROADMAP.md` に runtime boundary を出せるようにした
   - repo-type heuristic は `FastAPI` の文字列だけで `multi` に寄りすぎないように調整し、simple intake では explicit `single/multi repo` hint を candidate input へ渡して既存の期待動作を維持した
+  - compound `primary_language` hint は `Primary language` と `Supporting language` に分解して canonical 化し、`typescript + python` のような raw decision noise を減らした
+  - planning に `Framework: Next.js, FastAPI` がある場合は `API framework: FastAPI` の重複 candidate を落とし、`buildProjectSpec` は stale な `tech.frameworks` を planning から rescue して generated tech stack に反映するようにした
   - `責任者` と `技術ドメイン` は AI-first flow では blocking validation から外した
   - `技術ドメイン` 未確定は warning 扱いで ZIP を止めないようにした
   - skill layer contract を provider-aware に更新し、Codex / Claude Code / Gemini CLI を並列で扱う設計に整理した

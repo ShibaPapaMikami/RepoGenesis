@@ -339,7 +339,7 @@ test('buildProjectSpec should feed TTS-style intake into generator-specific docs
 
 test('buildProjectSpec should reflect browser-to-host audio runtime boundaries and normalized frameworks', () => {
   const intake = `## プロジェクト概要
-ローカル推論（Windows RTX4090）で動作するTTS・リアルタイム会話を統合したWebUI。Macからブラウザ操作可能。音声収録・参照音声・生成音声の管理とノイズ処理を一体化。
+ローカル推論（Windows RTX4090）で動作するTTS・リアルタイム会話を統合したWebUI。Macからブラウザ操作可能。FastAPI で Windows 推論機を制御し、音声収録・参照音声・生成音声の管理とノイズ処理を一体化。
 
 ## 想定ユーザー
 • 音声制作チーム
@@ -367,6 +367,7 @@ test('buildProjectSpec should reflect browser-to-host audio runtime boundaries a
 
 ## RepoGenesis入力候補
 • domain は web と ai と xr が候補
+• primary_language は typescript + python
 • framework は Next.js + FastAPI 想定
 • model は Qwen
 • security は medium を想定`;
@@ -378,6 +379,7 @@ test('buildProjectSpec should reflect browser-to-host audio runtime boundaries a
   const architecture = files.get('docs/ARCHITECTURE.md') ?? '';
   const roadmap = files.get('docs/ROADMAP.md') ?? '';
 
+  assert.equal(spec.tech.primary_language, 'typescript');
   assert.deepEqual(spec.tech.frameworks, ['Next.js', 'FastAPI']);
   assert.equal(requirements.includes('- Frameworks: Next.js, FastAPI'), true);
   assert.equal(requirements.includes('Framework choice is still TBD.'), false);
@@ -395,4 +397,53 @@ test('buildProjectSpec should reflect browser-to-host audio runtime boundaries a
     roadmap.includes('Implement the first browser-to-host handoff between the operator UI and the inference or media runtime.'),
     true,
   );
+});
+
+test('buildProjectSpec should rescue framework and primary language summaries from planning when top-level tech stack is stale', () => {
+  const state = makeState();
+  state.tech.primary_language = 'typescript';
+  state.tech.frameworks = [];
+  state.planning.tech_decisions = [
+    {
+      topic: 'Primary language',
+      choice: 'typescript',
+      status: 'candidate',
+      rationale: 'Frontend shell remains TypeScript.',
+      decision_date: '',
+      notes: '',
+    },
+    {
+      topic: 'Supporting language',
+      choice: 'python',
+      status: 'candidate',
+      rationale: 'Inference workers may stay in Python.',
+      decision_date: '',
+      notes: '',
+    },
+    {
+      topic: 'Framework',
+      choice: 'Next.js, FastAPI',
+      status: 'candidate',
+      rationale: 'Web UI plus control API.',
+      decision_date: '',
+      notes: '',
+    },
+    {
+      topic: 'API framework',
+      choice: 'FastAPI',
+      status: 'candidate',
+      rationale: 'Implicit FastAPI mention.',
+      decision_date: '',
+      notes: '',
+    },
+  ];
+
+  const spec = buildProjectSpec(state);
+  const files = generateFromSpec(spec);
+  const requirements = files.get('docs/REQUIREMENTS.md') ?? '';
+
+  assert.equal(spec.tech.primary_language, 'typescript');
+  assert.deepEqual(spec.tech.frameworks, ['Next.js', 'FastAPI']);
+  assert.equal(requirements.includes('- Frameworks: Next.js, FastAPI'), true);
+  assert.equal(requirements.includes('Framework choice is still TBD.'), false);
 });

@@ -46,6 +46,7 @@ type StructuredHintKey =
 
 type TechDecisionItem = FormState['planning']['tech_decisions'][number];
 type ExternalDependencyItem = FormState['planning']['external_dependencies'][number];
+type CanonicalPrimaryLanguage = FormState['tech']['primary_language'];
 
 interface ReferenceRepoMatch {
   name: string;
@@ -325,6 +326,28 @@ function canonicalizeModelChoice(value: string): string {
   const lowered = value.trim().toLowerCase();
   if (lowered.includes('qwen')) return 'self-hosted Qwen';
   return value.trim();
+}
+
+function normalizePrimaryLanguageName(value: string): CanonicalPrimaryLanguage | null {
+  const normalized = value.trim().toLowerCase().replace(/[()（）「」『』[\]]/g, ' ');
+  if (!normalized) return null;
+
+  if (/\btypescript\b|type\s*script/.test(normalized)) return 'typescript';
+  if (/\bpython\b|python\s*3/.test(normalized)) return 'python';
+  if (/\bc#\b|\bcsharp\b|c\s*sharp/.test(normalized)) return 'csharp';
+  if (/\bswift\b/.test(normalized)) return 'swift';
+  if (/\bgo\b|golang/.test(normalized)) return 'go';
+  if (/\brust\b/.test(normalized)) return 'rust';
+  if (/\bkotlin\b/.test(normalized)) return 'kotlin';
+  if (/その他|other/.test(normalized)) return 'other';
+  return null;
+}
+
+function normalizePrimaryLanguageChoices(value: string): CanonicalPrimaryLanguage[] {
+  return splitStructuredListValue(value)
+    .map((item) => normalizePrimaryLanguageName(item))
+    .filter((language): language is CanonicalPrimaryLanguage => language !== null)
+    .filter((language, index, list) => list.indexOf(language) === index);
 }
 
 function normalizeFrameworkName(value: string): string {
@@ -999,14 +1022,30 @@ function extractStructuredHints(
       return true;
     }
     case 'language':
-      mergeDecision(decisionBucket, {
-        topic: 'Primary language',
-        choice: value,
-        status,
-        rationale: line,
-        decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
-        notes: '',
-      });
+      {
+        const languages = normalizePrimaryLanguageChoices(value);
+        if (languages.length === 0) return true;
+
+        mergeDecision(decisionBucket, {
+          topic: 'Primary language',
+          choice: languages[0],
+          status,
+          rationale: line,
+          decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+          notes: '',
+        });
+
+        for (const supportingLanguage of languages.slice(1)) {
+          mergeDecision(decisionBucket, {
+            topic: 'Supporting language',
+            choice: supportingLanguage,
+            status,
+            rationale: line,
+            decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+            notes: '',
+          });
+        }
+      }
       return true;
     case 'security_level':
       mergeDecision(decisionBucket, {
@@ -1087,6 +1126,24 @@ function dedupeNotificationDecisions(items: TechDecisionItem[]): TechDecisionIte
   });
 }
 
+function dedupeFrameworkDecisions(items: TechDecisionItem[]): TechDecisionItem[] {
+  const explicitFrameworkChoices = new Set(
+    items
+      .filter((item) => item.topic === 'Framework')
+      .flatMap((item) => normalizeFrameworkChoices(item.choice))
+      .map((choice) => choice.toLowerCase()),
+  );
+
+  if (explicitFrameworkChoices.size === 0) return items;
+
+  return items.filter((item) => {
+    if (item.topic !== 'API framework') return true;
+
+    const apiFrameworkChoices = normalizeFrameworkChoices(item.choice);
+    return apiFrameworkChoices.some((choice) => !explicitFrameworkChoices.has(choice.toLowerCase()));
+  });
+}
+
 export function derivePlanningSuggestions(input: PlanningSuggestionInput): FormState['planning'] {
   const decisionBucket = new Map<string, TechDecisionItem>();
   const dependencyBucket = new Map<string, ExternalDependencyItem>();
@@ -1146,7 +1203,7 @@ export function derivePlanningSuggestions(input: PlanningSuggestionInput): FormS
   }
 
   return {
-    tech_decisions: dedupeNotificationDecisions(Array.from(decisionBucket.values())),
+    tech_decisions: dedupeFrameworkDecisions(dedupeNotificationDecisions(Array.from(decisionBucket.values()))),
     external_dependencies: Array.from(dependencyBucket.values()),
   };
 }

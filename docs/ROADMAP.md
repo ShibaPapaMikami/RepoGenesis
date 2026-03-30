@@ -178,6 +178,7 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Normalize TTS/CLI-specific core feature splitting, audio dependency metadata, and security phrasing so generated docs stay internally consistent
 - [x] Parse provider bullet variants (`•`) plus compound framework hints (`Next.js + FastAPI`) and keep model/framework normalization stable across generated docs
 - [x] Reflect distributed browser-to-host runtime boundaries in generated `REQUIREMENTS.md` / `ARCHITECTURE.md` / `ROADMAP.md` when the brief makes that topology explicit
+- [x] Split compound primary-language hints into canonical `Primary language` plus supporting language decisions, dedupe `API framework` noise when `Framework` already captures FastAPI, and rescue stale top-level framework summaries from planning during spec build
 
 ### CI / Docs Hardening
 - [x] Add CI coverage for vendored generator bundle drift

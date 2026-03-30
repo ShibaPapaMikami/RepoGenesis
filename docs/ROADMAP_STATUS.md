@@ -127,6 +127,8 @@ Phase 6 / Hardening
 - `Qwen` は planning 上で `self-hosted Qwen` に正規化され、model decision / dependency の二重表記を減らした。
 - generator は `Windows GPU host + Mac/browser client` のような distributed runtime boundary を検知し、generated `REQUIREMENTS.md` / `ARCHITECTURE.md` / `ROADMAP.md` に client-host boundary を明示するようになった。
 - repo-type heuristic は `FastAPI` の文字列だけで `multi` に寄りすぎないように調整し、simple intake では explicit `single/multi repo` hint を candidate input として渡すようにした。
+- compound `primary_language` hint は `Primary language` と `Supporting language` に分解して canonical 化し、`typescript + python` のような raw decision noise を減らすようにした。
+- planning に `Framework: Next.js, FastAPI` がある場合は `API framework: FastAPI` の重複 candidate を落とし、`buildProjectSpec` は stale な `tech.frameworks` を planning から rescue して generated tech stack に反映するようになった。
 
 ## What This Phase Still Needs
 - Refine the public UI so non-engineers can understand planning fields without reading internal terminology.
