@@ -43,6 +43,9 @@ export function generateRoadmap(brief: ProjectBrief): string {
           goals.push('Resolve the highest-risk open planning items first.');
           goals.push(...openPlanningItems.map((item) => item.endsWith('.') ? item : `${item}.`));
         }
+        if (signals.hasDistributedRuntimeBoundary) {
+          goals.push('Document the browser client and Windows/GPU host boundary before implementation spreads across both sides.');
+        }
         return {
           goals,
           deliverables: [
@@ -59,6 +62,9 @@ export function generateRoadmap(brief: ProjectBrief): string {
         ];
         if (adoptedDependencies.length > 0) {
           goals.push(`Integrate adopted dependencies needed for the first workflow: ${adoptedDependencies.join(', ')}.`);
+        }
+        if (signals.hasDistributedRuntimeBoundary) {
+          goals.push('Implement the first browser-to-host handoff between the operator UI and the inference or media runtime.');
         }
         if (signals.hasCli) {
           goals.push('Lock the operator-facing command surface, arguments, and output contract for the first release.');
@@ -77,6 +83,9 @@ export function generateRoadmap(brief: ProjectBrief): string {
         ];
         if (signals.hasTts || signals.hasAudio) {
           goals.push('Verify synthesis parameters, output format, and post-processing quality gates.');
+        }
+        if (signals.hasDistributedRuntimeBoundary) {
+          goals.push('Validate browser-to-host latency, transport failures, and recovery behavior on target hardware.');
         }
         if (signals.hasUnity) {
           goals.push('Stabilize the Unity or downstream runtime handoff boundary before expanding scope.');

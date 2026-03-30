@@ -180,10 +180,14 @@ const TOPIC_CATEGORY_MAP: Array<{
 
 const MODEL_PATTERN = /\b(gpt-[\w.-]+|claude-[\w.-]+|gemini-[\w.-]+|qwen[\w.-]*)\b/gi;
 
+function stripListMarker(line: string): string {
+  return line.replace(/^(?:[-*•・]\s*|\d+[.)]\s*)/, '').trim();
+}
+
 function splitLines(...texts: Array<string | undefined>): string[] {
   return texts
     .flatMap((text) => (text ?? '').split('\n'))
-    .map((line) => line.replace(/^[-*]\s*/, '').trim())
+    .map(stripListMarker)
     .filter(Boolean);
 }
 
@@ -312,8 +316,39 @@ function canonicalizeStructuredDependencyName(value: string, category: Dependenc
   if (category === 'database' && lowered.includes('supabase')) return 'Supabase';
   if (category === 'storage' && lowered.includes('supabase')) return 'Supabase Storage';
   if (category === 'auth' && lowered.includes('supabase')) return 'Supabase Auth';
+  if (category === 'model' && lowered.includes('qwen')) return 'self-hosted Qwen';
   if (category === 'ocr') return lowered.includes('ocr') ? 'OCR service' : value;
   return value;
+}
+
+function canonicalizeModelChoice(value: string): string {
+  const lowered = value.trim().toLowerCase();
+  if (lowered.includes('qwen')) return 'self-hosted Qwen';
+  return value.trim();
+}
+
+function normalizeFrameworkName(value: string): string {
+  const normalized = value.trim().replace(/[()（）「」『』[\]]/g, '');
+  if (!normalized) return '';
+
+  const lowered = normalized.toLowerCase();
+  if (/^next(?:\.js|js)?$/.test(lowered)) return 'Next.js';
+  if (/^fast\s*api$/.test(lowered) || lowered === 'fastapi') return 'FastAPI';
+  if (/^react$/.test(lowered)) return 'React';
+  if (/^vite$/.test(lowered)) return 'Vite';
+  if (/^typer$/.test(lowered)) return 'Typer';
+  if (/^nuxt(?:\.js|js)?$/.test(lowered)) return 'Nuxt.js';
+  if (/^vue(?:\.js|js)?$/.test(lowered)) return 'Vue.js';
+  if (/^svelte\s*kit$/.test(lowered) || lowered === 'sveltekit') return 'SvelteKit';
+  return normalized;
+}
+
+function normalizeFrameworkChoices(value: string): string[] {
+  return value
+    .split(/\s*(?:、|,|\/|\n|\s+\+\s+|\s+＆\s+|\s*&\s+|\sand\s)\s*/i)
+    .map((item) => normalizeFrameworkName(item))
+    .filter(Boolean)
+    .filter((framework, index, list) => list.indexOf(framework) === index);
 }
 
 function inferDependencySource(name: string): string {
@@ -564,8 +599,8 @@ function normalizeStructuredValue(value: string): string {
 
 function splitStructuredListValue(value: string): string[] {
   return value
-    .split(/\s*(?:、|,|\/|・|\band\b|\n|\s+と\s+)\s*/i)
-    .map((item) => item.trim().replace(/^[-*]\s*/, '').replace(/[.)。]+$/, ''))
+    .split(/\s*(?:、|,|\/|・|\band\b|\n|\s+と\s+|\s+\+\s+|\s+＆\s+|\s*&\s+)\s*/i)
+    .map((item) => stripListMarker(item).replace(/[.)。]+$/, ''))
     .filter(Boolean);
 }
 
@@ -742,9 +777,10 @@ function extractModelDecisions(
 ) {
   const matches = Array.from(line.matchAll(MODEL_PATTERN));
   for (const match of matches) {
+    const choice = canonicalizeModelChoice(match[1]);
     mergeDecision(decisionBucket, {
       topic: 'Model',
-      choice: match[1],
+      choice,
       status: normalizeStatus(line, fallbackStatus),
       rationale: line,
       decision_date: '',
@@ -897,15 +933,19 @@ function extractStructuredHints(
       addNotificationDependencies(value, line, fallbackStatus, dependencyBucket, decisionBucket);
       return true;
     case 'framework':
-      mergeDecision(decisionBucket, {
-        topic: 'Framework',
-        choice: value,
-        status,
-        rationale: line,
-        decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
-        notes: '',
-      });
-      return true;
+      {
+        const frameworks = normalizeFrameworkChoices(value);
+        if (frameworks.length === 0) return true;
+        mergeDecision(decisionBucket, {
+          topic: 'Framework',
+          choice: frameworks.join(', '),
+          status,
+          rationale: line,
+          decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+          notes: '',
+        });
+        return true;
+      }
     case 'architecture':
       mergeDecision(decisionBucket, {
         topic: 'Core workflow architecture',

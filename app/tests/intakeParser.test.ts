@@ -676,6 +676,61 @@ test('parseConsultationIntake should treat explicit candidate inputs as authorit
   );
 });
 
+test('parseConsultationIntake should parse bullet-style framework hints and dedupe model decisions for distributed audio web briefs', () => {
+  const input = `## プロジェクト概要
+ローカル推論（Windows RTX4090）で動作するTTS・リアルタイム会話を統合したWebUI。Macからブラウザ操作可能。音声収録・参照音声・生成音声の管理とノイズ処理を一体化。
+
+## 想定ユーザー
+• 音声制作チーム
+• 演出担当
+
+## 解決したい課題
+• 高品質な音声生成と後処理を1つの画面で扱いたい
+
+## 最初に作るべきもの
+ブラウザからWindows推論機へ指示を送り、生成音声とノイズ処理結果を確認できるWebUI。
+
+## 扱うデータ
+• 入力テキスト
+• 参照音声
+• 生成音声
+
+## 外部連携候補
+• https://github.com/rikorose/deepfilternet
+• https://github.com/modelscope/ClearerVoice-Studio
+
+## 未確定事項
+• 商用利用可否（CC BY-NC制約の扱い）
+• LLMのローカル or API選択
+• リアルタイム会話の遅延許容値
+
+## RepoGenesis入力候補
+• domain は web と ai と xr が候補
+• framework は Next.js + FastAPI 想定
+• model は Qwen
+• security は medium を想定`;
+
+  const draft = parseConsultationIntake(input, makeState());
+  const planning = draft.suggestedState.planning;
+
+  assert.deepEqual(draft.suggestedState.tech.frameworks, ['Next.js', 'FastAPI']);
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'Framework' && item.choice === 'Next.js, FastAPI'),
+    true,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'Model' && item.choice === 'self-hosted Qwen'),
+    true,
+  );
+  assert.equal(
+    planning.tech_decisions.some((item) =>
+      item.topic === 'Model' && item.choice === 'Qwen'),
+    false,
+  );
+});
+
 test('deriveDraftSuggestions should build provider-independent suggested state', () => {
   const suggestions = deriveDraftSuggestions(makeState(), {
     summary: '社内の案件相談を整理するツール',

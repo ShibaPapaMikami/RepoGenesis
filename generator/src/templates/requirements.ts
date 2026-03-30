@@ -1,6 +1,6 @@
 import type { ProjectBrief } from '../schema';
 import { getDependenciesByStatus } from '../planning';
-import { inferBriefSignals, inferPipelineStages, summarizeCoreFeatures, summarizeDependencyNames } from '../templateSignals';
+import { inferBriefSignals, inferPipelineStages, summarizeCoreFeatures, summarizeDependencyNames, summarizeRuntimeBoundary } from '../templateSignals';
 import { formatDomains, formatOwner, formatProjectDescription } from '../templateDisplay';
 
 export function generateRequirements(brief: ProjectBrief): string {
@@ -10,9 +10,12 @@ export function generateRequirements(brief: ProjectBrief): string {
   const pipelineStages = inferPipelineStages(brief);
   const coreFeatures = summarizeCoreFeatures(brief);
   const adoptedDependencies = summarizeDependencyNames(brief, 'adopted');
+  const runtimeBoundary = summarizeRuntimeBoundary(brief);
   const hasFrameworkSignal = tech.domains.includes('web')
     || tech.frameworks.length > 0
-    || planning.tech_decisions.some((item) => item.topic === 'Framework');
+    || planning.tech_decisions.some((item) => /framework/i.test(item.topic));
+  const hasResolvedFrameworkChoice = tech.frameworks.length > 0
+    || planning.tech_decisions.some((item) => /framework/i.test(item.topic) && item.choice.trim());
 
   const frameworkLine = tech.frameworks.length > 0
     ? `- Frameworks: ${tech.frameworks.join(', ')}\n`
@@ -94,6 +97,18 @@ export function generateRequirements(brief: ProjectBrief): string {
     });
   }
 
+  if (runtimeBoundary.length > 0) {
+    requirementSections.push({
+      title: `R${requirementSections.length + 1}: Keep the client-host runtime boundary explicit`,
+      description: `${project.name} must keep the operator-facing client and the inference or media-processing host aligned as separate but coordinated runtime responsibilities.`,
+      criteria: [
+        ...runtimeBoundary,
+        'The runtime transport between client and host is named before implementation expands across machines.',
+        'Host OS, GPU, and runtime prerequisites are documented close to setup and deployment notes.',
+      ],
+    });
+  }
+
   if (signals.hasCli) {
     requirementSections.push({
       title: `R${requirementSections.length + 1}: Provide a stable operator-facing CLI contract`,
@@ -130,7 +145,7 @@ export function generateRequirements(brief: ProjectBrief): string {
   const knownTbdLines = [
     project.owner.trim() ? null : '- Project owner is still TBD.',
     tech.domains.length > 0 ? null : '- Technical domain is still TBD.',
-    hasFrameworkSignal && tech.frameworks.length === 0 ? '- Framework choice is still TBD.' : null,
+    hasFrameworkSignal && !hasResolvedFrameworkChoice ? '- Framework choice is still TBD.' : null,
     ...planning.tech_decisions
       .filter((item) => item.status === 'open' && item.topic.trim())
       .slice(0, 5)

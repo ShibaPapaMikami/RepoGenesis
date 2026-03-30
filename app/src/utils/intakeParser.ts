@@ -80,10 +80,14 @@ interface ProjectKeywordRule {
 
 const SECURITY_ORDER: SecurityLevel[] = ['low', 'medium', 'high'];
 
+function stripListMarker(line: string): string {
+  return line.replace(/^(?:[-*•・]\s*|\d+[.)]\s*)/, '').trim();
+}
+
 function normalizeOpenQuestionLines(input: string): string[] {
   return input
     .split('\n')
-    .map((line) => line.replace(/^[-*]\s*/, '').trim())
+    .map(stripListMarker)
     .filter(Boolean);
 }
 
@@ -311,7 +315,7 @@ function toList(text: string | undefined): string[] {
   if (!text) return [];
   return text
     .split('\n')
-    .map((line) => line.replace(/^[-*]\s*/, '').trim())
+    .map(stripListMarker)
     .map((line) => line.split(/[、,]/).map((part) => part.trim()))
     .flat()
     .filter(Boolean);
@@ -321,7 +325,7 @@ function toCandidateList(text: string | undefined): string[] {
   if (!text) return [];
   return text
     .split('\n')
-    .map((line) => line.replace(/^[-*]\s*/, '').trim())
+    .map(stripListMarker)
     .filter(Boolean);
 }
 
@@ -329,7 +333,7 @@ function toReferenceList(text: string | undefined): string[] {
   if (!text) return [];
   return text
     .split('\n')
-    .map((line) => line.replace(/^[-*]\s*/, '').trim())
+    .map(stripListMarker)
     .filter(Boolean)
     .filter((line) => !/^(現時点で具体リンクなし|参考リンクは未整理)$/i.test(line));
 }
@@ -408,14 +412,35 @@ function inferPrimaryLanguageFromCandidateInputs(items: string[]): PrimaryLangua
   return parsePrimaryLanguageValue(explicitValue);
 }
 
+function normalizeFrameworkName(value: string): string {
+  const normalized = value.trim().replace(/[()（）「」『』[\]]/g, '');
+  if (!normalized) return '';
+
+  const lowered = normalized.toLowerCase();
+  if (/^next(?:\.js|js)?$/.test(lowered)) return 'Next.js';
+  if (/^fast\s*api$/.test(lowered) || lowered === 'fastapi') return 'FastAPI';
+  if (/^react$/.test(lowered)) return 'React';
+  if (/^vite$/.test(lowered)) return 'Vite';
+  if (/^typer$/.test(lowered)) return 'Typer';
+  if (/^nuxt(?:\.js|js)?$/.test(lowered)) return 'Nuxt.js';
+  if (/^vue(?:\.js|js)?$/.test(lowered)) return 'Vue.js';
+  if (/^svelte\s*kit$/.test(lowered) || lowered === 'sveltekit') return 'SvelteKit';
+  return normalized;
+}
+
+function parseFrameworkList(value: string): string[] {
+  return value
+    .split(/\s*(?:、|,|\/|\n|\s+\+\s+|\s+＆\s+|\s*&\s+|\sand\s)\s*/i)
+    .map((part) => normalizeFrameworkName(part))
+    .filter(Boolean)
+    .filter((framework, index, list) => list.indexOf(framework) === index);
+}
+
 function inferFrameworksFromCandidateInputs(items: string[]): string[] | null {
   const explicitValue = extractCandidateInputValue(items, ['framework', 'frameworks', 'フレームワーク']);
   if (!explicitValue) return null;
 
-  const frameworks = explicitValue
-    .split(/[、,\n/]+/)
-    .map((part) => part.trim())
-    .filter(Boolean);
+  const frameworks = parseFrameworkList(explicitValue);
 
   return frameworks.length > 0 ? frameworks : null;
 }
@@ -485,7 +510,7 @@ function normalizeDescriptionText(value: string | null | undefined): string {
 
   if (lines.length === 0) return '';
 
-  const normalizedLines = lines.map((line) => line.replace(/^[-*]\s*/, '').replace(/^\d+[.)]\s*/, '').trim());
+  const normalizedLines = lines.map(stripListMarker);
   const isListLike = lines.every((line) => /^[-*]\s*/.test(line) || /^\d+[.)]\s*/.test(line));
 
   if (isListLike) {
@@ -682,7 +707,7 @@ function toOpenQuestionList(
 }
 
 function inferRepoType(text: string): RepoType {
-  if (/(管理画面|ダッシュボード|画面)/i.test(text) && /(api|バッチ|worker|ジョブ)/i.test(text)) {
+  if (/(管理画面|ダッシュボード|画面)/i.test(text) && /(\bapi\b|バックエンド|backend|バッチ|worker|ジョブ)/i.test(text)) {
     return 'multi';
   }
   return 'single';

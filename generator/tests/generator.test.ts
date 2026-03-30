@@ -294,6 +294,95 @@ const PYTHON_CLI_TTS_BRIEF = {
   },
 };
 
+const DISTRIBUTED_AUDIO_WEB_BRIEF = {
+  ...SINGLE_BRIEF,
+  project: {
+    ...SINGLE_BRIEF.project,
+    name: 'Mistral AI Audio Tool',
+    slug: 'mistral-ai-audio-tool',
+    description: 'A browser UI reachable from macOS that controls a Windows RTX4090 host for local TTS inference, realtime conversation, and audio post-processing.',
+  },
+  tech: {
+    ...SINGLE_BRIEF.tech,
+    domains: ['web', 'ai', 'xr'],
+    primary_language: 'typescript' as const,
+    frameworks: ['Next.js', 'FastAPI'],
+  },
+  workflow: {
+    phases_count: 4,
+  },
+  planning: {
+    tech_decisions: [
+      {
+        topic: 'Framework',
+        choice: 'Next.js, FastAPI',
+        status: 'adopted' as const,
+        rationale: 'The browser UI and control API are both part of the first release shape.',
+        decision_date: '2026-03-31',
+        notes: '',
+      },
+      {
+        topic: 'Model',
+        choice: 'self-hosted Qwen',
+        status: 'candidate' as const,
+        rationale: 'A local-capable LLM is being evaluated for emotion parameter generation.',
+        decision_date: '',
+        notes: '',
+      },
+      {
+        topic: 'Licensing',
+        choice: '商用利用条件',
+        status: 'open' as const,
+        rationale: 'Need to confirm redistribution and commercial use constraints.',
+        decision_date: '',
+        notes: '',
+      },
+      {
+        topic: 'Emotion parameter generation',
+        choice: '感情パラメータ生成方式',
+        status: 'open' as const,
+        rationale: 'Need to decide whether emotion generation is local or API-driven.',
+        decision_date: '',
+        notes: '',
+      },
+      {
+        topic: 'Runtime mode',
+        choice: 'リアルタイム対応',
+        status: 'open' as const,
+        rationale: 'Need to define acceptable realtime latency.',
+        decision_date: '',
+        notes: '',
+      },
+    ],
+    external_dependencies: [
+      {
+        name: 'rikorose/deepfilternet',
+        category: 'github_repo' as const,
+        status: 'candidate' as const,
+        purpose: 'Realtime denoise candidate',
+        owner: 'Audio Team',
+        source: 'https://github.com/rikorose/deepfilternet',
+        license: '',
+        env_vars: [],
+        data_outbound: false,
+        notes: '',
+      },
+      {
+        name: 'modelscope/ClearerVoice-Studio',
+        category: 'github_repo' as const,
+        status: 'candidate' as const,
+        purpose: 'Post-processing candidate',
+        owner: 'Audio Team',
+        source: 'https://github.com/modelscope/ClearerVoice-Studio',
+        license: '',
+        env_vars: [],
+        data_outbound: false,
+        notes: '',
+      },
+    ],
+  },
+};
+
 let tmpDir: string;
 
 beforeEach(() => {
@@ -545,6 +634,27 @@ describe('generator — single-repo', () => {
     expect(claude).toContain('using `Typer`');
     expect(claude).toContain('Keep the first processing pipeline explicit end to end');
     expect(claude).toContain('Keep the Unity integration boundary explicit');
+  });
+
+  it('should reflect distributed browser-to-host runtime boundaries for audio web briefs', () => {
+    const inputPath = writeInputFile(DISTRIBUTED_AUDIO_WEB_BRIEF);
+    const result = generate({ inputPath, outputPath: tmpDir, force: true });
+
+    const requirements = fs.readFileSync(path.join(result.outputDir, 'docs/REQUIREMENTS.md'), 'utf-8');
+    const architecture = fs.readFileSync(path.join(result.outputDir, 'docs/ARCHITECTURE.md'), 'utf-8');
+    const roadmap = fs.readFileSync(path.join(result.outputDir, 'docs/ROADMAP.md'), 'utf-8');
+
+    expect(requirements).toContain('- Frameworks: Next.js, FastAPI');
+    expect(requirements).not.toContain('Framework choice is still TBD.');
+    expect(requirements).toContain('Keep the client-host runtime boundary explicit');
+    expect(requirements).toContain('browser UI reachable from macOS');
+    expect(requirements).toContain('Windows RTX4090 host');
+    expect(architecture).toContain('## Runtime Boundary');
+    expect(architecture).toContain('browser UI reachable from macOS');
+    expect(architecture).toContain('Windows RTX4090 host');
+    expect(roadmap).toContain('Document the browser client and Windows/GPU host boundary before implementation spreads across both sides.');
+    expect(roadmap).toContain('Implement the first browser-to-host handoff between the operator UI and the inference or media runtime.');
+    expect(roadmap).toContain('Validate browser-to-host latency, transport failures, and recovery behavior on target hardware.');
   });
 });
 

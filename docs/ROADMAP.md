@@ -176,6 +176,8 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Convert `未確定事項` into open planning items so generated `ROADMAP.md` Phase 1 goals reflect the real unresolved questions
 - [x] Parse `framework` / `audio processing` / `architecture` / `core feature` hints into structured planning entries
 - [x] Normalize TTS/CLI-specific core feature splitting, audio dependency metadata, and security phrasing so generated docs stay internally consistent
+- [x] Parse provider bullet variants (`•`) plus compound framework hints (`Next.js + FastAPI`) and keep model/framework normalization stable across generated docs
+- [x] Reflect distributed browser-to-host runtime boundaries in generated `REQUIREMENTS.md` / `ARCHITECTURE.md` / `ROADMAP.md` when the brief makes that topology explicit
 
 ### CI / Docs Hardening
 - [x] Add CI coverage for vendored generator bundle drift

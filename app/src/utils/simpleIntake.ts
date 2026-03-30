@@ -93,6 +93,12 @@ function buildCandidateInputs(input: SimpleIntakeState): string {
     candidates.push('- 外部連携あり前提で has_api_keys を想定');
   }
 
+  if (input.repoConfidence === 'single') {
+    candidates.push('- single repo を想定');
+  } else if (input.repoConfidence === 'multi') {
+    candidates.push('- multi repo を想定');
+  }
+
   return candidates.join('\n');
 }
 

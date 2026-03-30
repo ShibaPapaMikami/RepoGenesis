@@ -123,6 +123,10 @@ Phase 6 / Hardening
 - generator は explicit workflow architecture と differentiating core features を `REQUIREMENTS.md` / `ARCHITECTURE.md` / tool guidance に反映し、TTS/CLI briefs の project-specific value を generic text に落としにくくした。
 - intake hardening は TTS/CLI briefs で `core feature` の `と` 区切りも分割し、`audio processing` は individual decision の重複を避けつつ `Audio processing stack` と OSS dependency metadata (`source` / `license` / `purpose`) を補完するようになった。
 - `security は low〜medium` のような表現は planning / generated docs 上で `medium` へ正規化され、TTS sample の `TECH_DECISIONS.md` / `EXTERNAL_DEPENDENCIES.md` の内部表記揺れを減らした。
+- intake / simple-intake parser は `•` 箇条書きも候補入力として正しく剥がし、`framework は Next.js + FastAPI` のような compound hint を正規化して `tech.frameworks` と planning decisions へ反映できるようになった。
+- `Qwen` は planning 上で `self-hosted Qwen` に正規化され、model decision / dependency の二重表記を減らした。
+- generator は `Windows GPU host + Mac/browser client` のような distributed runtime boundary を検知し、generated `REQUIREMENTS.md` / `ARCHITECTURE.md` / `ROADMAP.md` に client-host boundary を明示するようになった。
+- repo-type heuristic は `FastAPI` の文字列だけで `multi` に寄りすぎないように調整し、simple intake では explicit `single/multi repo` hint を candidate input として渡すようにした。
 
 ## What This Phase Still Needs
 - Refine the public UI so non-engineers can understand planning fields without reading internal terminology.

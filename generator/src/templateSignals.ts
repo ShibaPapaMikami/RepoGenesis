@@ -9,6 +9,10 @@ const PIPELINE_PATTERN = /pipeline|パイプライン|前処理|後処理|post[-
 const TUNABLE_PARAMETER_PATTERN = /pitch|speed|rate|tempo|breath|break|prosody|emotion|感情|パラメータ/i;
 const EXPLICIT_PIPELINE_TOPIC_PATTERN = /core workflow architecture|workflow architecture|pipeline architecture/i;
 const CORE_FEATURE_TOPIC_PATTERN = /core feature/i;
+const WINDOWS_HOST_PATTERN = /\bwindows\b|windows\s+\d+|win11|win10/i;
+const GPU_HOST_PATTERN = /\brtx\s*\d{3,4}\b|\bgpu\b|cuda|ローカル推論|local inference/i;
+const MAC_CLIENT_PATTERN = /\bmac(?:os)?\b|macから|mac から|mac上|mac からも/i;
+const BROWSER_CLIENT_PATTERN = /\bbrowser\b|ブラウザ|webui|web ui|web-ui/i;
 
 function splitListChoice(choice: string): string[] {
   return choice
@@ -51,6 +55,10 @@ export interface BriefSignals {
   hasTts: boolean;
   hasPipeline: boolean;
   hasTunableParameters: boolean;
+  hasDistributedRuntimeBoundary: boolean;
+  hasWindowsGpuHost: boolean;
+  hasBrowserClient: boolean;
+  hasMacClient: boolean;
 }
 
 export function collectBriefContextText(brief: ProjectBrief): string {
@@ -81,6 +89,11 @@ export function inferBriefSignals(brief: ProjectBrief): BriefSignals {
   const hasAi = brief.tech.domains.includes('ai') || /\bai\b|\bllm\b|生成ai|生成 ai|model/i.test(text);
   const hasCli = brief.tech.domains.includes('cli') || CLI_PATTERN.test(text);
   const hasTts = TTS_PATTERN.test(text);
+  const hasWindowsHost = WINDOWS_HOST_PATTERN.test(text);
+  const hasGpuHost = GPU_HOST_PATTERN.test(text);
+  const hasMacClient = MAC_CLIENT_PATTERN.test(text);
+  const hasBrowserClient = BROWSER_CLIENT_PATTERN.test(text);
+  const hasDistributedRuntimeBoundary = hasWindowsHost && hasGpuHost && (hasMacClient || hasBrowserClient);
 
   return {
     hasAi,
@@ -91,6 +104,10 @@ export function inferBriefSignals(brief: ProjectBrief): BriefSignals {
     hasTts,
     hasPipeline: hasTts || PIPELINE_PATTERN.test(text) || (hasAi && hasCli),
     hasTunableParameters: hasTts || TUNABLE_PARAMETER_PATTERN.test(text),
+    hasDistributedRuntimeBoundary,
+    hasWindowsGpuHost: hasWindowsHost && hasGpuHost,
+    hasBrowserClient,
+    hasMacClient,
   };
 }
 
@@ -161,4 +178,24 @@ export function summarizeOpenPlanningItems(brief: ProjectBrief, max = 5): string
   ];
 
   return Array.from(new Set(fallbackItems)).slice(0, max);
+}
+
+export function summarizeRuntimeBoundary(brief: ProjectBrief): string[] {
+  const text = collectBriefContextText(brief);
+  const signals = inferBriefSignals(brief);
+  if (!signals.hasDistributedRuntimeBoundary) return [];
+
+  const gpuModel = text.match(/\bRTX\s*\d{3,4}\b/i)?.[0]?.toUpperCase() ?? '';
+  const hostParts = [
+    'Windows',
+    gpuModel || 'GPU',
+  ].filter(Boolean);
+
+  return [
+    signals.hasBrowserClient
+      ? `The operator-facing client is a browser UI${signals.hasMacClient ? ' reachable from macOS' : ''}.`
+      : `The operator-facing client is managed from ${signals.hasMacClient ? 'macOS' : 'a separate client machine'}.`,
+    `Inference and media-heavy processing run on a ${hostParts.join(' ')} host.`,
+    'The handoff between client and host stays explicit, including transport, artifact transfer, and failure recovery.',
+  ];
 }

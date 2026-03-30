@@ -75,6 +75,10 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - `framework=Typer`、`audio processing`、`architecture`、`core feature` を structured planning に昇格し、explicit pipeline / differentiating features を generated `REQUIREMENTS.md` / `ARCHITECTURE.md` / wrapper guidance に流し込めるようにした
   - TTS/CLI briefs では `core feature` の `と` 区切りも分割し、`audio processing` は `Audio processing stack` 1件に集約しつつ `librosa / numpy / soundfile` の `source` / `license` / `purpose` を external dependency metadata として補完するようにした
   - `security は low〜medium` のような候補表現は planning / generated docs 上で `medium` へ正規化し、`TECH_DECISIONS.md` と requirement 側の表記揺れを減らした
+  - parser は `•` 箇条書きも candidate input として解釈し、`framework は Next.js + FastAPI` のような複合 hint を `tech.frameworks` / planning decisions に正規化できるようにした
+  - `Qwen` は planning 上で `self-hosted Qwen` へ正規化し、model decision の重複を減らした
+  - generator は `Windows GPU host + Mac/browser client` の distributed runtime boundary を signal 化し、generated `REQUIREMENTS.md` / `ARCHITECTURE.md` / `ROADMAP.md` に runtime boundary を出せるようにした
+  - repo-type heuristic は `FastAPI` の文字列だけで `multi` に寄りすぎないように調整し、simple intake では explicit `single/multi repo` hint を candidate input へ渡して既存の期待動作を維持した
   - `責任者` と `技術ドメイン` は AI-first flow では blocking validation から外した
   - `技術ドメイン` 未確定は warning 扱いで ZIP を止めないようにした
   - skill layer contract を provider-aware に更新し、Codex / Claude Code / Gemini CLI を並列で扱う設計に整理した

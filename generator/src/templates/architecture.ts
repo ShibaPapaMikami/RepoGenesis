@@ -1,6 +1,6 @@
 import type { ProjectBrief } from '../schema';
 import { getAdoptedDependencyBulletLines, getAdoptedTechBulletLines } from '../planning';
-import { inferPipelineStages, summarizeCoreFeatures } from '../templateSignals';
+import { inferPipelineStages, summarizeCoreFeatures, summarizeRuntimeBoundary } from '../templateSignals';
 import { formatDomains, formatOwner } from '../templateDisplay';
 
 export function generateArchitecture(brief: ProjectBrief): string {
@@ -9,6 +9,7 @@ export function generateArchitecture(brief: ProjectBrief): string {
   const adoptedDependencies = getAdoptedDependencyBulletLines(brief);
   const pipelineStages = inferPipelineStages(brief);
   const coreFeatures = summarizeCoreFeatures(brief);
+  const runtimeBoundary = summarizeRuntimeBoundary(brief);
 
   const frameworkLine = tech.frameworks.length > 0
     ? `- Frameworks: ${tech.frameworks.join(', ')}\n`
@@ -117,6 +118,9 @@ ${keyComponents}
 
 ## Data Flow
 ${dataFlow}
+
+## Runtime Boundary
+${runtimeBoundary.length > 0 ? runtimeBoundary.map((line) => `- ${line}`).join('\n') : '- The first release currently assumes a single runtime boundary unless later planning says otherwise.'}
 
 ## Infrastructure
 ${infrastructure}

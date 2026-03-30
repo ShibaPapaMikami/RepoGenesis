@@ -336,3 +336,63 @@ test('buildProjectSpec should feed TTS-style intake into generator-specific docs
   assert.equal(externalDependencies.includes('- **Source**: https://python-soundfile.readthedocs.io/'), true);
   assert.equal(externalDependencies.includes('- **License / Terms**: BSD-3-Clause'), true);
 });
+
+test('buildProjectSpec should reflect browser-to-host audio runtime boundaries and normalized frameworks', () => {
+  const intake = `## プロジェクト概要
+ローカル推論（Windows RTX4090）で動作するTTS・リアルタイム会話を統合したWebUI。Macからブラウザ操作可能。音声収録・参照音声・生成音声の管理とノイズ処理を一体化。
+
+## 想定ユーザー
+• 音声制作チーム
+• 演出担当
+
+## 解決したい課題
+• 高品質な音声生成と後処理を1つの画面で扱いたい
+
+## 最初に作るべきもの
+ブラウザからWindows推論機へ指示を送り、生成音声とノイズ処理結果を確認できるWebUI。
+
+## 扱うデータ
+• 入力テキスト
+• 参照音声
+• 生成音声
+
+## 外部連携候補
+• https://github.com/rikorose/deepfilternet
+• https://github.com/modelscope/ClearerVoice-Studio
+
+## 未確定事項
+• 商用利用可否（CC BY-NC制約の扱い）
+• LLMのローカル or API選択
+• リアルタイム会話の遅延許容値
+
+## RepoGenesis入力候補
+• domain は web と ai と xr が候補
+• framework は Next.js + FastAPI 想定
+• model は Qwen
+• security は medium を想定`;
+
+  const draft = parseConsultationIntake(intake, makeState());
+  const spec = buildProjectSpec(draft.suggestedState);
+  const files = generateFromSpec(spec);
+  const requirements = files.get('docs/REQUIREMENTS.md') ?? '';
+  const architecture = files.get('docs/ARCHITECTURE.md') ?? '';
+  const roadmap = files.get('docs/ROADMAP.md') ?? '';
+
+  assert.deepEqual(spec.tech.frameworks, ['Next.js', 'FastAPI']);
+  assert.equal(requirements.includes('- Frameworks: Next.js, FastAPI'), true);
+  assert.equal(requirements.includes('Framework choice is still TBD.'), false);
+  assert.equal(requirements.includes('Keep the client-host runtime boundary explicit'), true);
+  assert.equal(requirements.includes('browser UI reachable from macOS'), true);
+  assert.equal(requirements.includes('Windows RTX4090 host'), true);
+  assert.equal(architecture.includes('## Runtime Boundary'), true);
+  assert.equal(architecture.includes('browser UI reachable from macOS'), true);
+  assert.equal(architecture.includes('Windows RTX4090 host'), true);
+  assert.equal(
+    roadmap.includes('Document the browser client and Windows/GPU host boundary before implementation spreads across both sides.'),
+    true,
+  );
+  assert.equal(
+    roadmap.includes('Implement the first browser-to-host handoff between the operator UI and the inference or media runtime.'),
+    true,
+  );
+});
