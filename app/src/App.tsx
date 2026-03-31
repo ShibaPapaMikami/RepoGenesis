@@ -36,6 +36,12 @@ import { SupportPanel } from './components/support/SupportPanel';
 import { getGenerationMode, usesSameOriginOrchestrationProxy } from './utils/generateRepository';
 import { canViewSupportPanel } from './utils/supportAccess.ts';
 import {
+  buildRuntimeLabel,
+  formatRuntimeLabelTitle,
+  normalizeRuntimeLabelMode,
+  shouldShowRuntimeLabel,
+} from './utils/runtimeLabel.ts';
+import {
   getConsultationPromptTemplate,
   parseConsultationIntake,
   updateDraftOpenQuestions,
@@ -74,6 +80,8 @@ import './App.css';
 
 declare const __APP_RELEASE__: string;
 declare const __APP_COMMIT__: string;
+declare const __APP_DEPLOYED_AT__: string;
+declare const __APP_RUNTIME_LABEL_MODE__: string;
 
 type GuidedStep = 'intro' | 'paste' | 'draft' | 'options' | 'detail' | 'review' | 'result';
 type SaveState = 'idle' | 'saving' | 'saved';
@@ -282,6 +290,8 @@ function App() {
   const showSupportPanel = requiresRemoteLogin
     && authSession.authenticated
     && canViewSupportPanel(authSession.email);
+  const runtimeLabelMode = normalizeRuntimeLabelMode(__APP_RUNTIME_LABEL_MODE__);
+  const showRuntimeLabel = shouldShowRuntimeLabel(runtimeLabelMode, showSupportPanel);
   const activeStep = guidedStep;
   const suggestedRepoType = consultationDraft?.suggestedState.structure.repo_type ?? state.structure.repo_type;
   const suggestedSecurity = consultationDraft?.suggestedState.securityLevelOverride ?? state.security.level;
@@ -580,7 +590,12 @@ function App() {
   }
 
   const releaseLabel = __APP_RELEASE__.startsWith('v') ? __APP_RELEASE__ : `v${__APP_RELEASE__}`;
-  const buildLabel = `${releaseLabel} (${__APP_COMMIT__})`;
+  const runtimeLabel = showRuntimeLabel
+    ? buildRuntimeLabel(releaseLabel, __APP_COMMIT__, __APP_DEPLOYED_AT__)
+    : null;
+  const runtimeLabelTitle = runtimeLabel
+    ? formatRuntimeLabelTitle(__APP_DEPLOYED_AT__)
+    : undefined;
 
   return (
     <div className="app">
@@ -593,7 +608,8 @@ function App() {
         requiresRemoteLogin={requiresRemoteLogin}
         testMode={testMode}
         onToggleTestMode={setTestMode}
-        buildLabel={buildLabel}
+        runtimeLabel={runtimeLabel}
+        runtimeLabelTitle={runtimeLabelTitle}
         authControls={requiresRemoteLogin ? (
           <AuthPanel
             enabled={requiresRemoteLogin}

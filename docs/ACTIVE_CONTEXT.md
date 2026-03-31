@@ -82,6 +82,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - compound `primary_language` hint は `Primary language` と `Supporting language` に分解して canonical 化し、`typescript + python` のような raw decision noise を減らした
   - planning に `Framework: Next.js, FastAPI` がある場合は `API framework: FastAPI` の重複 candidate を落とし、`buildProjectSpec` は stale な `tech.frameworks` を planning から rescue して generated tech stack に反映するようにした
   - generated `VERSIONING_STANDARD.md` / `REQUIREMENTS.md` / wrapper guidance は、operator-facing web UI で `v<release> (<commit>) <deploy time>` を右上ヘッダーに低強調で表示する default を持ち、開発完了後は hidden / feature-flagged / admin-only へ切り替え可能な運用方針まで含むようになった
+  - hosted RepoGenesis UI 自体も `v<release> (<commit>) <deploy time>` を header 右上の低強調ラベルとして出せるようにし、`public / admin / hidden` の表示モードを build-time env で切り替えられるようにした
   - `責任者` と `技術ドメイン` は AI-first flow では blocking validation から外した
   - `技術ドメイン` 未確定は warning 扱いで ZIP を止めないようにした
   - skill layer contract を provider-aware に更新し、Codex / Claude Code / Gemini CLI を並列で扱う設計に整理した

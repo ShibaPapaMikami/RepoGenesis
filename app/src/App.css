@@ -53,7 +53,7 @@
 
 .app-topbar {
   display: grid;
-  grid-template-columns: minmax(260px, 320px) minmax(280px, 1fr) auto auto;
+  grid-template-columns: minmax(260px, 320px) minmax(280px, 1fr) auto auto auto;
   align-items: stretch;
   gap: 0;
   margin-bottom: 1rem;
@@ -69,7 +69,8 @@
 .app-brand-lockup,
 .app-topbar-copy,
 .app-auth-slot,
-.app-devtools {
+.app-devtools,
+.app-runtime-slot {
   min-height: 76px;
   padding: 0.85rem 1rem;
 }
@@ -111,13 +112,16 @@
 .app-build-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.42rem 0.72rem;
+  justify-content: center;
+  padding: 0.3rem 0.55rem;
   border-radius: 999px;
-  background: rgba(29, 29, 31, 0.92);
-  color: #f5f5f7;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  border: 1px solid rgba(29, 29, 31, 0.08);
+  background: rgba(255, 255, 255, 0.74);
+  color: #6e6e73;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .app-save-status {
@@ -139,6 +143,7 @@
   align-items: center;
   background: rgba(255, 255, 255, 0.78);
   border-right: 1px solid rgba(29, 29, 31, 0.06);
+  grid-column: 3;
 }
 
 .app-utility-toggle {
@@ -157,10 +162,19 @@
   flex-wrap: nowrap;
   justify-content: flex-start;
   background: rgba(255, 255, 255, 0.78);
+  grid-column: 4;
 }
 
 .app-devtools-button {
   white-space: nowrap;
+}
+
+.app-runtime-slot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  background: rgba(255, 255, 255, 0.78);
+  grid-column: 5;
 }
 
 .app-inline-link {
@@ -1688,13 +1702,15 @@
   .app-brand-lockup,
   .app-topbar-copy,
   .app-auth-slot,
-  .app-devtools {
+  .app-devtools,
+  .app-runtime-slot {
     min-height: auto;
     border-right: 0;
     border-bottom: 1px solid rgba(29, 29, 31, 0.08);
   }
 
-  .app-devtools {
+  .app-devtools,
+  .app-runtime-slot {
     border-bottom: 0;
   }
 
@@ -1713,6 +1729,7 @@
 
   .app-auth-slot,
   .app-devtools,
+  .app-runtime-slot,
   .auth-inline,
   .auth-inline-actions {
     justify-content: flex-start;

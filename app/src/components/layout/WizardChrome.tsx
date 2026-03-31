@@ -10,7 +10,8 @@ interface WizardChromeProps<TStep extends string> {
   requiresRemoteLogin: boolean;
   testMode: boolean;
   onToggleTestMode: (checked: boolean) => void;
-  buildLabel: string;
+  runtimeLabel: string | null;
+  runtimeLabelTitle?: string;
   authControls?: ReactNode;
   showDeveloperTools: boolean;
   onOpenSupportPanel: () => void;
@@ -25,7 +26,8 @@ export function WizardChrome<TStep extends string>({
   requiresRemoteLogin,
   testMode,
   onToggleTestMode,
-  buildLabel,
+  runtimeLabel,
+  runtimeLabelTitle,
   authControls,
   showDeveloperTools,
   onOpenSupportPanel,
@@ -43,7 +45,6 @@ export function WizardChrome<TStep extends string>({
             <p className="app-brand-subtitle">AI対応リポジトリ構造ジェネレータ</p>
           </div>
           <div className="app-topbar-copy">
-            <span className="app-build-badge">{buildLabel}</span>
             <span className="app-save-status">{saveLabel}</span>
             <span className="app-save-note">
               {requiresRemoteLogin ? 'ログインは ZIP 生成時だけ必要です' : 'ログインなしで最後まで試せます'}
@@ -68,6 +69,17 @@ export function WizardChrome<TStep extends string>({
               >
                 運用ログ
               </button>
+            </div>
+          )}
+          {runtimeLabel && (
+            <div className="app-runtime-slot">
+              <span
+                className="app-build-badge"
+                title={runtimeLabelTitle}
+                aria-label={`現在の公開バージョン ${runtimeLabel}${runtimeLabelTitle ? `。公開時刻 ${runtimeLabelTitle}` : ''}`}
+              >
+                {runtimeLabel}
+              </span>
             </div>
           )}
         </div>

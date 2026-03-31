@@ -108,3 +108,25 @@ test('canViewSupportPanel only allows configured support viewers', async () => {
     process.env.VITE_SUPPORT_ALLOWED_DOMAINS = previousDomains;
   }
 });
+
+test('runtime label helpers format deploy time and respect admin visibility mode', async () => {
+  const {
+    buildRuntimeLabel,
+    formatRuntimeLabelTitle,
+    normalizeRuntimeLabelMode,
+    shouldShowRuntimeLabel,
+  } = await import('../src/utils/runtimeLabel.ts');
+
+  const label = buildRuntimeLabel('v0.1.1', '287b66f', '2026-04-01T07:36:00+09:00');
+  const title = formatRuntimeLabelTitle('2026-04-01T07:36:00+09:00');
+
+  assert.match(label, /^v0\.1\.1 \(287b66f\) \d{1,2}:\d{2}$/);
+  assert.match(title, /2026\/04\/01/);
+  assert.equal(normalizeRuntimeLabelMode('admin'), 'admin');
+  assert.equal(normalizeRuntimeLabelMode('hidden'), 'hidden');
+  assert.equal(normalizeRuntimeLabelMode('unexpected'), 'public');
+  assert.equal(shouldShowRuntimeLabel('public', false), true);
+  assert.equal(shouldShowRuntimeLabel('admin', false), false);
+  assert.equal(shouldShowRuntimeLabel('admin', true), true);
+  assert.equal(shouldShowRuntimeLabel('hidden', true), false);
+});
