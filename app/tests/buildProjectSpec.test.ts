@@ -378,6 +378,8 @@ test('buildProjectSpec should reflect browser-to-host audio runtime boundaries a
   const requirements = files.get('docs/REQUIREMENTS.md') ?? '';
   const architecture = files.get('docs/ARCHITECTURE.md') ?? '';
   const roadmap = files.get('docs/ROADMAP.md') ?? '';
+  const versioning = files.get('docs/VERSIONING_STANDARD.md') ?? '';
+  const claude = files.get('CLAUDE.md') ?? '';
 
   assert.equal(spec.tech.primary_language, 'typescript');
   assert.deepEqual(spec.tech.frameworks, ['Next.js', 'FastAPI']);
@@ -386,6 +388,9 @@ test('buildProjectSpec should reflect browser-to-host audio runtime boundaries a
   assert.equal(requirements.includes('Keep the client-host runtime boundary explicit'), true);
   assert.equal(requirements.includes('browser UI reachable from macOS'), true);
   assert.equal(requirements.includes('Windows RTX4090 host'), true);
+  assert.equal(requirements.includes('top-right header'), true);
+  assert.equal(requirements.includes('deploy or publication time'), true);
+  assert.equal(requirements.includes('restricted to admins'), true);
   assert.equal(architecture.includes('## Runtime Boundary'), true);
   assert.equal(architecture.includes('browser UI reachable from macOS'), true);
   assert.equal(architecture.includes('Windows RTX4090 host'), true);
@@ -397,6 +402,12 @@ test('buildProjectSpec should reflect browser-to-host audio runtime boundaries a
     roadmap.includes('Implement the first browser-to-host handoff between the operator UI and the inference or media runtime.'),
     true,
   );
+  assert.equal(versioning.includes('deploy or publication time'), true);
+  assert.equal(versioning.includes('top-right of the header'), true);
+  assert.equal(versioning.includes('`v<release> (<commit>) <deploy time>`'), true);
+  assert.equal(versioning.includes('restricted to admins'), true);
+  assert.equal(claude.includes('top-right header'), true);
+  assert.equal(claude.includes('deploy or publication time'), true);
 });
 
 test('buildProjectSpec should rescue framework and primary language summaries from planning when top-level tech stack is stale', () => {

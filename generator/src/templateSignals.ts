@@ -13,6 +13,7 @@ const WINDOWS_HOST_PATTERN = /\bwindows\b|windows\s+\d+|win11|win10/i;
 const GPU_HOST_PATTERN = /\brtx\s*\d{3,4}\b|\bgpu\b|cuda|ローカル推論|local inference/i;
 const MAC_CLIENT_PATTERN = /\bmac(?:os)?\b|macから|mac から|mac上|mac からも/i;
 const BROWSER_CLIENT_PATTERN = /\bbrowser\b|ブラウザ|webui|web ui|web-ui/i;
+const WEB_UI_FRAMEWORK_PATTERN = /\bnext(?:\.js|js)?\b|\breact\b|\bvue(?:\.js|js)?\b|\bnuxt(?:\.js|js)?\b|\bsvelte\s*kit\b|\bsveltekit\b|\bvite\b/i;
 
 function splitListChoice(choice: string): string[] {
   return choice
@@ -109,6 +110,21 @@ export function inferBriefSignals(brief: ProjectBrief): BriefSignals {
     hasBrowserClient,
     hasMacClient,
   };
+}
+
+export function hasOperatorFacingWebUi(brief: ProjectBrief): boolean {
+  const signals = inferBriefSignals(brief);
+  if (signals.hasWeb || signals.hasBrowserClient) return true;
+
+  const planning = brief.planning ?? { tech_decisions: [], external_dependencies: [] };
+  const frameworkText = [
+    brief.tech.frameworks.join(' '),
+    ...planning.tech_decisions
+      .filter((item) => /framework/i.test(item.topic))
+      .map((item) => item.choice),
+  ].join(' ');
+
+  return WEB_UI_FRAMEWORK_PATTERN.test(frameworkText);
 }
 
 export function inferPipelineStages(brief: ProjectBrief): string[] {

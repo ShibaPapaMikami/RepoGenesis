@@ -1,6 +1,6 @@
 import type { ProjectBrief } from '../schema';
 import { getDependenciesByStatus } from '../planning';
-import { inferBriefSignals, inferPipelineStages, summarizeCoreFeatures, summarizeDependencyNames, summarizeRuntimeBoundary } from '../templateSignals';
+import { hasOperatorFacingWebUi, inferBriefSignals, inferPipelineStages, summarizeCoreFeatures, summarizeDependencyNames, summarizeRuntimeBoundary } from '../templateSignals';
 import { formatDomains, formatOwner, formatProjectDescription } from '../templateDisplay';
 
 export function generateRequirements(brief: ProjectBrief): string {
@@ -11,6 +11,7 @@ export function generateRequirements(brief: ProjectBrief): string {
   const coreFeatures = summarizeCoreFeatures(brief);
   const adoptedDependencies = summarizeDependencyNames(brief, 'adopted');
   const runtimeBoundary = summarizeRuntimeBoundary(brief);
+  const hasWebUi = hasOperatorFacingWebUi(brief);
   const hasFrameworkSignal = tech.domains.includes('web')
     || tech.frameworks.length > 0
     || planning.tech_decisions.some((item) => /framework/i.test(item.topic));
@@ -42,6 +43,12 @@ export function generateRequirements(brief: ProjectBrief): string {
         'Local setup expectations and required environment placeholders are documented.',
         `Security expectations for level \`${security.level}\` are reflected in implementation and deployment decisions.`,
         'Release version and commit identity can be surfaced by the running service, API, or CLI when applicable.',
+        ...(hasWebUi
+          ? [
+            'Operator-facing web UI keeps a low-emphasis runtime label in the top-right header showing release version, commit SHA, and deploy or publication time during active development and rollout.',
+            'The UI label can later be hidden, feature-flagged, or restricted to admins without removing other runtime identity surfaces.',
+          ]
+          : []),
       ],
     },
   ];
@@ -185,6 +192,7 @@ ${knownTbdLines.length > 0 ? knownTbdLines.join('\n') : '- No major TBDs were de
 
 ### Version Traceability
 - Running services must expose release version and commit SHA.
+- Running services should expose deploy or publication time where operators inspect runtime identity.
 - APIs should expose deploy identity through health/version surfaces or logs.
 - CLI tools should support version output.
 `;

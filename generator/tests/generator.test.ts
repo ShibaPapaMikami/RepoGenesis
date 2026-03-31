@@ -643,18 +643,29 @@ describe('generator — single-repo', () => {
     const requirements = fs.readFileSync(path.join(result.outputDir, 'docs/REQUIREMENTS.md'), 'utf-8');
     const architecture = fs.readFileSync(path.join(result.outputDir, 'docs/ARCHITECTURE.md'), 'utf-8');
     const roadmap = fs.readFileSync(path.join(result.outputDir, 'docs/ROADMAP.md'), 'utf-8');
+    const versioning = fs.readFileSync(path.join(result.outputDir, 'docs/VERSIONING_STANDARD.md'), 'utf-8');
+    const claude = fs.readFileSync(path.join(result.outputDir, 'CLAUDE.md'), 'utf-8');
 
     expect(requirements).toContain('- Frameworks: Next.js, FastAPI');
     expect(requirements).not.toContain('Framework choice is still TBD.');
     expect(requirements).toContain('Keep the client-host runtime boundary explicit');
     expect(requirements).toContain('browser UI reachable from macOS');
     expect(requirements).toContain('Windows RTX4090 host');
+    expect(requirements).toContain('top-right header');
+    expect(requirements).toContain('deploy or publication time');
+    expect(requirements).toContain('restricted to admins');
     expect(architecture).toContain('## Runtime Boundary');
     expect(architecture).toContain('browser UI reachable from macOS');
     expect(architecture).toContain('Windows RTX4090 host');
     expect(roadmap).toContain('Document the browser client and Windows/GPU host boundary before implementation spreads across both sides.');
     expect(roadmap).toContain('Implement the first browser-to-host handoff between the operator UI and the inference or media runtime.');
     expect(roadmap).toContain('Validate browser-to-host latency, transport failures, and recovery behavior on target hardware.');
+    expect(versioning).toContain('deploy or publication time');
+    expect(versioning).toContain('top-right of the header');
+    expect(versioning).toContain('`v<release> (<commit>) <deploy time>`');
+    expect(versioning).toContain('restricted to admins');
+    expect(claude).toContain('top-right header');
+    expect(claude).toContain('deploy or publication time');
   });
 });
 

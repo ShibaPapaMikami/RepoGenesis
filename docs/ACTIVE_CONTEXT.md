@@ -81,6 +81,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - repo-type heuristic は `FastAPI` の文字列だけで `multi` に寄りすぎないように調整し、simple intake では explicit `single/multi repo` hint を candidate input へ渡して既存の期待動作を維持した
   - compound `primary_language` hint は `Primary language` と `Supporting language` に分解して canonical 化し、`typescript + python` のような raw decision noise を減らした
   - planning に `Framework: Next.js, FastAPI` がある場合は `API framework: FastAPI` の重複 candidate を落とし、`buildProjectSpec` は stale な `tech.frameworks` を planning から rescue して generated tech stack に反映するようにした
+  - generated `VERSIONING_STANDARD.md` / `REQUIREMENTS.md` / wrapper guidance は、operator-facing web UI で `v<release> (<commit>) <deploy time>` を右上ヘッダーに低強調で表示する default を持ち、開発完了後は hidden / feature-flagged / admin-only へ切り替え可能な運用方針まで含むようになった
   - `責任者` と `技術ドメイン` は AI-first flow では blocking validation から外した
   - `技術ドメイン` 未確定は warning 扱いで ZIP を止めないようにした
   - skill layer contract を provider-aware に更新し、Codex / Claude Code / Gemini CLI を並列で扱う設計に整理した

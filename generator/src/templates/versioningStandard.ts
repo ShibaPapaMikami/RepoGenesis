@@ -1,6 +1,20 @@
 import type { ProjectBrief } from '../schema';
+import { hasOperatorFacingWebUi } from '../templateSignals';
 
 export function generateVersioningStandard(brief: ProjectBrief): string {
+  const webUiBlock = hasOperatorFacingWebUi(brief)
+    ? `### 6. Preferred web UI label
+- For operator-facing web UI, default placement is a small low-emphasis label in the top-right of the header.
+- Preferred compact label: \`v<release> (<commit>) <deploy time>\` (for example \`v2.2.13 (b41ecc0) 6:14\`).
+- Keep the label visible during active development and rollout so operators can tell whether the current screen reflects the latest deploy.
+- After the product stabilizes, the label may be hidden, feature-flagged, or restricted to admins if the same runtime identity remains inspectable elsewhere.
+`
+    : `### 6. Optional web UI label
+- If the project later adds operator-facing web UI, default placement for runtime identity is a small low-emphasis label in the top-right of the header.
+- Preferred compact label: \`v<release> (<commit>) <deploy time>\`.
+- The label may be hidden, feature-flagged, or restricted to admins after launch, as long as runtime identity remains inspectable elsewhere.
+`;
+
   return `# VERSIONING_STANDARD.md
 
 ## Purpose
@@ -16,9 +30,9 @@ Define how ${brief.project.name} should expose release identity and runtime trac
 - Deployable services must expose:
   - release version
   - commit SHA
+  - deploy or publication time
   - environment
-- The display location is implementation-specific.
-- If the identity is shown in UI, prefer a compact low-emphasis label such as \`v2.2.13 (4094d23)\`.
+- If the identity is shown in UI, prefer a compact low-emphasis label such as \`v2.2.13 (4094d23) 6:14\`.
 - The requirement is observability, not a fixed UI layout.
 
 ### 3. API services
@@ -37,14 +51,13 @@ Define how ${brief.project.name} should expose release identity and runtime trac
 - Commit SHA is the exact deployed code identity.
 - Both should be retained for rollback and incident handling.
 
-### 6. Preferred UI label
-- When a web UI shows version identity, prefer the format \`v<release> (<commit>)\`.
-- Keep the label visible but visually low-emphasis so it supports debugging without competing with the main product UI.
+${webUiBlock}
 
 ### 7. Minimum operational requirement
 - Operators must be able to answer:
   - What release is running?
   - What commit is running?
+  - When was this deploy or publication made visible?
   - Which environment is affected?
 `;
 }

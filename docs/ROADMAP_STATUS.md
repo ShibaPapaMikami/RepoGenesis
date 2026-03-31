@@ -129,6 +129,7 @@ Phase 6 / Hardening
 - repo-type heuristic は `FastAPI` の文字列だけで `multi` に寄りすぎないように調整し、simple intake では explicit `single/multi repo` hint を candidate input として渡すようにした。
 - compound `primary_language` hint は `Primary language` と `Supporting language` に分解して canonical 化し、`typescript + python` のような raw decision noise を減らすようにした。
 - planning に `Framework: Next.js, FastAPI` がある場合は `API framework: FastAPI` の重複 candidate を落とし、`buildProjectSpec` は stale な `tech.frameworks` を planning から rescue して generated tech stack に反映するようになった。
+- generated `VERSIONING_STANDARD.md` / `REQUIREMENTS.md` / wrapper guidance は、operator-facing web UI で `v<release> (<commit>) <deploy time>` を右上ヘッダーに低強調で表示する default を持ち、開発完了後は hidden / feature-flagged / admin-only へ切り替え可能な運用方針まで含むようになった。
 
 ## What This Phase Still Needs
 - Refine the public UI so non-engineers can understand planning fields without reading internal terminology.

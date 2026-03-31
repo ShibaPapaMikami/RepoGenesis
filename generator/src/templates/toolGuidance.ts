@@ -1,6 +1,6 @@
 import type { ProjectBrief } from '../schema';
 import type { SupportedAiTool } from '../aiTools';
-import { inferBriefSignals } from '../templateSignals';
+import { hasOperatorFacingWebUi, inferBriefSignals } from '../templateSignals';
 import { getToolWrapperFile } from '../aiTools';
 
 interface RepoEntry {
@@ -34,6 +34,7 @@ export function generateToolGuidance(
   const wrapperFile = getToolWrapperFile(tool);
   const providerSpecificLine = PROVIDER_SPECIFIC_LINES[tool];
   const signals = inferBriefSignals(brief);
+  const hasWebUi = hasOperatorFacingWebUi(brief);
   const hasTyperFramework = brief.tech.frameworks.some((framework) => /typer/i.test(framework))
     || (brief.planning?.tech_decisions ?? []).some((item) => /framework/i.test(item.topic) && /typer/i.test(item.choice));
   const domainSpecificLines = [
@@ -54,6 +55,12 @@ export function generateToolGuidance(
       : null,
     signals.hasUnity
       ? '- Keep the Unity integration boundary explicit: define handoff artifacts, expected file formats, and runtime assumptions before coding across the boundary.'
+      : null,
+    hasWebUi
+      ? '- For operator-facing web UI, keep a small low-emphasis runtime label in the top-right header showing release version, commit, and deploy or publication time during active development and rollout.'
+      : null,
+    hasWebUi
+      ? '- Implement the runtime label so it can later be hidden, feature-flagged, or restricted to admins without removing API/log-based traceability.'
       : null,
   ].filter(Boolean) as string[];
   const domainSpecificBlock = domainSpecificLines.length > 0
