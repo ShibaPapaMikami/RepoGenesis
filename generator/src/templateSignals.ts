@@ -3,6 +3,7 @@ import { getDependenciesByStatus } from './planning';
 
 const CLI_PATTERN = /\bcli\b|command line|コマンドライン|コマンド|terminal|ターミナル/i;
 const TTS_PATTERN = /\btts\b|text[- ]to[- ]speech|speech synthesis|voice synthesis|voice generation|irodori|音声合成|読み上げ|発話/i;
+const TRANSCRIPTION_PATTERN = /\btranscription\b|speech[- ]to[- ]text|\basr\b|whisper|文字起こし|書き起こし|議事録|議事録作成|会議ログ|音声認識/i;
 const AUDIO_PATTERN = /\baudio\b|\bvoice\b|\bspeech\b|\bwav\b|\bmp3\b|音声/i;
 const UNITY_PATTERN = /\bunity\b|ユニティ/i;
 const PIPELINE_PATTERN = /pipeline|パイプライン|前処理|後処理|post[- ]?process|post[- ]?processing|pre[- ]?process|pre[- ]?processing/i;
@@ -10,10 +11,13 @@ const TUNABLE_PARAMETER_PATTERN = /pitch|speed|rate|tempo|breath|break|prosody|e
 const EXPLICIT_PIPELINE_TOPIC_PATTERN = /core workflow architecture|workflow architecture|pipeline architecture/i;
 const CORE_FEATURE_TOPIC_PATTERN = /core feature/i;
 const WINDOWS_HOST_PATTERN = /\bwindows\b|windows\s+\d+|win11|win10/i;
-const GPU_HOST_PATTERN = /\brtx\s*\d{3,4}\b|\bgpu\b|cuda|ローカル推論|local inference/i;
-const MAC_CLIENT_PATTERN = /\bmac(?:os)?\b|macから|mac から|mac上|mac からも/i;
+const GPU_HOST_PATTERN = /\brtx\s*\d{3,4}\b|\bgpu\b|cuda/i;
+const MAC_CLIENT_PATTERN = /\bfrom mac(?:os)?\b|reachable from mac(?:os)?|mac(?:os)? client|macから|mac から|mac上|mac からも/i;
 const BROWSER_CLIENT_PATTERN = /\bbrowser\b|ブラウザ|webui|web ui|web-ui/i;
 const WEB_UI_FRAMEWORK_PATTERN = /\bnext(?:\.js|js)?\b|\breact\b|\bvue(?:\.js|js)?\b|\bnuxt(?:\.js|js)?\b|\bsvelte\s*kit\b|\bsveltekit\b|\bvite\b/i;
+const DESKTOP_UI_FRAMEWORK_PATTERN = /\belectron\b|\btauri\b/i;
+const DESKTOP_APP_PATTERN = /\bdesktop\b|デスクトップアプリ|デスクトップ|ローカルデスクトップ/i;
+const TRANSCRIPTION_CONTROL_PATTERN = /話者分離|speaker|diarization|timestamp|タイムスタンプ|segment|chunk|vad|language|言語|議事録|要約|markdown|保存形式|出力形式/i;
 
 function splitListChoice(choice: string): string[] {
   return choice
@@ -54,12 +58,17 @@ export interface BriefSignals {
   hasUnity: boolean;
   hasAudio: boolean;
   hasTts: boolean;
+  hasTranscription: boolean;
   hasPipeline: boolean;
   hasTunableParameters: boolean;
+  hasTranscriptionControls: boolean;
   hasDistributedRuntimeBoundary: boolean;
   hasWindowsGpuHost: boolean;
   hasBrowserClient: boolean;
   hasMacClient: boolean;
+  hasDesktopApp: boolean;
+  hasOperatorFacingUi: boolean;
+  hasStableCliSurface: boolean;
 }
 
 export function collectBriefContextText(brief: ProjectBrief): string {
@@ -87,35 +96,6 @@ export function collectBriefContextText(brief: ProjectBrief): string {
 
 export function inferBriefSignals(brief: ProjectBrief): BriefSignals {
   const text = collectBriefContextText(brief);
-  const hasAi = brief.tech.domains.includes('ai') || /\bai\b|\bllm\b|生成ai|生成 ai|model/i.test(text);
-  const hasCli = brief.tech.domains.includes('cli') || CLI_PATTERN.test(text);
-  const hasTts = TTS_PATTERN.test(text);
-  const hasWindowsHost = WINDOWS_HOST_PATTERN.test(text);
-  const hasGpuHost = GPU_HOST_PATTERN.test(text);
-  const hasMacClient = MAC_CLIENT_PATTERN.test(text);
-  const hasBrowserClient = BROWSER_CLIENT_PATTERN.test(text);
-  const hasDistributedRuntimeBoundary = hasWindowsHost && hasGpuHost && (hasMacClient || hasBrowserClient);
-
-  return {
-    hasAi,
-    hasCli,
-    hasWeb: brief.tech.domains.includes('web'),
-    hasUnity: brief.tech.domains.includes('unity') || UNITY_PATTERN.test(text),
-    hasAudio: hasTts || AUDIO_PATTERN.test(text),
-    hasTts,
-    hasPipeline: hasTts || PIPELINE_PATTERN.test(text) || (hasAi && hasCli),
-    hasTunableParameters: hasTts || TUNABLE_PARAMETER_PATTERN.test(text),
-    hasDistributedRuntimeBoundary,
-    hasWindowsGpuHost: hasWindowsHost && hasGpuHost,
-    hasBrowserClient,
-    hasMacClient,
-  };
-}
-
-export function hasOperatorFacingWebUi(brief: ProjectBrief): boolean {
-  const signals = inferBriefSignals(brief);
-  if (signals.hasWeb || signals.hasBrowserClient) return true;
-
   const planning = brief.planning ?? { tech_decisions: [], external_dependencies: [] };
   const frameworkText = [
     brief.tech.frameworks.join(' '),
@@ -123,8 +103,62 @@ export function hasOperatorFacingWebUi(brief: ProjectBrief): boolean {
       .filter((item) => /framework/i.test(item.topic))
       .map((item) => item.choice),
   ].join(' ');
+  const operatorInterfaceText = planning.tech_decisions
+    .filter((item) => /operator interface/i.test(item.topic))
+    .map((item) => [item.choice, item.rationale, item.notes].filter(Boolean).join(' '))
+    .join(' ');
+  const hasAi = brief.tech.domains.includes('ai') || /\bai\b|\bllm\b|生成ai|生成 ai|model/i.test(text);
+  const hasCli = brief.tech.domains.includes('cli') || CLI_PATTERN.test(text);
+  const hasTts = TTS_PATTERN.test(text);
+  const hasTranscription = TRANSCRIPTION_PATTERN.test(text);
+  const hasWindowsHost = WINDOWS_HOST_PATTERN.test(text);
+  const hasGpuHost = GPU_HOST_PATTERN.test(text);
+  const hasMacClient = MAC_CLIENT_PATTERN.test(text);
+  const hasBrowserClient = BROWSER_CLIENT_PATTERN.test(text);
+  const hasDesktopApp = DESKTOP_APP_PATTERN.test(text) || DESKTOP_UI_FRAMEWORK_PATTERN.test(frameworkText);
+  const hasDistributedRuntimeBoundary = hasWindowsHost && hasGpuHost && (hasMacClient || hasBrowserClient);
+  const hasOperatorFacingUi = brief.tech.domains.includes('web')
+    || hasBrowserClient
+    || hasDesktopApp
+    || WEB_UI_FRAMEWORK_PATTERN.test(frameworkText)
+    || DESKTOP_UI_FRAMEWORK_PATTERN.test(frameworkText)
+    || /\bui\b|画面|ブラウザ|web ui|desktop|デスクトップ/i.test(operatorInterfaceText);
+  const hasStableCliSurface = brief.tech.frameworks.some((framework) => /typer/i.test(framework))
+    || planning.tech_decisions.some((item) =>
+      /framework/i.test(item.topic) && /typer/i.test(item.choice))
+    || planning.tech_decisions.some((item) =>
+      /operator interface/i.test(item.topic)
+      && item.status !== 'open'
+      && CLI_PATTERN.test([item.choice, item.rationale, item.notes].filter(Boolean).join(' ')))
+    || (brief.tech.domains.includes('cli') && CLI_PATTERN.test(text));
 
-  return WEB_UI_FRAMEWORK_PATTERN.test(frameworkText);
+  return {
+    hasAi,
+    hasCli,
+    hasWeb: brief.tech.domains.includes('web'),
+    hasUnity: brief.tech.domains.includes('unity') || UNITY_PATTERN.test(text),
+    hasAudio: hasTts || hasTranscription || AUDIO_PATTERN.test(text),
+    hasTts,
+    hasTranscription,
+    hasPipeline: hasTts || hasTranscription || PIPELINE_PATTERN.test(text) || (hasAi && hasCli),
+    hasTunableParameters: hasTts || TUNABLE_PARAMETER_PATTERN.test(text),
+    hasTranscriptionControls: hasTranscription && TRANSCRIPTION_CONTROL_PATTERN.test(text),
+    hasDistributedRuntimeBoundary,
+    hasWindowsGpuHost: hasWindowsHost && hasGpuHost,
+    hasBrowserClient,
+    hasMacClient,
+    hasDesktopApp,
+    hasOperatorFacingUi,
+    hasStableCliSurface,
+  };
+}
+
+export function hasOperatorFacingUi(brief: ProjectBrief): boolean {
+  return inferBriefSignals(brief).hasOperatorFacingUi;
+}
+
+export function hasStableCliSurface(brief: ProjectBrief): boolean {
+  return inferBriefSignals(brief).hasStableCliSurface;
 }
 
 export function inferPipelineStages(brief: ProjectBrief): string[] {
@@ -135,8 +169,12 @@ export function inferPipelineStages(brief: ProjectBrief): string[] {
 
   const signals = inferBriefSignals(brief);
 
-  if (signals.hasTts || signals.hasAudio) {
+  if (signals.hasTts) {
     return ['parameter preparation', 'synthesis / generation', 'post-processing / export'];
+  }
+
+  if (signals.hasTranscription) {
+    return ['audio capture / ingest', 'transcription', 'review / save / export'];
   }
 
   if (signals.hasAi && signals.hasCli) {

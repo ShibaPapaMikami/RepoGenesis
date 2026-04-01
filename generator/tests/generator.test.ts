@@ -383,6 +383,67 @@ const DISTRIBUTED_AUDIO_WEB_BRIEF = {
   },
 };
 
+const DESKTOP_TRANSCRIPTION_BRIEF = {
+  ...SINGLE_BRIEF,
+  project: {
+    ...SINGLE_BRIEF.project,
+    name: 'G議事録',
+    slug: 'g-minutes',
+    description: 'Windows と macOS で動く社内向けローカルデスクトップアプリ。会議中のマイク音声をリアルタイムで文字起こしし、会議終了後にログとして保存する。初期版は話者分離なしで開始し、将来追加できるようにAIバックエンドを差し替え可能な構成にする。機密情報を含む会議を想定し、外部クラウド送信なしの運用を基本とする。',
+  },
+  tech: {
+    ...SINGLE_BRIEF.tech,
+    domains: ['ai'],
+    primary_language: 'typescript' as const,
+    frameworks: [],
+  },
+  workflow: {
+    phases_count: 4,
+  },
+  planning: {
+    tech_decisions: [
+      {
+        topic: 'Operator interface',
+        choice: 'CLI / UI の優先度',
+        status: 'open' as const,
+        rationale: 'Need to decide between CLI, desktop UI, or another operator-facing surface.',
+        decision_date: '',
+        notes: '',
+      },
+      {
+        topic: 'Speaker separation',
+        choice: '話者分離の初期スコープ',
+        status: 'open' as const,
+        rationale: 'Need to decide whether diarization is part of the initial release.',
+        decision_date: '',
+        notes: '',
+      },
+      {
+        topic: 'Minutes generation',
+        choice: '議事録生成 / 要約の自動化',
+        status: 'open' as const,
+        rationale: 'Need to decide whether meeting minutes generation is automatic in the first release.',
+        decision_date: '',
+        notes: '',
+      },
+    ],
+    external_dependencies: [
+      {
+        name: 'ml-explore/mlx',
+        category: 'github_repo' as const,
+        status: 'adopted' as const,
+        purpose: 'Apple Silicon 向けのローカル推論候補',
+        owner: 'Audio Team',
+        source: 'https://github.com/ml-explore/mlx',
+        license: '',
+        env_vars: [],
+        data_outbound: false,
+        notes: '',
+      },
+    ],
+  },
+};
+
 let tmpDir: string;
 
 beforeEach(() => {
@@ -666,6 +727,33 @@ describe('generator — single-repo', () => {
     expect(versioning).toContain('restricted to admins');
     expect(claude).toContain('top-right header');
     expect(claude).toContain('deploy or publication time');
+  });
+
+  it('should generate transcription- and desktop-aware docs without forcing CLI output', () => {
+    const inputPath = writeInputFile(DESKTOP_TRANSCRIPTION_BRIEF);
+    const result = generate({ inputPath, outputPath: tmpDir, force: true });
+
+    const requirements = fs.readFileSync(path.join(result.outputDir, 'docs/REQUIREMENTS.md'), 'utf-8');
+    const architecture = fs.readFileSync(path.join(result.outputDir, 'docs/ARCHITECTURE.md'), 'utf-8');
+    const roadmap = fs.readFileSync(path.join(result.outputDir, 'docs/ROADMAP.md'), 'utf-8');
+    const versioning = fs.readFileSync(path.join(result.outputDir, 'docs/VERSIONING_STANDARD.md'), 'utf-8');
+    const claude = fs.readFileSync(path.join(result.outputDir, 'CLAUDE.md'), 'utf-8');
+
+    expect(requirements).toContain('- Domains: ai');
+    expect(requirements).toContain('audio capture / ingest -> transcription -> review / save / export');
+    expect(requirements).toContain('Operator-facing UI keeps a low-emphasis runtime label in the top-right header');
+    expect(requirements).toContain('Transcription-related controls and output format requirements are documented');
+    expect(requirements).not.toContain('Provide a stable operator-facing CLI contract');
+    expect(requirements).toContain('Open decision: Operator interface -> CLI / UI の優先度.');
+    expect(architecture).toContain('## First Workflow Shape');
+    expect(architecture).toContain('1. audio capture / ingest');
+    expect(architecture).toContain('2. transcription');
+    expect(roadmap).toContain('Validate transcription accuracy, timestamp or speaker-label expectations, and export quality gates.');
+    expect(versioning).toContain('Preferred operator UI label');
+    expect(versioning).toContain('operator-facing web or desktop UI');
+    expect(versioning).toContain('top-right of the header');
+    expect(claude).toContain('For transcription products, keep capture source');
+    expect(claude).not.toContain('Treat the CLI contract as first-class');
   });
 });
 

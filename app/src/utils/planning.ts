@@ -540,7 +540,19 @@ function inferOpenQuestionDecision(line: string): { topic: string; choice: strin
   if (/リアルタイム|real-?time/i.test(line)) {
     return { topic: 'Runtime mode', choice: 'リアルタイム対応' };
   }
-  if (/感情パラメータ|emotion|ルールベース|llm/i.test(line)) {
+  if (/文字起こし|transcription|asr|音声認識/i.test(line) && /(方式|backend|バックエンド|モデル|精度|ローカル処理|候補)/i.test(line)) {
+    return { topic: 'Transcription backend', choice: '文字起こし方式' };
+  }
+  if (/議事録生成|要約|summary|決定事項|todo|action item|アクションアイテム/i.test(line)) {
+    return { topic: 'Minutes generation', choice: '議事録生成 / 要約の自動化' };
+  }
+  if (/保存場所|保存先|共有ストレージ|ローカル保存|google drive|notion/i.test(line)) {
+    return { topic: 'Transcript storage', choice: '保存場所 / 共有方法' };
+  }
+  if (/話者分離|speaker separation|diarization/i.test(line)) {
+    return { topic: 'Speaker separation', choice: '話者分離の初期スコープ' };
+  }
+  if (/(感情パラメータ|emotion|pitch|speed|breath|break|prosody)/i.test(line) && /(ルールベース|llm|生成|方式|parameter|パラメータ)/i.test(line)) {
     return { topic: 'Emotion parameter generation', choice: '感情パラメータ生成方式' };
   }
   if (/話者|speaker/i.test(line)) {

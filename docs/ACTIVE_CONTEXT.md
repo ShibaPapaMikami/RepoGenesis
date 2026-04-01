@@ -1,7 +1,7 @@
 # ACTIVE_CONTEXT.md — Current Project State
 
 ## Last Updated
-2026-03-29
+2026-04-01
 
 ## Current Phase
 Phase 6 — AI-Assisted Spec Authoring (Hardening)
@@ -86,6 +86,10 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - guided wizard は `相談内容 -> ドラフト` を含む主要 step 遷移で必ず上端へ戻るように揃え、draft CTA も下部 action row の並びへ寄せた
   - options/detail には「現在値は AI が仮置きした候補」という説明と、技術ドメイン / 主要言語 / フレームワーク / planning の自動入力範囲を読み替える補助カードを追加した
   - curated skill recommendation は `AI tool` だけでなく project context も見て絞り込み、first-stage skill は初回 draft 適用時に自動選択し、public wizard 上で skill の発動方法も明示するようにした
+  - generator は `transcription / desktop / operator-facing UI` signal を追加し、TTS/CLI 向け deterministic enrichment が meeting transcription briefs に漏れないようにした
+  - generated `REQUIREMENTS.md` / `ARCHITECTURE.md` / `ROADMAP.md` / wrapper guidance / `VERSIONING_STANDARD.md` は、desktop transcription briefs で `audio capture / ingest -> transcription -> review / save / export` と top-right runtime label policy を出せるようになった
+  - planning parser は meeting-transcription の `未確定事項` を `Minutes generation` / `Transcript storage` / `Speaker separation` / `Transcription backend` へ正規化し、`Emotion parameter generation` の false positive を避けるようにした
+  - `buildProjectSpec` は stale framework/domain carry-over を抑え、operator interface が open な desktop/transcription briefs で `cli` / `web` を自動固定しすぎないようにした
   - `責任者` と `技術ドメイン` は AI-first flow では blocking validation から外した
   - `技術ドメイン` 未確定は warning 扱いで ZIP を止めないようにした
   - skill layer contract を provider-aware に更新し、Codex / Claude Code / Gemini CLI を並列で扱う設計に整理した

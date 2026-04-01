@@ -171,6 +171,7 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Generate concrete `ROADMAP.md` phase goals from workflow, dependencies, and unresolved planning items
 - [x] Add CLI / language-aware wrapper guidance for generated `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`
 - [x] Reflect explicit workflow architecture and differentiating core features into generated `REQUIREMENTS.md` / `ARCHITECTURE.md`
+- [x] Distinguish transcription / desktop operator-UI briefs from TTS/CLI briefs so generated pipeline, roadmap, wrapper guidance, and runtime-label policy match the actual product shape
 
 ### Track 5: Intake Parsing Hardening
 - [x] Treat explicit `RepoGenesis入力候補` as authoritative overrides for domains, primary language, and execution style
@@ -183,6 +184,7 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Split compound primary-language hints into canonical `Primary language` plus supporting language decisions, dedupe `API framework` noise when `Framework` already captures FastAPI, and rescue stale top-level framework summaries from planning during spec build
 - [x] Make web UI version traceability explicit by default: small top-right header label with `v<release> (<commit>) <deploy time>` during active development, plus a documented path to hide or restrict it to admins after launch
 - [x] Mirror the same runtime label policy in the hosted RepoGenesis UI with build-time `public / admin / hidden` modes so the app itself exposes deploy recency consistently
+- [x] Map meeting-transcription open questions into transcription-specific planning topics and suppress stale `cli/web` carry-over when the brief only leaves operator surface selection open
 
 ### CI / Docs Hardening
 - [x] Add CI coverage for vendored generator bundle drift

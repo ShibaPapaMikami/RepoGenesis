@@ -216,6 +216,72 @@ test('buildProjectSpec should support the named meeting transcription template',
   assert.deepEqual(spec.tech.domains, []);
 });
 
+test('buildProjectSpec should avoid stale CLI defaults for desktop transcription projects and generate transcription-specific docs', () => {
+  const draft = parseConsultationIntake(getConsultationTestTemplate('meeting_transcription_internal_tool'), {
+    ...makeState(),
+    project: {
+      name: '',
+      slug: '',
+      description: '',
+      owner: 'Gugenka Ops',
+    },
+    tech: {
+      ...makeState().tech,
+      domains: ['ai', 'cli'],
+    },
+  });
+  draft.suggestedState.project.description = 'Windows と macOS で動く社内向けローカルデスクトップアプリ。会議中のマイク音声をリアルタイムで文字起こしし、会議終了後にログとして保存する。';
+  draft.suggestedState.tech.domains = ['ai', 'cli'];
+  const spec = buildProjectSpec(draft.suggestedState);
+  const files = generateFromSpec(spec);
+  const requirements = files.get('docs/REQUIREMENTS.md') ?? '';
+  const architecture = files.get('docs/ARCHITECTURE.md') ?? '';
+  const roadmap = files.get('docs/ROADMAP.md') ?? '';
+  const versioning = files.get('docs/VERSIONING_STANDARD.md') ?? '';
+  const claude = files.get('CLAUDE.md') ?? '';
+
+  assert.deepEqual(spec.tech.domains, ['ai']);
+  assert.equal(
+    spec.planning.tech_decisions.some((item) =>
+      item.topic === 'Operator interface'
+      && item.status === 'open'
+      && item.choice === 'CLI / UI の優先度'),
+    true,
+  );
+  assert.equal(
+    spec.planning.tech_decisions.some((item) =>
+      item.topic === 'Minutes generation'
+      && item.status === 'open'
+      && item.choice === '議事録生成 / 要約の自動化'),
+    true,
+  );
+  assert.equal(
+    spec.planning.tech_decisions.some((item) =>
+      item.topic === 'Transcript storage'
+      && item.status === 'open'
+      && item.choice === '保存場所 / 共有方法'),
+    true,
+  );
+  assert.equal(
+    spec.planning.tech_decisions.some((item) =>
+      item.topic === 'Speaker separation'
+      && item.status === 'open'
+      && item.choice === '話者分離の初期スコープ'),
+    true,
+  );
+  assert.equal(requirements.includes('Domains: ai\n- Primary Language: typescript'), true);
+  assert.equal(requirements.includes('audio capture / ingest -> transcription -> review / save / export'), true);
+  assert.equal(requirements.includes('Provide a stable operator-facing CLI contract'), false);
+  assert.equal(requirements.includes('Operator-facing UI keeps a low-emphasis runtime label in the top-right header'), true);
+  assert.equal(requirements.includes('Transcription-related controls and output format requirements are documented'), true);
+  assert.equal(architecture.includes('1. audio capture / ingest'), true);
+  assert.equal(roadmap.includes('Validate transcription accuracy, timestamp or speaker-label expectations, and export quality gates.'), true);
+  assert.equal(versioning.includes('operator-facing web or desktop UI'), true);
+  assert.equal(versioning.includes('top-right of the header'), true);
+  assert.equal(claude.includes('For transcription products, keep capture source'), true);
+  assert.equal(claude.includes('Treat the CLI contract as first-class'), false);
+});
+
 test('buildProjectSpec should raise security level to the minimum required by flags', () => {
   const state = makeState();
   state.security.level = 'low';

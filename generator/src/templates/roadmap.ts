@@ -1,5 +1,5 @@
 import type { ProjectBrief } from '../schema';
-import { inferBriefSignals, inferPipelineStages, summarizeDependencyNames, summarizeOpenPlanningItems } from '../templateSignals';
+import { hasStableCliSurface, inferBriefSignals, inferPipelineStages, summarizeDependencyNames, summarizeOpenPlanningItems } from '../templateSignals';
 
 const PHASE_TITLES = [
   'Project Setup & Foundation',
@@ -20,6 +20,7 @@ export function generateRoadmap(brief: ProjectBrief): string {
   const pipelineStages = inferPipelineStages(brief);
   const adoptedDependencies = summarizeDependencyNames(brief, 'adopted');
   const openPlanningItems = summarizeOpenPlanningItems(brief);
+  const hasCliSurface = hasStableCliSurface(brief);
 
   function buildPhaseContent(index: number): { goals: string[]; deliverables: string[] } {
     switch (index) {
@@ -66,7 +67,7 @@ export function generateRoadmap(brief: ProjectBrief): string {
         if (signals.hasDistributedRuntimeBoundary) {
           goals.push('Implement the first browser-to-host handoff between the operator UI and the inference or media runtime.');
         }
-        if (signals.hasCli) {
+        if (hasCliSurface) {
           goals.push('Lock the operator-facing command surface, arguments, and output contract for the first release.');
         }
         return {
@@ -81,8 +82,10 @@ export function generateRoadmap(brief: ProjectBrief): string {
         const goals = [
           'Validate output quality, failure handling, and operator experience for the first workflow.',
         ];
-        if (signals.hasTts || signals.hasAudio) {
+        if (signals.hasTts) {
           goals.push('Verify synthesis parameters, output format, and post-processing quality gates.');
+        } else if (signals.hasTranscription) {
+          goals.push('Validate transcription accuracy, timestamp or speaker-label expectations, and export quality gates.');
         }
         if (signals.hasDistributedRuntimeBoundary) {
           goals.push('Validate browser-to-host latency, transport failures, and recovery behavior on target hardware.');

@@ -1,7 +1,7 @@
 # ROADMAP_STATUS.md — Current Position
 
 ## Last Updated
-2026-03-29
+2026-04-01
 
 ## Roadmap Position
 Phase 6 / Hardening
@@ -134,6 +134,9 @@ Phase 6 / Hardening
 - guided wizard は `相談内容 -> ドラフト` を含む全主要 step 遷移で上端へ戻るように揃え、draft CTA も他 step と同じ下部 action row へ寄せた。
 - options/detail には「現在値は AI が仮置きした候補」という説明を追加し、技術ドメイン / 主要言語 / フレームワーク / planning の自動入力範囲を non-engineer 向けに読み替えやすくした。
 - curated skill recommendation は `AI tool` だけでなく project context も見て絞り込み、first-stage skill は初回 draft 適用時に自動選択したうえで、public wizard に skill の発動方法を明示するようになった。
+- generator は `transcription / desktop / operator-facing UI` を TTS/CLI と分けて解釈するようになり、`REQUIREMENTS.md` / `ARCHITECTURE.md` / `ROADMAP.md` / wrapper guidance / `VERSIONING_STANDARD.md` が `audio capture / ingest -> transcription -> review / save / export` と UI 前提の runtime label policy を出せるようになった。
+- meeting-transcription 系の `未確定事項` は `Minutes generation` / `Transcript storage` / `Speaker separation` / `Transcription backend` などの planning topic へ正規化され、`Emotion parameter generation` のような TTS 専用 open decision が混ざりにくくなった。
+- `buildProjectSpec` は stale な `cli` / `web` carry-over を軽減し、operator interface が open の desktop/transcription brief で CLI requirement や web domain を固定しすぎないようにした。
 
 ## What This Phase Still Needs
 - Refine the public UI so non-engineers can understand planning fields without reading internal terminology.

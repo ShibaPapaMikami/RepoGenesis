@@ -467,6 +467,36 @@ test('parseConsultationIntake should avoid false positive domains for calendar a
   assert.equal(draft.review.openQuestions.some((item) => item.includes('ツールのUI形式')), true);
 });
 
+test('parseConsultationIntake should map meeting-transcription open questions without leaking TTS-specific decisions', () => {
+  const draft = parseConsultationIntake(getConsultationTestTemplate('meeting_transcription_internal_tool'), makeState());
+  const techDecisions = draft.suggestedState.planning.tech_decisions;
+
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Operator interface' && item.status === 'open' && item.choice === 'CLI / UI の優先度'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Minutes generation' && item.status === 'open' && item.choice === '議事録生成 / 要約の自動化'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Transcript storage' && item.status === 'open' && item.choice === '保存場所 / 共有方法'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Speaker separation' && item.status === 'open' && item.choice === '話者分離の初期スコープ'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) => item.topic === 'Emotion parameter generation'),
+    false,
+  );
+});
+
 test('validate should allow missing owner and domains for consultation-driven drafts', () => {
   const draft = parseConsultationIntake(getConsultationTestTemplate('meeting_transcription_internal_tool'), makeState());
   const errors = validate(draft.suggestedState);

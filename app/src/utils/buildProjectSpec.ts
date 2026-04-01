@@ -73,6 +73,47 @@ function resolveFrameworks(state: FormState): string[] {
     .filter((framework, index, list) => list.indexOf(framework) === index);
 }
 
+function resolveDomains(state: FormState, frameworks: string[]): ProjectSpec['tech']['domains'] {
+  const planning = state.planning ?? { tech_decisions: [], external_dependencies: [] };
+  const description = state.project.description ?? '';
+  const planningFrameworkText = planning.tech_decisions
+    .filter((item) => /framework/i.test(item.topic) && item.rationale !== 'RepoGenesis の初期生成で選択済み')
+    .map((item) => [item.choice, item.rationale, item.notes].filter(Boolean).join(' '))
+    .join('\n');
+  const resolvedOperatorInterfaceText = planning.tech_decisions
+    .filter((item) => /operator interface/i.test(item.topic) && item.status !== 'open')
+    .map((item) => [item.choice, item.rationale, item.notes].filter(Boolean).join(' '))
+    .join('\n');
+  const combinedText = [description, planningFrameworkText, resolvedOperatorInterfaceText].join('\n');
+  const hasDesktopUiSignal = /\bdesktop\b|デスクトップ|windows と macos|windows and macos|electron|tauri/i.test(combinedText);
+  const hasBrowserUiSignal = /\bbrowser\b|ブラウザ|web ui|web-ui/i.test(combinedText);
+  const hasWebFramework = frameworks.some((framework) => /next\.js|react|vue\.js|nuxt\.js|sveltekit|vite/i.test(framework))
+    && (
+      state.tech.domains.includes('web')
+      || /\bbrowser\b|ブラウザ|web ui|web-ui|管理画面|ダッシュボード|画面/i.test(description)
+      || /next\.js|react|vue\.js|nuxt\.js|sveltekit|vite/i.test(planningFrameworkText)
+    );
+  const hasTyperFramework = frameworks.some((framework) => /typer/i.test(framework));
+  const hasStableCliSurface = hasTyperFramework
+    || planning.tech_decisions.some((item) =>
+      /operator interface/i.test(item.topic)
+      && item.status !== 'open'
+      && /\bcli\b|command line|コマンドライン|ターミナル/i.test([item.choice, item.rationale, item.notes].filter(Boolean).join(' ')))
+    || (state.tech.domains.includes('cli') && /\bcli\b|command line|コマンドライン|ターミナル/i.test(description));
+
+  const domains = state.tech.domains.filter((domain, index, list) => list.indexOf(domain) === index);
+
+  if (hasWebFramework || hasBrowserUiSignal) {
+    if (!domains.includes('web')) domains.push('web');
+  }
+
+  if (domains.includes('cli') && !hasStableCliSurface && (hasDesktopUiSignal || hasBrowserUiSignal)) {
+    return domains.filter((domain) => domain !== 'cli');
+  }
+
+  return domains;
+}
+
 function resolveSecurityLevel(state: FormState): ProjectSpec['security']['level'] {
   const minimum = calculateMinSecurityLevel(state.security);
   const candidate = state.securityLevelOverride ?? state.security.level;
@@ -86,6 +127,7 @@ export function buildProjectSpec(state: FormState): ProjectSpec {
   const securityLevel = resolveSecurityLevel(state);
   const primaryLanguage = resolvePrimaryLanguage(state);
   const frameworks = resolveFrameworks(state);
+  const domains = resolveDomains(state, frameworks);
   return {
     specVersion: SUPPORTED_SPEC_VERSION,
     project: {
@@ -96,7 +138,7 @@ export function buildProjectSpec(state: FormState): ProjectSpec {
       created_at: new Date().toISOString(),
     },
     tech: {
-      domains: state.tech.domains,
+      domains,
       primary_language: primaryLanguage,
       frameworks,
       ai_tools: aiTools,

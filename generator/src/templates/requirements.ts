@@ -1,6 +1,6 @@
 import type { ProjectBrief } from '../schema';
 import { getDependenciesByStatus } from '../planning';
-import { hasOperatorFacingWebUi, inferBriefSignals, inferPipelineStages, summarizeCoreFeatures, summarizeDependencyNames, summarizeRuntimeBoundary } from '../templateSignals';
+import { hasOperatorFacingUi, hasStableCliSurface, inferBriefSignals, inferPipelineStages, summarizeCoreFeatures, summarizeDependencyNames, summarizeRuntimeBoundary } from '../templateSignals';
 import { formatDomains, formatOwner, formatProjectDescription } from '../templateDisplay';
 
 export function generateRequirements(brief: ProjectBrief): string {
@@ -11,7 +11,8 @@ export function generateRequirements(brief: ProjectBrief): string {
   const coreFeatures = summarizeCoreFeatures(brief);
   const adoptedDependencies = summarizeDependencyNames(brief, 'adopted');
   const runtimeBoundary = summarizeRuntimeBoundary(brief);
-  const hasWebUi = hasOperatorFacingWebUi(brief);
+  const hasOperatorUi = hasOperatorFacingUi(brief);
+  const hasCliSurface = hasStableCliSurface(brief);
   const hasFrameworkSignal = tech.domains.includes('web')
     || tech.frameworks.length > 0
     || planning.tech_decisions.some((item) => /framework/i.test(item.topic));
@@ -43,9 +44,9 @@ export function generateRequirements(brief: ProjectBrief): string {
         'Local setup expectations and required environment placeholders are documented.',
         `Security expectations for level \`${security.level}\` are reflected in implementation and deployment decisions.`,
         'Release version and commit identity can be surfaced by the running service, API, or CLI when applicable.',
-        ...(hasWebUi
+        ...(hasOperatorUi
           ? [
-            'Operator-facing web UI keeps a low-emphasis runtime label in the top-right header showing release version, commit SHA, and deploy or publication time during active development and rollout.',
+            'Operator-facing UI keeps a low-emphasis runtime label in the top-right header showing release version, commit SHA, and deploy or publication time during active development and rollout.',
             'The UI label can later be hidden, feature-flagged, or restricted to admins without removing other runtime identity surfaces.',
           ]
           : []),
@@ -81,8 +82,12 @@ export function generateRequirements(brief: ProjectBrief): string {
       criteria.push('Tunable parameters that materially affect generated output are listed with defaults and intended effects.');
     }
 
-    if (signals.hasTts || signals.hasAudio) {
+    if (signals.hasTts) {
       criteria.push('Audio-related parameters and output format requirements are documented when they affect quality or compatibility.');
+    }
+
+    if (signals.hasTranscriptionControls) {
+      criteria.push('Transcription-related controls and output format requirements are documented when they affect review quality, timestamps, speaker markers, or downstream compatibility.');
     }
 
     requirementSections.push({
@@ -116,7 +121,7 @@ export function generateRequirements(brief: ProjectBrief): string {
     });
   }
 
-  if (signals.hasCli) {
+  if (hasCliSurface) {
     requirementSections.push({
       title: `R${requirementSections.length + 1}: Provide a stable operator-facing CLI contract`,
       description: `${project.name} must be runnable as a documented command-line workflow from the first release.`,
@@ -149,10 +154,14 @@ export function generateRequirements(brief: ProjectBrief): string {
     ...(index === 0 ? section.criteria.map((item) => `  - [ ] ${item}`) : ['- Acceptance Criteria:', ...section.criteria.map((item) => `  - [ ] ${item}`)]),
   ]).filter(Boolean);
 
+  const hasOpenOperatorInterface = planning.tech_decisions.some((item) =>
+    item.status === 'open' && /operator interface/i.test(item.topic));
+
   const knownTbdLines = [
     project.owner.trim() ? null : '- Project owner is still TBD.',
     tech.domains.length > 0 ? null : '- Technical domain is still TBD.',
     hasFrameworkSignal && !hasResolvedFrameworkChoice ? '- Framework choice is still TBD.' : null,
+    hasOpenOperatorInterface && !hasCliSurface ? '- Operator interface is still open; do not treat CLI as the default delivery surface yet.' : null,
     ...planning.tech_decisions
       .filter((item) => item.status === 'open' && item.topic.trim())
       .slice(0, 5)
