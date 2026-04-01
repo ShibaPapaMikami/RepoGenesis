@@ -1,6 +1,7 @@
 import type { ProjectBrief } from '../schema';
 import { buildToolWrapperExampleClause, getToolWrapperFiles } from '../aiTools';
 import { getAdoptedDependencyBulletLines, getAdoptedTechBulletLines } from '../planning';
+import { summarizeSupportingLanguages } from '../templateSignals';
 import { formatDomains, formatOwner, formatProjectDescription } from '../templateDisplay';
 
 interface RepoEntry {
@@ -60,14 +61,34 @@ ${toolLines}
 │   ├── VERSIONING_STANDARD.md
 │   ├── ADR/
 │   │   └── 0000-template.md
+│   └── runbooks/
+│       ├── README.md
+│       ├── production-bootstrap.md
+│       ├── production-cutover.md
+│       ├── production-checks.md
+│       ├── rollback.md
+│       ├── incident-response.md
+│       └── skill-install.md
 ├── plans/
 │   └── template.md
 ├── prompts/
 │   └── restart.md
+├── skills/
+│   └── README.md
+├── repogenesis.skills.json
+├── CONTRIBUTING.md
+├── .github/
+│   ├── PULL_REQUEST_TEMPLATE.md
+│   └── ISSUE_TEMPLATE/
+│       ├── bug_report.md
+│       └── feature_request.md
+├── .repogenesis/
+│   └── manifest.json
 ├── SECURITY.md
 ├── .env.example
 └── .gitignore
-\`\`\``;
+\`\`\`
+Optional bundled skill artifacts may also appear under provider-specific directories such as \`.claude/\` when selected at generation time.`;
 }
 
 function buildWorkspaceStructure(brief: ProjectBrief): string {
@@ -87,12 +108,29 @@ ${toolLines}
 │   ├── EXTERNAL_DEPENDENCIES.md
 │   └── runbooks/
 │       ├── README.md
+│       ├── production-bootstrap.md
+│       ├── production-cutover.md
+│       ├── production-checks.md
+│       ├── rollback.md
+│       ├── incident-response.md
 │       └── skill-install.md
 ├── prompts/
 │   └── restart.md
+├── skills/
+│   └── README.md
+├── repogenesis.skills.json
+├── CONTRIBUTING.md
+├── .github/
+│   ├── PULL_REQUEST_TEMPLATE.md
+│   └── ISSUE_TEMPLATE/
+│       ├── bug_report.md
+│       └── feature_request.md
+├── .repogenesis/
+│   └── manifest.json
 ├── .gitignore
 ${repoLines}
-\`\`\``;
+\`\`\`
+Optional bundled skill artifacts may also appear under provider-specific directories such as \`.claude/\` when selected at generation time.`;
 }
 
 function buildRepoStructure(brief: ProjectBrief, repo: RepoEntry): string {
@@ -142,9 +180,13 @@ export function generateProjectMd(
   const scope = options.scope ?? (brief.structure.repo_type === 'multi' ? 'workspace' : 'single');
   const repo = options.repo;
   const adoptedPlanning = buildAdoptedPlanningSection(brief);
+  const supportingLanguages = summarizeSupportingLanguages(brief);
 
   const frameworkLine = brief.tech.frameworks.length > 0
     ? `- Frameworks: ${brief.tech.frameworks.join(', ')}\n`
+    : '';
+  const supportingLanguageLine = supportingLanguages.length > 0
+    ? `- Supporting Languages: ${supportingLanguages.join(', ')}\n`
     : '';
 
   if (scope === 'repo' && repo) {
@@ -165,7 +207,7 @@ ${brief.project.name} (workspace: ${brief.project.slug})
 ${deps}## Tech Stack
 - Domains: ${formatDomains(brief.tech.domains)}
 - Primary Language: ${brief.tech.primary_language}
-${frameworkLine}- AI Tooling Policy: \`../docs/AI_TOOLING.md\`
+${frameworkLine}${supportingLanguageLine}- AI Tooling Policy: \`../docs/AI_TOOLING.md\`
 ${adoptedPlanning}
 
 ## Absolute Rules
@@ -213,7 +255,7 @@ ${formatProjectDescription(brief.project.description)}
 ## Tech Stack
 - Domains: ${formatDomains(brief.tech.domains)}
 - Primary Language: ${brief.tech.primary_language}
-${frameworkLine}- AI Tooling Policy: \`docs/AI_TOOLING.md\`
+${frameworkLine}${supportingLanguageLine}- AI Tooling Policy: \`docs/AI_TOOLING.md\`
 ${adoptedPlanning}
 
 ## Workspace Repositories
@@ -257,7 +299,7 @@ ${formatProjectDescription(brief.project.description)}
 ## Tech Stack
 - Domains: ${formatDomains(brief.tech.domains)}
 - Primary Language: ${brief.tech.primary_language}
-${frameworkLine}- AI Tooling Policy: \`docs/AI_TOOLING.md\`
+${frameworkLine}${supportingLanguageLine}- AI Tooling Policy: \`docs/AI_TOOLING.md\`
 ${adoptedPlanning}
 
 ## Development Workflow

@@ -25,7 +25,9 @@ type StructuredHintKey =
   | 'slug'
   | 'domains'
   | 'language'
+  | 'ai_runtime_lang'
   | 'framework'
+  | 'ui_stack'
   | 'architecture'
   | 'core_feature'
   | 'audio_processing'
@@ -42,7 +44,15 @@ type StructuredHintKey =
   | 'phases'
   | 'scheduled_jobs'
   | 'dependency'
-  | 'environment';
+  | 'environment'
+  | 'ai_bridge'
+  | 'sidecar_packaging'
+  | 'future_asr_candidates'
+  | 'ci_reference'
+  | 'canonical_format'
+  | 'segment_duration'
+  | 'export_format'
+  | 'autosave';
 
 type TechDecisionItem = FormState['planning']['tech_decisions'][number];
 type ExternalDependencyItem = FormState['planning']['external_dependencies'][number];
@@ -195,7 +205,7 @@ function splitLines(...texts: Array<string | undefined>): string[] {
 function normalizeStatus(line: string, fallback: TechDecisionStatus = 'candidate'): TechDecisionStatus {
   if (/却下|採用しない|不要|対象外/i.test(line)) return 'rejected';
   if (/未確定|未定|要確認|かどうか|または|優先順位|方針/i.test(line)) return 'open';
-  if (/想定|候補|検討|later/i.test(line)) return 'candidate';
+  if (/想定|候補|検討|later|future|candidate|reference|参照|pattern|パターン/i.test(line)) return 'candidate';
   if (/採用|必須|固定|前提|利用する|使う/i.test(line)) return 'adopted';
   return fallback;
 }
@@ -217,7 +227,9 @@ function normalizeStructuredHintKey(label: string): StructuredHintKey | null {
   if (/^(slug|project slug|project_slug|スラッグ)$/.test(normalized)) return 'slug';
   if (/^(domain|domains|技術ドメイン)$/.test(normalized)) return 'domains';
   if (/^(language|primary language|primary_language|言語)$/.test(normalized)) return 'language';
+  if (/^(ai runtime lang|ai_runtime_lang|runtime language|sidecar language|推論実行言語)$/.test(normalized)) return 'ai_runtime_lang';
   if (/^(framework|frameworks|フレームワーク)$/.test(normalized)) return 'framework';
+  if (/^(ui stack|ui_stack|desktop ui stack|desktop_ui_stack|ui framework|uiフレームワーク)$/.test(normalized)) return 'ui_stack';
   if (/^(architecture|workflow architecture|pipeline architecture|処理構造|処理フロー|処理パイプライン|アーキテクチャ)$/.test(normalized)) return 'architecture';
   if (/^(core feature|core features|key feature|key features|主要機能|コア機能)$/.test(normalized)) return 'core_feature';
   if (/^(audio processing|audio processing library|audio processing libraries|audio dependencies|audio stack|音声処理|音声処理ライブラリ|音声処理依存)$/.test(normalized)) return 'audio_processing';
@@ -235,6 +247,14 @@ function normalizeStructuredHintKey(label: string): StructuredHintKey | null {
   if (/^(scheduled_jobs|scheduled jobs|batch|cron|定期実行|バッチ)$/.test(normalized)) return 'scheduled_jobs';
   if (/^(dependency|dependencies|external dependency|external dependencies|外部依存|外部依存候補)$/.test(normalized)) return 'dependency';
   if (/^(environment|execution environment|target environment|実行環境|対象環境)$/.test(normalized)) return 'environment';
+  if (/^(ai bridge|ai_bridge|runtime bridge|sidecar bridge|推論ブリッジ)$/.test(normalized)) return 'ai_bridge';
+  if (/^(sidecar packaging|sidecar_packaging|packaging|サイドカーパッケージング|配布パッケージ)$/.test(normalized)) return 'sidecar_packaging';
+  if (/^(future asr candidates|future_asr_candidates|future backend candidates|将来asr候補)$/.test(normalized)) return 'future_asr_candidates';
+  if (/^(ci reference|ci_reference|implementation reference|実装参照|参照実装)$/.test(normalized)) return 'ci_reference';
+  if (/^(internal canonical format|internal_canonical_format|canonical format|canonical transcript format|正本形式|内部正本形式)$/.test(normalized)) return 'canonical_format';
+  if (/^(segment duration|segment_duration|transcript segment duration|transcript segmentation|segment policy|分割粒度|セグメント粒度)$/.test(normalized)) return 'segment_duration';
+  if (/^(output format|output formats|export format|export formats|output_format|export_format|出力形式|保存形式)$/.test(normalized)) return 'export_format';
+  if (/^(autosave|auto save|auto_save|自動保存)$/.test(normalized)) return 'autosave';
   return null;
 }
 
@@ -360,6 +380,8 @@ function normalizeFrameworkName(value: string): string {
   if (/^react$/.test(lowered)) return 'React';
   if (/^vite$/.test(lowered)) return 'Vite';
   if (/^typer$/.test(lowered)) return 'Typer';
+  if (/^tauri(?:\s*v?2)?$/.test(lowered) || /^tauri_v?2$/.test(lowered)) return 'Tauri v2';
+  if (/^electron$/.test(lowered)) return 'Electron';
   if (/^nuxt(?:\.js|js)?$/.test(lowered)) return 'Nuxt.js';
   if (/^vue(?:\.js|js)?$/.test(lowered)) return 'Vue.js';
   if (/^svelte\s*kit$/.test(lowered) || lowered === 'sveltekit') return 'SvelteKit';
@@ -395,6 +417,34 @@ function inferDependencyLicense(name: string): string {
   if (lowered === 'numpy') return 'BSD-3-Clause';
   if (lowered === 'soundfile') return 'BSD-3-Clause';
   return '';
+}
+
+function normalizeBridgeChoice(value: string): string {
+  const normalized = value.trim().replace(/[()（）「」『』[\]]/g, '');
+  if (!normalized) return '';
+
+  const lowered = normalized.toLowerCase().replace(/[\s-]+/g, '_');
+  if (lowered === 'tauri_sidecar') return 'Tauri sidecar';
+  return normalized;
+}
+
+function normalizePackagingChoice(value: string): string {
+  const normalized = value.trim().replace(/[()（）「」『』[\]]/g, '');
+  if (!normalized) return '';
+
+  const lowered = normalized.toLowerCase().replace(/[\s-]+/g, '');
+  if (lowered === 'pyinstaller') return 'PyInstaller';
+  return normalized;
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function hasRepoAliasMention(line: string, alias: string): boolean {
+  const escaped = escapeRegex(alias.toLowerCase());
+  const pattern = new RegExp(`(^|[^a-z0-9_./-])${escaped}($|[^a-z0-9_./-])`, 'i');
+  return pattern.test(line.toLowerCase());
 }
 
 function inferAudioProcessingPurpose(name: string): string {
@@ -473,11 +523,10 @@ function addGithubDependency(
 function resolveNamedReferenceRepos(line: string, referenceRepoIndex: Map<string, ReferenceRepoMatch>): ReferenceRepoMatch[] {
   if (referenceRepoIndex.size === 0) return [];
 
-  const lowered = line.toLowerCase();
   const matches = new Map<string, ReferenceRepoMatch>();
 
   for (const [alias, repo] of referenceRepoIndex.entries()) {
-    if (lowered.includes(alias)) {
+    if (hasRepoAliasMention(line, alias)) {
       matches.set(repo.name.toLowerCase(), repo);
     }
   }
@@ -487,13 +536,16 @@ function resolveNamedReferenceRepos(line: string, referenceRepoIndex: Map<string
 
 function extractMentionedGithubRepoNames(line: string): string[] {
   const candidates = new Set<string>();
+  const bareNameStopWords = new Set(['actions', 'github', 'workflow', 'workflows']);
   const namedMatches = Array.from(
     line.matchAll(/github(?:上)?(?:の|にある)?\s+([A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)?)/gi),
   );
 
   for (const match of namedMatches) {
     const candidate = match[1]?.trim().replace(/[),.]+$/, '');
-    if (candidate) candidates.add(candidate);
+    if (!candidate) continue;
+    if (!candidate.includes('/') && bareNameStopWords.has(candidate.toLowerCase())) continue;
+    candidates.add(candidate);
   }
 
   return Array.from(candidates);
@@ -610,6 +662,39 @@ function extractImplicitDecisionHints(
     mergeDecision(decisionBucket, {
       topic: 'API framework',
       choice: 'FastAPI',
+      status,
+      rationale: line,
+      decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+      notes: '',
+    });
+  }
+
+  if (/\btauri(?:[_\s-]?v?2)?\b/i.test(line)) {
+    mergeDecision(decisionBucket, {
+      topic: 'Framework',
+      choice: 'Tauri v2',
+      status,
+      rationale: line,
+      decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+      notes: '',
+    });
+  }
+
+  if (/\bpyinstaller\b/i.test(line)) {
+    mergeDecision(decisionBucket, {
+      topic: 'Sidecar packaging',
+      choice: 'PyInstaller',
+      status,
+      rationale: line,
+      decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+      notes: '',
+    });
+  }
+
+  if (/\btauri[_\s-]?sidecar\b/i.test(line)) {
+    mergeDecision(decisionBucket, {
+      topic: 'Inference bridge',
+      choice: 'Tauri sidecar',
       status,
       rationale: line,
       decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
@@ -968,6 +1053,7 @@ function extractStructuredHints(
       addNotificationDependencies(value, line, fallbackStatus, dependencyBucket, decisionBucket);
       return true;
     case 'framework':
+    case 'ui_stack':
       {
         const frameworks = normalizeFrameworkChoices(value);
         if (frameworks.length === 0) return true;
@@ -981,6 +1067,22 @@ function extractStructuredHints(
         });
         return true;
       }
+    case 'ai_runtime_lang':
+      {
+        const languages = normalizePrimaryLanguageChoices(value);
+        if (languages.length === 0) return true;
+        for (const language of languages) {
+          mergeDecision(decisionBucket, {
+            topic: 'Supporting language',
+            choice: language,
+            status,
+            rationale: line,
+            decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+            notes: '',
+          });
+        }
+      }
+      return true;
     case 'architecture':
       mergeDecision(decisionBucket, {
         topic: 'Core workflow architecture',
@@ -1075,6 +1177,86 @@ function extractStructuredHints(
     case 'environment':
       mergeDecision(decisionBucket, {
         topic: 'Execution environment',
+        choice: value,
+        status,
+        rationale: line,
+        decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+        notes: '',
+      });
+      return true;
+    case 'ai_bridge':
+      mergeDecision(decisionBucket, {
+        topic: 'Inference bridge',
+        choice: normalizeBridgeChoice(value),
+        status,
+        rationale: line,
+        decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+        notes: '',
+      });
+      return true;
+    case 'sidecar_packaging':
+      mergeDecision(decisionBucket, {
+        topic: 'Sidecar packaging',
+        choice: normalizePackagingChoice(value),
+        status,
+        rationale: line,
+        decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+        notes: '',
+      });
+      return true;
+    case 'future_asr_candidates':
+      mergeDecision(decisionBucket, {
+        topic: 'Transcription backend candidates',
+        choice: splitStructuredListValue(value).join(', ') || value,
+        status: 'candidate',
+        rationale: line,
+        decision_date: '',
+        notes: '',
+      });
+      return true;
+    case 'ci_reference':
+      mergeDecision(decisionBucket, {
+        topic: 'Implementation reference',
+        choice: value,
+        status: 'candidate',
+        rationale: line,
+        decision_date: '',
+        notes: '',
+      });
+      return true;
+    case 'canonical_format':
+      mergeDecision(decisionBucket, {
+        topic: 'Canonical transcript format',
+        choice: value,
+        status,
+        rationale: line,
+        decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+        notes: '',
+      });
+      return true;
+    case 'segment_duration':
+      mergeDecision(decisionBucket, {
+        topic: 'Transcript segmentation',
+        choice: value,
+        status,
+        rationale: line,
+        decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+        notes: '',
+      });
+      return true;
+    case 'export_format':
+      mergeDecision(decisionBucket, {
+        topic: 'Transcript export',
+        choice: value,
+        status,
+        rationale: line,
+        decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
+        notes: '',
+      });
+      return true;
+    case 'autosave':
+      mergeDecision(decisionBucket, {
+        topic: 'Autosave',
         choice: value,
         status,
         rationale: line,

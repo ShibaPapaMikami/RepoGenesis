@@ -137,6 +137,10 @@ Phase 6 / Hardening
 - generator は `transcription / desktop / operator-facing UI` を TTS/CLI と分けて解釈するようになり、`REQUIREMENTS.md` / `ARCHITECTURE.md` / `ROADMAP.md` / wrapper guidance / `VERSIONING_STANDARD.md` が `audio capture / ingest -> transcription -> review / save / export` と UI 前提の runtime label policy を出せるようになった。
 - meeting-transcription 系の `未確定事項` は `Minutes generation` / `Transcript storage` / `Speaker separation` / `Transcription backend` などの planning topic へ正規化され、`Emotion parameter generation` のような TTS 専用 open decision が混ざりにくくなった。
 - `buildProjectSpec` は stale な `cli` / `web` carry-over を軽減し、operator interface が open の desktop/transcription brief で CLI requirement や web domain を固定しすぎないようにした。
+- `future_asr_candidates` / `ci_reference` のような future/reference-only hint は candidate/reference planning として扱うようにし、`ml-explore/mlx` や `Actions` が adopted runtime dependency に誤昇格しないようにした。
+- GitHub reference alias match は token 境界ベースへ tightening し、`mlx_or_parakeet` のような複合 token から `mlx` repo を誤推定しないようにした。
+- intake / buildProjectSpec は `ui_stack` / `ai_runtime_lang` / `ai_bridge` / `sidecar_packaging` / `internal_canonical_format` / `segment_duration` / `export_format` / `autosave` を structured planning として保持できるようになった。
+- generated `PROJECT.md` / `REQUIREMENTS.md` / `ARCHITECTURE.md` / wrapper guidance は supporting language、desktop shell / sidecar bridge、transcript contract（segmentation / canonical JSON / export / autosave）を出し、single-repo tree も runbooks / skills / `.github` / `.repogenesis` を含む実態に揃えた。
 
 ## What This Phase Still Needs
 - Refine the public UI so non-engineers can understand planning fields without reading internal terminology.

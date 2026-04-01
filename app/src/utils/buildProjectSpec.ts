@@ -40,6 +40,8 @@ function normalizeFrameworkName(value: string): string {
   if (/^react$/.test(lowered)) return 'React';
   if (/^vite$/.test(lowered)) return 'Vite';
   if (/^typer$/.test(lowered)) return 'Typer';
+  if (/^tauri(?:\s*v?2)?$/.test(lowered) || /^tauri_v?2$/.test(lowered)) return 'Tauri v2';
+  if (/^electron$/.test(lowered)) return 'Electron';
   if (/^nuxt(?:\.js|js)?$/.test(lowered)) return 'Nuxt.js';
   if (/^vue(?:\.js|js)?$/.test(lowered)) return 'Vue.js';
   if (/^svelte\s*kit$/.test(lowered) || lowered === 'sveltekit') return 'SvelteKit';

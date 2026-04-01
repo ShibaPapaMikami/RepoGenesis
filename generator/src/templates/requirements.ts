@@ -1,6 +1,6 @@
 import type { ProjectBrief } from '../schema';
 import { getDependenciesByStatus } from '../planning';
-import { hasOperatorFacingUi, hasStableCliSurface, inferBriefSignals, inferPipelineStages, summarizeCoreFeatures, summarizeDependencyNames, summarizeRuntimeBoundary } from '../templateSignals';
+import { hasOperatorFacingUi, hasStableCliSurface, inferBriefSignals, inferPipelineStages, summarizeCoreFeatures, summarizeDependencyNames, summarizeRuntimeBoundary, summarizeSupportingLanguages, summarizeTranscriptionContract } from '../templateSignals';
 import { formatDomains, formatOwner, formatProjectDescription } from '../templateDisplay';
 
 export function generateRequirements(brief: ProjectBrief): string {
@@ -11,6 +11,8 @@ export function generateRequirements(brief: ProjectBrief): string {
   const coreFeatures = summarizeCoreFeatures(brief);
   const adoptedDependencies = summarizeDependencyNames(brief, 'adopted');
   const runtimeBoundary = summarizeRuntimeBoundary(brief);
+  const supportingLanguages = summarizeSupportingLanguages(brief);
+  const transcriptionContract = summarizeTranscriptionContract(brief);
   const hasOperatorUi = hasOperatorFacingUi(brief);
   const hasCliSurface = hasStableCliSurface(brief);
   const hasFrameworkSignal = tech.domains.includes('web')
@@ -21,6 +23,9 @@ export function generateRequirements(brief: ProjectBrief): string {
 
   const frameworkLine = tech.frameworks.length > 0
     ? `- Frameworks: ${tech.frameworks.join(', ')}\n`
+    : '';
+  const supportingLanguageLine = supportingLanguages.length > 0
+    ? `- Supporting Languages: ${supportingLanguages.join(', ')}\n`
     : '';
   const requirementSections: Array<{
     title: string;
@@ -88,6 +93,18 @@ export function generateRequirements(brief: ProjectBrief): string {
 
     if (signals.hasTranscriptionControls) {
       criteria.push('Transcription-related controls and output format requirements are documented when they affect review quality, timestamps, speaker markers, or downstream compatibility.');
+      if (transcriptionContract.segmentation) {
+        criteria.push(`Transcript segmentation is defined for the first workflow: ${transcriptionContract.segmentation}.`);
+      }
+      if (transcriptionContract.canonicalFormat) {
+        criteria.push(`A canonical transcript artifact format is defined before exports fan out: ${transcriptionContract.canonicalFormat}.`);
+      }
+      if (transcriptionContract.exportFormat) {
+        criteria.push(`Review and export targets are named explicitly for the first release: ${transcriptionContract.exportFormat}.`);
+      }
+      if (transcriptionContract.autosave) {
+        criteria.push(`Autosave behavior is defined for operator sessions: ${transcriptionContract.autosave}.`);
+      }
     }
 
     requirementSections.push({
@@ -185,7 +202,7 @@ Define what ${project.name} must do. This is the single source of truth for func
 ## Technical Context
 - Domains: ${formatDomains(tech.domains)}
 - Primary Language: ${tech.primary_language}
-${frameworkLine}- AI Tooling Policy: \`docs/AI_TOOLING.md\`
+${frameworkLine}${supportingLanguageLine}- AI Tooling Policy: \`docs/AI_TOOLING.md\`
 
 ## Core Requirements
 ${requirementLines.join('\n')}

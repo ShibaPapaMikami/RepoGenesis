@@ -172,6 +172,8 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Add CLI / language-aware wrapper guidance for generated `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`
 - [x] Reflect explicit workflow architecture and differentiating core features into generated `REQUIREMENTS.md` / `ARCHITECTURE.md`
 - [x] Distinguish transcription / desktop operator-UI briefs from TTS/CLI briefs so generated pipeline, roadmap, wrapper guidance, and runtime-label policy match the actual product shape
+- [x] Preserve desktop shell / sidecar architecture hints, supporting languages, and transcript artifact contracts in generated docs for local transcription apps
+- [x] Keep generated `PROJECT.md` repository trees aligned with the actual starter files, runbooks, and optional bundled-skill directories
 
 ### Track 5: Intake Parsing Hardening
 - [x] Treat explicit `RepoGenesis入力候補` as authoritative overrides for domains, primary language, and execution style
@@ -185,6 +187,8 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Make web UI version traceability explicit by default: small top-right header label with `v<release> (<commit>) <deploy time>` during active development, plus a documented path to hide or restrict it to admins after launch
 - [x] Mirror the same runtime label policy in the hosted RepoGenesis UI with build-time `public / admin / hidden` modes so the app itself exposes deploy recency consistently
 - [x] Map meeting-transcription open questions into transcription-specific planning topics and suppress stale `cli/web` carry-over when the brief only leaves operator surface selection open
+- [x] Treat future/reference-only ASR or CI hints as candidate/reference planning instead of adopted runtime dependencies, and avoid false GitHub alias matches such as `mlx` inside `mlx_or_parakeet`
+- [x] Parse desktop transcription-specific implementation hints (`ui_stack`, `ai_runtime_lang`, `ai_bridge`, `sidecar_packaging`, `internal_canonical_format`, `segment_duration`, `export_format`, `autosave`) into structured planning and generated docs
 
 ### CI / Docs Hardening
 - [x] Add CI coverage for vendored generator bundle drift

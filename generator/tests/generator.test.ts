@@ -444,6 +444,127 @@ const DESKTOP_TRANSCRIPTION_BRIEF = {
   },
 };
 
+const DESKTOP_TAURI_SIDECAR_BRIEF = {
+  ...SINGLE_BRIEF,
+  project: {
+    ...SINGLE_BRIEF.project,
+    name: 'Gローカル議事録',
+    slug: 'g-local-minutes',
+    description: 'Windows / macOS のローカルデスクトップアプリ。会議音声を文字起こしし、2〜5秒単位の JSON 正本を持ちながら Markdown / TXT に出力し、会議中は一時ログを自動保存する。',
+  },
+  tech: {
+    ...SINGLE_BRIEF.tech,
+    domains: ['ai'],
+    primary_language: 'typescript' as const,
+    frameworks: ['Tauri v2'],
+  },
+  workflow: {
+    phases_count: 4,
+  },
+  planning: {
+    tech_decisions: [
+      {
+        topic: 'Supporting language',
+        choice: 'python',
+        status: 'adopted' as const,
+        rationale: 'A local Python sidecar runs ASR workloads separately from the desktop shell.',
+        decision_date: '2026-04-01',
+        notes: '',
+      },
+      {
+        topic: 'Inference bridge',
+        choice: 'Tauri sidecar',
+        status: 'adopted' as const,
+        rationale: 'Desktop UI hands ASR work to a local sidecar bridge.',
+        decision_date: '2026-04-01',
+        notes: '',
+      },
+      {
+        topic: 'Sidecar packaging',
+        choice: 'PyInstaller',
+        status: 'adopted' as const,
+        rationale: 'The sidecar packaging strategy must be explicit from the first release.',
+        decision_date: '2026-04-01',
+        notes: '',
+      },
+      {
+        topic: 'Canonical transcript format',
+        choice: 'json',
+        status: 'adopted' as const,
+        rationale: 'JSON is the internal canonical artifact before user-facing exports.',
+        decision_date: '2026-04-01',
+        notes: '',
+      },
+      {
+        topic: 'Transcript segmentation',
+        choice: '2〜5秒',
+        status: 'adopted' as const,
+        rationale: 'Review and editing operate on short local segments.',
+        decision_date: '2026-04-01',
+        notes: '',
+      },
+      {
+        topic: 'Transcript export',
+        choice: 'json / markdown / txt',
+        status: 'adopted' as const,
+        rationale: 'The first release exports canonical and user-facing transcript artifacts.',
+        decision_date: '2026-04-01',
+        notes: '',
+      },
+      {
+        topic: 'Autosave',
+        choice: '会議中の一時ログを自動保存',
+        status: 'adopted' as const,
+        rationale: 'Operator sessions should not lose in-progress transcripts.',
+        decision_date: '2026-04-01',
+        notes: '',
+      },
+      {
+        topic: 'Transcription backend candidates',
+        choice: 'Qwen3-ASR, parakeet-mlx',
+        status: 'candidate' as const,
+        rationale: 'Future local ASR candidates stay candidate until backend evaluation finishes.',
+        decision_date: '',
+        notes: '',
+      },
+      {
+        topic: 'Implementation reference',
+        choice: 'GitHub Actions + PyInstaller pattern',
+        status: 'candidate' as const,
+        rationale: 'Reference only; not a runtime dependency.',
+        decision_date: '',
+        notes: '',
+      },
+    ],
+    external_dependencies: [
+      {
+        name: 'SYSTRAN/faster-whisper',
+        category: 'github_repo' as const,
+        status: 'candidate' as const,
+        purpose: 'Primary local ASR candidate',
+        owner: 'Audio Team',
+        source: 'https://github.com/SYSTRAN/faster-whisper',
+        license: '',
+        env_vars: [],
+        data_outbound: false,
+        notes: '',
+      },
+      {
+        name: 'QwenLM/Qwen3-ASR',
+        category: 'github_repo' as const,
+        status: 'candidate' as const,
+        purpose: 'Future ASR candidate',
+        owner: 'Audio Team',
+        source: 'https://github.com/QwenLM/Qwen3-ASR',
+        license: '',
+        env_vars: [],
+        data_outbound: false,
+        notes: '',
+      },
+    ],
+  },
+};
+
 let tmpDir: string;
 
 beforeEach(() => {
@@ -754,6 +875,42 @@ describe('generator — single-repo', () => {
     expect(versioning).toContain('top-right of the header');
     expect(claude).toContain('For transcription products, keep capture source');
     expect(claude).not.toContain('Treat the CLI contract as first-class');
+  });
+
+  it('should render desktop sidecar and transcript-contract details without treating references as adopted runtime deps', () => {
+    const inputPath = writeInputFile(DESKTOP_TAURI_SIDECAR_BRIEF);
+    const result = generate({ inputPath, outputPath: tmpDir, force: true });
+
+    const projectMd = fs.readFileSync(path.join(result.outputDir, 'PROJECT.md'), 'utf-8');
+    const requirements = fs.readFileSync(path.join(result.outputDir, 'docs/REQUIREMENTS.md'), 'utf-8');
+    const architecture = fs.readFileSync(path.join(result.outputDir, 'docs/ARCHITECTURE.md'), 'utf-8');
+    const techDecisions = fs.readFileSync(path.join(result.outputDir, 'docs/TECH_DECISIONS.md'), 'utf-8');
+    const externalDependencies = fs.readFileSync(path.join(result.outputDir, 'docs/EXTERNAL_DEPENDENCIES.md'), 'utf-8');
+    const claude = fs.readFileSync(path.join(result.outputDir, 'CLAUDE.md'), 'utf-8');
+
+    expect(projectMd).toContain('- Frameworks: Tauri v2');
+    expect(projectMd).toContain('- Supporting Languages: python');
+    expect(projectMd).toContain('runbooks/');
+    expect(projectMd).toContain('repogenesis.skills.json');
+    expect(projectMd).toContain('.github/');
+    expect(projectMd).toContain('.repogenesis/');
+    expect(projectMd).toContain('Optional bundled skill artifacts may also appear');
+    expect(requirements).toContain('Transcript segmentation is defined for the first workflow: 2〜5秒.');
+    expect(requirements).toContain('A canonical transcript artifact format is defined before exports fan out: json.');
+    expect(requirements).toContain('Review and export targets are named explicitly for the first release: json / markdown / txt.');
+    expect(requirements).toContain('Autosave behavior is defined for operator sessions: 会議中の一時ログを自動保存.');
+    expect(architecture).toContain('- Supporting Languages: python');
+    expect(architecture).toContain('## Transcript Contract');
+    expect(architecture).toContain('- Canonical format: json');
+    expect(architecture).toContain('- Autosave: 会議中の一時ログを自動保存');
+    expect(architecture).toContain('Tauri sidecar');
+    expect(architecture).toContain('PyInstaller');
+    expect(techDecisions).toContain('### Supporting language');
+    expect(techDecisions).toContain('### Inference bridge');
+    expect(techDecisions).toContain('### Sidecar packaging');
+    expect(externalDependencies).not.toContain('### Actions');
+    expect(externalDependencies).not.toContain('### ml-explore/mlx');
+    expect(claude).toContain('shell-to-sidecar bridge');
   });
 });
 

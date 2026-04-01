@@ -90,6 +90,10 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - generated `REQUIREMENTS.md` / `ARCHITECTURE.md` / `ROADMAP.md` / wrapper guidance / `VERSIONING_STANDARD.md` は、desktop transcription briefs で `audio capture / ingest -> transcription -> review / save / export` と top-right runtime label policy を出せるようになった
   - planning parser は meeting-transcription の `未確定事項` を `Minutes generation` / `Transcript storage` / `Speaker separation` / `Transcription backend` へ正規化し、`Emotion parameter generation` の false positive を避けるようにした
   - `buildProjectSpec` は stale framework/domain carry-over を抑え、operator interface が open な desktop/transcription briefs で `cli` / `web` を自動固定しすぎないようにした
+  - `future_asr_candidates` / `ci_reference` のような future/reference-only hint は candidate/reference planning として扱うようにし、`ml-explore/mlx` や `Actions` を adopted runtime dependency へ誤昇格しないようにした
+  - GitHub reference alias match は token 境界ベースへ tightening し、`mlx_or_parakeet` から `mlx` repo を誤推定しないようにした
+  - intake / buildProjectSpec は `ui_stack` / `ai_runtime_lang` / `ai_bridge` / `sidecar_packaging` / `internal_canonical_format` / `segment_duration` / `export_format` / `autosave` を structured planning として保持できるようになった
+  - generated `PROJECT.md` / `REQUIREMENTS.md` / `ARCHITECTURE.md` / tool guidance は supporting language、desktop shell / sidecar bridge、transcript contract（segmentation / canonical JSON / export / autosave）を出し、single-repo tree も runbooks / skills / `.github` / `.repogenesis` を含む実態に揃えた
   - `責任者` と `技術ドメイン` は AI-first flow では blocking validation から外した
   - `技術ドメイン` 未確定は warning 扱いで ZIP を止めないようにした
   - skill layer contract を provider-aware に更新し、Codex / Claude Code / Gemini CLI を並列で扱う設計に整理した

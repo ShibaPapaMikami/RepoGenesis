@@ -1,18 +1,31 @@
 import type { ProjectBrief } from '../schema';
 import { getAdoptedDependencyBulletLines, getAdoptedTechBulletLines } from '../planning';
-import { inferPipelineStages, summarizeCoreFeatures, summarizeRuntimeBoundary } from '../templateSignals';
+import { inferPipelineStages, summarizeCoreFeatures, summarizeRuntimeBoundary, summarizeSupportingLanguages, summarizeTranscriptionContract } from '../templateSignals';
 import { formatDomains, formatOwner } from '../templateDisplay';
 
 export function generateArchitecture(brief: ProjectBrief): string {
   const { project, tech, structure } = brief;
+  const planning = brief.planning ?? { tech_decisions: [], external_dependencies: [] };
   const adoptedDecisions = getAdoptedTechBulletLines(brief);
   const adoptedDependencies = getAdoptedDependencyBulletLines(brief);
   const pipelineStages = inferPipelineStages(brief);
   const coreFeatures = summarizeCoreFeatures(brief);
   const runtimeBoundary = summarizeRuntimeBoundary(brief);
+  const supportingLanguages = summarizeSupportingLanguages(brief);
+  const transcriptionContract = summarizeTranscriptionContract(brief);
+  const hasTauriShell = tech.frameworks.some((framework) => /tauri/i.test(framework))
+    || planning.tech_decisions.some((item) => /framework/i.test(item.topic) && /tauri/i.test(item.choice));
+  const hasPythonSidecar = supportingLanguages.includes('python');
+  const bridgeChoice = planning.tech_decisions
+    .find((item) => /inference bridge/i.test(item.topic) && item.choice.trim())?.choice;
+  const packagingChoice = planning.tech_decisions
+    .find((item) => /sidecar packaging/i.test(item.topic) && item.choice.trim())?.choice;
 
   const frameworkLine = tech.frameworks.length > 0
     ? `- Frameworks: ${tech.frameworks.join(', ')}\n`
+    : '';
+  const supportingLanguageLine = supportingLanguages.length > 0
+    ? `- Supporting Languages: ${supportingLanguages.join(', ')}\n`
     : '';
 
   let structureSection: string;
@@ -43,6 +56,18 @@ ${repoLines}`;
   const keyComponents = structure.repo_type === 'single'
     ? [
         `- **Core product workflow**: the main implementation for ${project.name}, built in \`${tech.primary_language}\` and expanded from the generated starter repository.`,
+        ...(hasTauriShell
+          ? ['- **Desktop shell**: a Tauri v2 shell hosts the operator-facing local desktop UI and app packaging boundary.']
+          : []),
+        ...(hasPythonSidecar
+          ? ['- **Inference / sidecar runtime**: Python handles local ASR or media-heavy execution that should stay isolated from the UI shell.']
+          : []),
+        ...(bridgeChoice
+          ? [`- **Bridge layer**: ${bridgeChoice} keeps audio capture, inference, and transcript artifact handoff explicit between the UI shell and sidecar.`]
+          : []),
+        ...(packagingChoice
+          ? [`- **Distribution packaging**: ${packagingChoice} is part of the first packaging story for the sidecar or local runtime.`]
+          : []),
         ...coreFeatures.map((feature) => `- **Differentiating feature**: ${feature} stays explicit in the first workflow, not implicit in generic quality language.`),
         `- **Documentation and planning layer**: \`PROJECT.md\`, \`docs/REQUIREMENTS.md\`, \`docs/ACTIVE_CONTEXT.md\`, and \`docs/ROADMAP.md\` hold current truth and execution context.`,
         `- **Security and configuration layer**: \`SECURITY.md\` and \`.env.example\` define setup boundaries and secret-handling expectations.`,
@@ -62,6 +87,11 @@ ${repoLines}`;
           if (index === pipelineStages.length - 1) return `${index + 1}. The system emits the first usable result through \`${stage}\`.`;
           return `${index + 1}. The workflow advances through \`${stage}\` before moving to the next stage.`;
         })
+        .concat(
+          bridgeChoice && (hasTauriShell || hasPythonSidecar)
+            ? [`${pipelineStages.length + 1}. The UI shell and sidecar exchange artifacts through \`${bridgeChoice}\` before save or export completes.`]
+            : [],
+        )
         .join('\n')
       : [
           `1. A user or operator starts the primary workflow described for ${project.name}.`,
@@ -90,6 +120,23 @@ ${repoLines}`;
         '- Document repository-specific hosting targets only when the delivery plan requires them.',
       ].join('\n');
 
+  const transcriptContractLines = [
+    transcriptionContract.segmentation ? `- Segmentation: ${transcriptionContract.segmentation}` : null,
+    transcriptionContract.canonicalFormat ? `- Canonical format: ${transcriptionContract.canonicalFormat}` : null,
+    transcriptionContract.exportFormat ? `- Review / export targets: ${transcriptionContract.exportFormat}` : null,
+    transcriptionContract.autosave ? `- Autosave: ${transcriptionContract.autosave}` : null,
+  ].filter(Boolean) as string[];
+
+  const runtimeBoundaryLines = runtimeBoundary.length > 0
+    ? runtimeBoundary.map((line) => `- ${line}`).join('\n')
+    : [
+        hasTauriShell ? '- The operator UI runs inside a local Tauri v2 desktop shell.' : null,
+        hasPythonSidecar ? '- Media-heavy or ASR work runs in a local Python sidecar rather than inside the UI shell.' : null,
+        bridgeChoice ? `- The shell-to-sidecar handoff is explicit through ${bridgeChoice}.` : null,
+        packagingChoice ? `- Sidecar distribution is expected to use ${packagingChoice}.` : null,
+        !hasTauriShell && !hasPythonSidecar ? '- The first release currently assumes a single runtime boundary unless later planning says otherwise.' : null,
+      ].filter(Boolean).join('\n');
+
   return `# ARCHITECTURE.md — System Architecture
 
 ## Project
@@ -98,7 +145,7 @@ ${project.name} — ${project.description}
 ## Tech Stack
 - Domains: ${formatDomains(tech.domains)}
 - Primary Language: ${tech.primary_language}
-${frameworkLine}
+${frameworkLine}${supportingLanguageLine}
 ${structureSection}
 
 ## Adopted Technology Decisions
@@ -113,14 +160,17 @@ ${overview}${differentiators}
 ## First Workflow Shape
 ${pipelineStages.length > 0 ? pipelineStages.map((stage, index) => `${index + 1}. ${stage}`).join('\n') : '- The first workflow shape has not been made explicit yet.'}
 
-## Key Components
+${transcriptContractLines.length > 0 ? `## Transcript Contract
+${transcriptContractLines.join('\n')}
+
+` : ''}## Key Components
 ${keyComponents}
 
 ## Data Flow
 ${dataFlow}
 
 ## Runtime Boundary
-${runtimeBoundary.length > 0 ? runtimeBoundary.map((line) => `- ${line}`).join('\n') : '- The first release currently assumes a single runtime boundary unless later planning says otherwise.'}
+${runtimeBoundaryLines}
 
 ## Infrastructure
 ${infrastructure}

@@ -497,6 +497,99 @@ test('parseConsultationIntake should map meeting-transcription open questions wi
   );
 });
 
+test('parseConsultationIntake should keep desktop transcription stack explicit without promoting future or CI references to adopted dependencies', () => {
+  const input = `## プロジェクト概要
+社内利用を起点にしつつ将来的に社外配布もできるローカルファーストのリアルタイム文字起こしデスクトップアプリ。会議中のマイク音声をリアルタイムで字幕表示し、会議終了後にログとして保存する。
+
+## 想定ユーザー
+- PM
+
+## 解決したい課題
+- 会議ログを手作業でまとめている
+
+## 最初に作るべきもの
+デスクトップUIから録音と文字起こしを行い、会議終了後に JSON / Markdown / TXT を保存する最小構成。
+
+## 扱うデータ
+- 会議音声
+- 文字起こし結果
+
+## 参考実装・関連リンク
+- faster-whisper https://github.com/SYSTRAN/faster-whisper
+- Qwen3-ASR https://github.com/QwenLM/Qwen3-ASR
+- parakeet-mlx https://github.com/senstella/parakeet-mlx
+
+## RepoGenesis入力候補
+- primary_language は typescript
+- ui_stack は tauri_v2
+- ai_runtime_lang は python
+- ai_bridge は tauri_sidecar
+- sidecar_packaging は pyinstaller
+- future_asr_candidates は qwen3_asr / mlx_or_parakeet
+- ci_reference は GLipSync で使った GitHub Actions + PyInstaller パターンを参照
+- internal_canonical_format は json
+- segment_duration は 2〜5秒
+- export_format は json / markdown / txt
+- autosave は 会議中の一時ログを自動保存`;
+
+  const draft = parseConsultationIntake(input, makeState());
+  const techDecisions = draft.suggestedState.planning.tech_decisions;
+  const externalDependencies = draft.suggestedState.planning.external_dependencies;
+
+  assert.equal(draft.suggestedState.tech.frameworks.includes('Tauri v2'), true);
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Supporting language' && item.choice === 'python' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Inference bridge' && item.choice === 'Tauri sidecar' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Sidecar packaging' && item.choice === 'PyInstaller' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Canonical transcript format' && item.choice === 'json' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Transcript segmentation' && item.choice === '2〜5秒' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Transcript export' && item.choice === 'json / markdown / txt' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Autosave' && item.choice === '会議中の一時ログを自動保存' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Transcription backend candidates' && item.choice === 'qwen3_asr, mlx_or_parakeet' && item.status === 'candidate'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Implementation reference' && item.status === 'candidate'),
+    true,
+  );
+  assert.equal(externalDependencies.some((item) => item.name === 'Actions'), false);
+  assert.equal(externalDependencies.some((item) => item.name === 'ml-explore/mlx'), false);
+  assert.equal(
+    externalDependencies.some((item) => item.name === 'QwenLM/Qwen3-ASR' && item.status === 'candidate'),
+    true,
+  );
+});
+
 test('validate should allow missing owner and domains for consultation-driven drafts', () => {
   const draft = parseConsultationIntake(getConsultationTestTemplate('meeting_transcription_internal_tool'), makeState());
   const errors = validate(draft.suggestedState);

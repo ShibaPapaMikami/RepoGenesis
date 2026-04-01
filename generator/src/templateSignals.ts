@@ -10,6 +10,11 @@ const PIPELINE_PATTERN = /pipeline|パイプライン|前処理|後処理|post[-
 const TUNABLE_PARAMETER_PATTERN = /pitch|speed|rate|tempo|breath|break|prosody|emotion|感情|パラメータ/i;
 const EXPLICIT_PIPELINE_TOPIC_PATTERN = /core workflow architecture|workflow architecture|pipeline architecture/i;
 const CORE_FEATURE_TOPIC_PATTERN = /core feature/i;
+const SUPPORTING_LANGUAGE_TOPIC_PATTERN = /supporting language/i;
+const TRANSCRIPT_SEGMENTATION_TOPIC_PATTERN = /transcript segmentation/i;
+const CANONICAL_TRANSCRIPT_FORMAT_TOPIC_PATTERN = /canonical transcript format/i;
+const TRANSCRIPT_EXPORT_TOPIC_PATTERN = /transcript export/i;
+const AUTOSAVE_TOPIC_PATTERN = /autosave/i;
 const WINDOWS_HOST_PATTERN = /\bwindows\b|windows\s+\d+|win11|win10/i;
 const GPU_HOST_PATTERN = /\brtx\s*\d{3,4}\b|\bgpu\b|cuda/i;
 const MAC_CLIENT_PATTERN = /\bfrom mac(?:os)?\b|reachable from mac(?:os)?|mac(?:os)? client|macから|mac から|mac上|mac からも/i;
@@ -198,6 +203,13 @@ export function summarizeCoreFeatures(brief: ProjectBrief, max = 4): string[] {
   return Array.from(new Set(features)).slice(0, max);
 }
 
+export function summarizeSupportingLanguages(brief: ProjectBrief, max = 3): string[] {
+  const languages = extractPlanningChoiceValues(brief, SUPPORTING_LANGUAGE_TOPIC_PATTERN)
+    .flatMap((choice) => splitListChoice(choice))
+    .map((choice) => choice.toLowerCase());
+  return Array.from(new Set(languages)).slice(0, max);
+}
+
 export function summarizeDependencyNames(
   brief: ProjectBrief,
   status: 'adopted' | 'candidate' | 'open' | 'rejected',
@@ -252,4 +264,28 @@ export function summarizeRuntimeBoundary(brief: ProjectBrief): string[] {
     `Inference and media-heavy processing run on a ${hostParts.join(' ')} host.`,
     'The handoff between client and host stays explicit, including transport, artifact transfer, and failure recovery.',
   ];
+}
+
+export interface TranscriptionContractSummary {
+  segmentation?: string;
+  canonicalFormat?: string;
+  exportFormat?: string;
+  autosave?: string;
+}
+
+function lastPlanningChoice(
+  brief: ProjectBrief,
+  pattern: RegExp,
+): string | undefined {
+  const values = extractPlanningChoiceValues(brief, pattern);
+  return values.length > 0 ? values[values.length - 1] : undefined;
+}
+
+export function summarizeTranscriptionContract(brief: ProjectBrief): TranscriptionContractSummary {
+  return {
+    segmentation: lastPlanningChoice(brief, TRANSCRIPT_SEGMENTATION_TOPIC_PATTERN),
+    canonicalFormat: lastPlanningChoice(brief, CANONICAL_TRANSCRIPT_FORMAT_TOPIC_PATTERN),
+    exportFormat: lastPlanningChoice(brief, TRANSCRIPT_EXPORT_TOPIC_PATTERN),
+    autosave: lastPlanningChoice(brief, AUTOSAVE_TOPIC_PATTERN),
+  };
 }

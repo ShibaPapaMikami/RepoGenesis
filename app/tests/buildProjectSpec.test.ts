@@ -282,6 +282,82 @@ test('buildProjectSpec should avoid stale CLI defaults for desktop transcription
   assert.equal(claude.includes('Treat the CLI contract as first-class'), false);
 });
 
+test('buildProjectSpec should preserve desktop sidecar hints and transcription artifact contracts for local minutes apps', () => {
+  const intake = `## プロジェクト概要
+社内利用を起点にしつつ将来的に社外配布もできるローカルファーストのリアルタイム文字起こしデスクトップアプリ。会議中のマイク音声をリアルタイムで字幕表示し、会議終了後にログとして保存する。
+
+## 想定ユーザー
+- PM
+
+## 解決したい課題
+- 会議ログを手作業でまとめている
+
+## 最初に作るべきもの
+デスクトップUIから録音と文字起こしを行い、会議終了後に JSON / Markdown / TXT を保存する最小構成。
+
+## 扱うデータ
+- 会議音声
+- 文字起こし結果
+
+## 参考実装・関連リンク
+- faster-whisper https://github.com/SYSTRAN/faster-whisper
+- Qwen3-ASR https://github.com/QwenLM/Qwen3-ASR
+- parakeet-mlx https://github.com/senstella/parakeet-mlx
+
+## RepoGenesis入力候補
+- primary_language は typescript
+- ui_stack は tauri_v2
+- ai_runtime_lang は python
+- ai_bridge は tauri_sidecar
+- sidecar_packaging は pyinstaller
+- future_asr_candidates は qwen3_asr / mlx_or_parakeet
+- ci_reference は GLipSync で使った GitHub Actions + PyInstaller パターンを参照
+- internal_canonical_format は json
+- segment_duration は 2〜5秒
+- export_format は json / markdown / txt
+- autosave は 会議中の一時ログを自動保存`;
+
+  const draft = parseConsultationIntake(intake, makeState());
+  const spec = buildProjectSpec(draft.suggestedState);
+  const files = generateFromSpec(spec);
+  const projectMd = files.get('PROJECT.md') ?? '';
+  const requirements = files.get('docs/REQUIREMENTS.md') ?? '';
+  const architecture = files.get('docs/ARCHITECTURE.md') ?? '';
+  const techDecisions = files.get('docs/TECH_DECISIONS.md') ?? '';
+  const externalDependencies = files.get('docs/EXTERNAL_DEPENDENCIES.md') ?? '';
+
+  assert.deepEqual(spec.tech.frameworks, ['Tauri v2']);
+  assert.equal(
+    spec.planning.tech_decisions.some((item) =>
+      item.topic === 'Supporting language' && item.choice === 'python' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(projectMd.includes('- Supporting Languages: python'), true);
+  assert.equal(projectMd.includes('runbooks/'), true);
+  assert.equal(projectMd.includes('repogenesis.skills.json'), true);
+  assert.equal(projectMd.includes('.github/'), true);
+  assert.equal(projectMd.includes('.repogenesis/'), true);
+  assert.equal(requirements.includes('- Frameworks: Tauri v2'), true);
+  assert.equal(requirements.includes('- Supporting Languages: python'), true);
+  assert.equal(requirements.includes('Transcript segmentation is defined for the first workflow: 2〜5秒.'), true);
+  assert.equal(requirements.includes('A canonical transcript artifact format is defined before exports fan out: json.'), true);
+  assert.equal(requirements.includes('Review and export targets are named explicitly for the first release: json / markdown / txt.'), true);
+  assert.equal(requirements.includes('Autosave behavior is defined for operator sessions: 会議中の一時ログを自動保存.'), true);
+  assert.equal(architecture.includes('- Frameworks: Tauri v2'), true);
+  assert.equal(architecture.includes('- Supporting Languages: python'), true);
+  assert.equal(architecture.includes('## Transcript Contract'), true);
+  assert.equal(architecture.includes('- Canonical format: json'), true);
+  assert.equal(architecture.includes('- Autosave: 会議中の一時ログを自動保存'), true);
+  assert.equal(architecture.includes('Tauri sidecar'), true);
+  assert.equal(architecture.includes('PyInstaller'), true);
+  assert.equal(techDecisions.includes('### Supporting language'), true);
+  assert.equal(techDecisions.includes('### Inference bridge'), true);
+  assert.equal(techDecisions.includes('### Sidecar packaging'), true);
+  assert.equal(techDecisions.includes('### Transcription backend candidates'), true);
+  assert.equal(externalDependencies.includes('### Actions'), false);
+  assert.equal(externalDependencies.includes('### ml-explore/mlx'), false);
+});
+
 test('buildProjectSpec should raise security level to the minimum required by flags', () => {
   const state = makeState();
   state.security.level = 'low';
