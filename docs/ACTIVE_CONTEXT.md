@@ -83,6 +83,9 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - planning に `Framework: Next.js, FastAPI` がある場合は `API framework: FastAPI` の重複 candidate を落とし、`buildProjectSpec` は stale な `tech.frameworks` を planning から rescue して generated tech stack に反映するようにした
   - generated `VERSIONING_STANDARD.md` / `REQUIREMENTS.md` / wrapper guidance は、operator-facing web UI で `v<release> (<commit>) <deploy time>` を右上ヘッダーに低強調で表示する default を持ち、開発完了後は hidden / feature-flagged / admin-only へ切り替え可能な運用方針まで含むようになった
   - hosted RepoGenesis UI 自体も `v<release> (<commit>) <deploy time>` を header 右上の低強調ラベルとして出せるようにし、`public / admin / hidden` の表示モードを build-time env で切り替えられるようにした
+  - guided wizard は `相談内容 -> ドラフト` を含む主要 step 遷移で必ず上端へ戻るように揃え、draft CTA も下部 action row の並びへ寄せた
+  - options/detail には「現在値は AI が仮置きした候補」という説明と、技術ドメイン / 主要言語 / フレームワーク / planning の自動入力範囲を読み替える補助カードを追加した
+  - curated skill recommendation は `AI tool` だけでなく project context も見て絞り込み、first-stage skill は初回 draft 適用時に自動選択し、public wizard 上で skill の発動方法も明示するようにした
   - `責任者` と `技術ドメイン` は AI-first flow では blocking validation から外した
   - `技術ドメイン` 未確定は warning 扱いで ZIP を止めないようにした
   - skill layer contract を provider-aware に更新し、Codex / Claude Code / Gemini CLI を並列で扱う設計に整理した

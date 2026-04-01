@@ -1,4 +1,4 @@
-import type { AiTool } from '../constants/enums.ts';
+import type { AiTool, Domain, RepoType } from '../constants/enums.ts';
 
 export type SkillProvider = 'codex' | 'claude_code' | 'gemini_cli' | 'tool_agnostic';
 export type SkillSourceType = 'official' | 'curated' | 'internal';
@@ -26,6 +26,14 @@ export interface SkillCatalogItem {
   providers: SkillProvider[];
   providerSupport: SkillProviderSupport[];
   tags: string[];
+}
+
+export interface SkillRecommendationContext {
+  aiTools: AiTool[];
+  domains?: Domain[];
+  frameworks?: string[];
+  repoType?: RepoType;
+  planningHints?: string[];
 }
 
 export const SKILL_PROVIDER_LABELS: Record<SkillProvider, string> = {
@@ -191,7 +199,14 @@ export function formatSkillProviderSupportSummary(skill: SkillCatalogItem): stri
     .join('、');
 }
 
-export function getRecommendedSkills(aiTools: AiTool[]): SkillCatalogItem[] {
+function normalizeContext(input: AiTool[] | SkillRecommendationContext): SkillRecommendationContext {
+  if (Array.isArray(input)) {
+    return { aiTools: input };
+  }
+  return input;
+}
+
+function filterByProviders(aiTools: AiTool[]): SkillCatalogItem[] {
   const activeProviders = new Set(
     aiTools
       .map(mapAiToolToSkillProvider)
@@ -206,4 +221,66 @@ export function getRecommendedSkills(aiTools: AiTool[]): SkillCatalogItem[] {
     item.providers.includes('tool_agnostic')
     || item.providers.some((provider) => activeProviders.has(provider)),
   );
+}
+
+function isProjectAwareFilteringNeeded(context: SkillRecommendationContext): boolean {
+  return Boolean(
+    context.domains?.length
+    || context.frameworks?.length
+    || context.repoType
+    || context.planningHints?.some((item) => item.trim().length > 0),
+  );
+}
+
+function collectSignalText(context: SkillRecommendationContext): string {
+  return [
+    context.domains?.join(' ') ?? '',
+    context.frameworks?.join(' ') ?? '',
+    context.repoType ?? '',
+    context.planningHints?.join(' ') ?? '',
+  ].join(' ').toLowerCase();
+}
+
+function isSkillRelevant(skill: SkillCatalogItem, context: SkillRecommendationContext): boolean {
+  if (skill.id === 'repo-readiness-review') return true;
+
+  const signalText = collectSignalText(context);
+  const hasWebUi = (context.domains ?? []).includes('web')
+    || /\bnext(?:\.js|js)?\b|\breact\b|\bvue\b|\bnuxt\b|\bsvelte\b|\bvite\b|frontend|browser|web ui|webui|\bui\b/.test(signalText);
+  const hasBackend = /\bfastapi\b|\bapi\b|\bbackend\b|\bserver\b|\brender\b/.test(signalText)
+    || context.repoType === 'multi';
+  const hasDeploySurface = /\bdeploy\b|\bvercel\b|\brender\b|production|公開/.test(signalText) || hasWebUi || hasBackend;
+
+  switch (skill.id) {
+    case 'frontend-design':
+      return hasWebUi;
+    case 'playwright':
+      return hasWebUi;
+    case 'vercel-deploy':
+      return hasWebUi && /\bvercel\b|\bnext(?:\.js|js)?\b/.test(signalText);
+    case 'render-deploy':
+      return hasBackend || /\brender\b/.test(signalText);
+    case 'gh-fix-ci':
+      return hasDeploySurface;
+    default:
+      return true;
+  }
+}
+
+export function getRecommendedSkills(input: AiTool[] | SkillRecommendationContext): SkillCatalogItem[] {
+  const context = normalizeContext(input);
+  const providerFiltered = filterByProviders(context.aiTools);
+
+  if (!isProjectAwareFilteringNeeded(context)) {
+    return providerFiltered;
+  }
+
+  const relevant = providerFiltered.filter((item) => isSkillRelevant(item, context));
+  return relevant.length > 0 ? relevant : providerFiltered;
+}
+
+export function getAutoSelectedSkillIds(input: AiTool[] | SkillRecommendationContext): string[] {
+  return getRecommendedSkills(input)
+    .filter((skill) => skill.selectionStage === 'first')
+    .map((skill) => skill.id);
 }

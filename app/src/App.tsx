@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { formReducer, initialFormState } from './state/formReducer';
 import { validationErrors, canExport } from './state/selectors';
+import type { FormState } from './state/actions.ts';
 import {
   clearConsultationState,
   clearDraft,
@@ -68,6 +69,7 @@ import {
 import {
   formatSkillProviderNames,
   formatSkillProviderSupportSummary,
+  getAutoSelectedSkillIds,
   getRecommendedSkills,
   SKILL_CATALOG,
   SKILL_RISK_LABELS,
@@ -135,6 +137,24 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
+function scrollToStepTop() {
+  window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+}
+
+function buildSkillRecommendationContext(state: FormState) {
+  return {
+    aiTools: state.tech.ai_tools,
+    domains: state.tech.domains,
+    frameworks: state.tech.frameworks,
+    repoType: state.structure.repo_type,
+    planningHints: [
+      state.project.description,
+      ...state.planning.tech_decisions.map((item) => [item.topic, item.choice, item.notes].filter(Boolean).join(' ')),
+      ...state.planning.external_dependencies.map((item) => [item.name, item.purpose, item.source, item.notes].filter(Boolean).join(' ')),
+    ].filter((item) => item.trim().length > 0),
+  };
+}
+
 function App() {
   const [state, dispatch] = useReducer(formReducer, initialFormState);
   const [consultationText, setConsultationText] = useState(() => loadConsultationText());
@@ -147,6 +167,7 @@ function App() {
   const [promptCopied, setPromptCopied] = useState(false);
   const [promptProvider, setPromptProvider] = useState<ExternalPromptProvider>('chatgpt');
   const [recommendationDecisions, setRecommendationDecisions] = useState<RecommendationDecisions>(() => loadRecommendationDecisions());
+  const [skillSelectionTouched, setSkillSelectionTouched] = useState(false);
   const [guidedStep, setGuidedStep] = useState<GuidedStep>('intro');
   const [draftApplied, setDraftApplied] = useState<boolean>(() =>
     deriveInitialWizardState(loadDraft(), loadConsultationText(), loadConsultationDraft()).draftApplied);
@@ -301,10 +322,13 @@ function App() {
   const summaryDomains = state.tech.domains.length > 0
     ? state.tech.domains.join(', ')
     : consultationDraft?.suggestedState.tech.domains.join(', ') || '未確定';
-  const recommendedSkills = getRecommendedSkills(state.tech.ai_tools);
+  const skillRecommendationContext = buildSkillRecommendationContext(state);
+  const recommendedSkills = getRecommendedSkills(skillRecommendationContext);
+  const autoSelectedSkillIds = getAutoSelectedSkillIds(skillRecommendationContext);
   const starterSkills = recommendedSkills.filter((skill) => skill.selectionStage === 'first');
   const laterSkills = recommendedSkills.filter((skill) => skill.selectionStage === 'later');
   const selectedSkills = SKILL_CATALOG.filter((item) => selectedSkillIds.includes(item.id));
+  const autoSelectedSkills = SKILL_CATALOG.filter((item) => autoSelectedSkillIds.includes(item.id));
   const activeAiToolNames = formatAiToolNames(state.tech.ai_tools) || 'AI ツール';
   const activeWrapperFiles = formatAiToolWrapperFiles(state.tech.ai_tools);
   const skillLead = generationMode === 'remote'
@@ -318,6 +342,20 @@ function App() {
   const repoTypeRecommendation = draftRecommendations.find((item) => item.key === 'repo_type');
   const securityRecommendation = draftRecommendations.find((item) => item.key === 'security_level');
   const phasesRecommendation = draftRecommendations.find((item) => item.key === 'phases_count');
+  const suggestedDomainsLabel = consultationDraft?.suggestedState.tech.domains.join(', ') || '未確定';
+  const suggestedLanguageLabel = consultationDraft?.suggestedState.tech.primary_language ?? state.tech.primary_language;
+  const suggestedFrameworksLabel = consultationDraft?.suggestedState.tech.frameworks.join(', ') || '未確定';
+  const planningPreviewTech = state.planning.tech_decisions
+    .filter((item) => item.topic.trim() && item.choice.trim())
+    .slice(0, 4)
+    .map((item) => `${item.topic}: ${item.choice} (${item.status})`);
+  const planningPreviewDependencies = state.planning.external_dependencies
+    .filter((item) => item.name.trim())
+    .slice(0, 4)
+    .map((item) => `${item.name} (${item.status})`);
+  const skillActivationExample = selectedSkills.length > 0
+    ? `「PROJECT.md${activeWrapperFiles ? ` と ${activeWrapperFiles}` : ''} を読んで、${selectedSkills[0].name} を使って最初に進めるべきタスクを整理して」`
+    : `「PROJECT.md${activeWrapperFiles ? ` と ${activeWrapperFiles}` : ''} を読んで、このプロジェクトで最初に使うべき Skill を選んで」`;
   const recommendationStatusLabels: Record<RecommendationDecisionStatus, string> = {
     pending: '未確認',
     accepted: '採用',
@@ -405,10 +443,11 @@ function App() {
     if (!canVisitStep(step)) return;
     shouldFocusMainRef.current = true;
     setGuidedStep(step);
-    window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+    scrollToStepTop();
   }
 
   function toggleSkillSelection(skillId: string) {
+    setSkillSelectionTouched(true);
     setSelectedSkillIds((current) =>
       current.includes(skillId)
         ? current.filter((id) => id !== skillId)
@@ -496,6 +535,7 @@ function App() {
     setConsultationDraft(null);
     setRecommendationDecisions(DEFAULT_RECOMMENDATION_DECISIONS);
     setSelectedSkillIds([]);
+    setSkillSelectionTouched(false);
     setSelectedTestTemplateId('');
     setConsultationMessage(null);
     setPromptCopied(false);
@@ -537,8 +577,11 @@ function App() {
     }
     setConsultationDraft(draft);
     setRecommendationDecisions(DEFAULT_RECOMMENDATION_DECISIONS);
+    setSelectedSkillIds([]);
+    setSkillSelectionTouched(false);
     setConsultationMessage('ドラフトを作成しました。内容を確認して次へ進んでください。');
     setGuidedStep('draft');
+    scrollToStepTop();
     setDraftApplied(false);
     setResultPhase('idle');
   }
@@ -550,8 +593,11 @@ function App() {
     setConsultationText(template.content);
     setConsultationDraft(null);
     setRecommendationDecisions(DEFAULT_RECOMMENDATION_DECISIONS);
+    setSelectedSkillIds([]);
+    setSkillSelectionTouched(false);
     setConsultationMessage(`固定テスト文章「${template.label}」を貼り付け欄に反映しました。`);
     setGuidedStep('paste');
+    scrollToStepTop();
     setResumeTargetStep('paste');
     setHasSavedProgress(true);
     setDraftApplied(false);
@@ -560,6 +606,7 @@ function App() {
   function handleStartFresh() {
     handleReset();
     setGuidedStep('paste');
+    scrollToStepTop();
   }
 
   function handleResumeSavedProgress() {
@@ -568,8 +615,13 @@ function App() {
 
   function applyConsultationDraft(nextStep: 'options' | 'detail' | 'review') {
     if (!consultationDraft) return;
-    dispatch({ type: 'RESTORE_DRAFT', payload: consultationDraft.suggestedState });
+    const restoredState = consultationDraft.suggestedState;
+    dispatch({ type: 'RESTORE_DRAFT', payload: restoredState });
     setRecommendationDecisions(DEFAULT_RECOMMENDATION_DECISIONS);
+    if (!skillSelectionTouched) {
+      const autoSkills = getAutoSelectedSkillIds(buildSkillRecommendationContext(restoredState));
+      setSelectedSkillIds(autoSkills);
+    }
     setConsultationMessage(
       nextStep === 'options'
         ? 'ドラフトをフォームへ反映しました。次に、必要なオプションだけ確認してください。'
@@ -579,7 +631,7 @@ function App() {
     );
     setGuidedStep(nextStep);
     setDraftApplied(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToStepTop();
   }
 
   function handleChangeDraftOpenQuestions(value: string) {
@@ -653,6 +705,7 @@ function App() {
             onCopyPrompt={handleCopyConsultationPrompt}
             promptCopied={promptCopied}
             onBuildDraft={handleBuildConsultationDraft}
+            onBackToPaste={() => goToStep('paste')}
             onContinueToOptions={() => applyConsultationDraft('options')}
             onChangeOpenQuestions={handleChangeDraftOpenQuestions}
             draft={consultationDraft}
@@ -677,6 +730,7 @@ function App() {
               onCopyPrompt={handleCopyConsultationPrompt}
               promptCopied={promptCopied}
               onBuildDraft={handleBuildConsultationDraft}
+              onBackToPaste={() => goToStep('paste')}
               onContinueToOptions={() => applyConsultationDraft('options')}
               onChangeOpenQuestions={handleChangeDraftOpenQuestions}
               draft={consultationDraft}
@@ -702,6 +756,15 @@ function App() {
             <p className="consultation-lead">
               ここでは generator に既にある設定だけに絞って、repo 構成や security を軽く調整します。迷う場合は推奨値のままで進めます。
             </p>
+
+            <div className="consultation-guidance">
+              <h4>この画面の見方</h4>
+              <ul>
+                <li>この画面の「現在」は、ドラフト反映時にフォームへ入った仮置き値です。</li>
+                <li>多くの場合、現在値は AI / parser が提案した値と同じです。</li>
+                <li>`AI推奨: 未確認` は「まだ人が確認していない」という意味で、未採用という意味ではありません。</li>
+              </ul>
+            </div>
 
             <div className="consultation-columns options-grid">
               <div className="consultation-card">
@@ -830,12 +893,29 @@ function App() {
             <div className="consultation-summary skill-selection">
               <p><strong>Skill（スキル）</strong></p>
               <p className="consultation-lead">{skillLead}</p>
+              <p className="hint">
+                最初に入れておくべき Skill は project 内容に合わせて自動選定し、初回は自動でチェックします。不要なら外せます。
+              </p>
               <ul className="skill-selection-notes">
                 <li>ZIP に入るのは「Skill（スキル）のファイルが一緒に入る」という意味です。</li>
                 <li>解凍後に対応する AI でその project を開くと、その Skill（スキル）を参照しながら作業できます。</li>
                 <li>何もしなくても勝手に動くものではなく、AI に頼む時の補助になります。</li>
                 <li>迷う場合は、まず `Repo Readiness Review` だけ選べば十分です。</li>
               </ul>
+              {autoSelectedSkills.length > 0 && (
+                <div className="consultation-guidance skill-activation-guide">
+                  <h4>自動でチェックする Skill</h4>
+                  <p>{autoSelectedSkills.map((skill) => skill.name).join(', ')}</p>
+                </div>
+              )}
+              <div className="consultation-guidance skill-activation-guide">
+                <h4>Skill の使い方</h4>
+                <ul>
+                  <li>生成した repo を対応する AI で開き、最初に `PROJECT.md` と {activeWrapperFiles || 'tool wrapper'} を読ませます。</li>
+                  <li>そのうえで、使いたい Skill 名を入れて依頼します。</li>
+                  <li>依頼文例: {skillActivationExample}</li>
+                </ul>
+              </div>
               {recommendedSkills.length > 0 ? (
                 <>
                   {starterSkills.length > 0 && (
@@ -882,6 +962,15 @@ function App() {
             </p>
 
             <div className="advanced-detail-stack">
+              <div className="consultation-guidance">
+                <h4>詳細調整の考え方</h4>
+                <ul>
+                  <li>技術ドメイン、主要言語、フレームワークは相談結果から仮置きされています。</li>
+                  <li>技術判断と外部依存も、相談結果から拾えたものは自動で入ります。</li>
+                  <li>空欄のままでも進められます。非エンジニアの場合、確実に分かる項目だけ直せば十分です。</li>
+                </ul>
+              </div>
+
               {consultationDraft && (
                 <section className="form-section consultation-followup">
                   <h2>相談結果からの確認事項</h2>
@@ -914,6 +1003,34 @@ function App() {
                   </div>
                 </section>
               )}
+              <div className="consultation-columns detail-guidance-grid">
+                <div className="consultation-card">
+                  <h4>AIが仮置きした技術情報</h4>
+                  <ul>
+                    <li>技術ドメイン原案: {suggestedDomainsLabel}</li>
+                    <li>主要言語原案: {suggestedLanguageLabel}</li>
+                    <li>フレームワーク原案: {suggestedFrameworksLabel}</li>
+                  </ul>
+                  <p className="hint">現在フォームに入っている値を必要な分だけ直せば大丈夫です。</p>
+                </div>
+                <div className="consultation-card consultation-card-wide">
+                  <h4>自動で入りやすい技術判断と外部依存</h4>
+                  <p><strong>技術判断:</strong> {planningPreviewTech.length}件 / <strong>外部依存:</strong> {planningPreviewDependencies.length}件</p>
+                  {planningPreviewTech.length > 0 ? (
+                    <ul>
+                      {planningPreviewTech.map((item) => <li key={item}>{item}</li>)}
+                    </ul>
+                  ) : (
+                    <p className="hint">まだ自動入力はありません。未確定なら無理に追加しなくて大丈夫です。</p>
+                  )}
+                  {planningPreviewDependencies.length > 0 && (
+                    <ul>
+                      {planningPreviewDependencies.map((item) => <li key={item}>{item}</li>)}
+                    </ul>
+                  )}
+                  <p className="hint">API / OSS / GitHub リポジトリなどが分かっている時だけ編集してください。</p>
+                </div>
+              </div>
               <ProjectSection state={state} dispatch={dispatch} errors={errors} />
               <TechSection state={state} dispatch={dispatch} errors={errors} />
               <SecuritySection state={state} dispatch={dispatch} />

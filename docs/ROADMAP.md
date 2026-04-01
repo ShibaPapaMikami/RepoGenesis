@@ -158,6 +158,8 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 
 ### Track 3: Structural Separation
 - [x] Separate provider-neutral AI tooling policy into generated `docs/AI_TOOLING.md` and keep wrapper files thin
+- [x] Make guided wizard step transitions consistent and clarify which values are AI-prefilled versus manually confirmed in options/detail screens
+- [x] Auto-select first-stage curated skills from project context and make skill activation instructions explicit in the public wizard
 - [ ] Continue skill layer deeper automation as its own track
 - [ ] Continue CI / docs hardening as its own track
 - [x] Remove `manual_bearer` support from public-facing paths

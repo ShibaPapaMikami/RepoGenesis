@@ -131,6 +131,9 @@ Phase 6 / Hardening
 - planning に `Framework: Next.js, FastAPI` がある場合は `API framework: FastAPI` の重複 candidate を落とし、`buildProjectSpec` は stale な `tech.frameworks` を planning から rescue して generated tech stack に反映するようになった。
 - generated `VERSIONING_STANDARD.md` / `REQUIREMENTS.md` / wrapper guidance は、operator-facing web UI で `v<release> (<commit>) <deploy time>` を右上ヘッダーに低強調で表示する default を持ち、開発完了後は hidden / feature-flagged / admin-only へ切り替え可能な運用方針まで含むようになった。
 - hosted RepoGenesis UI 自体も `v<release> (<commit>) <deploy time>` を header 右上の低強調ラベルとして出せるようにし、`public / admin / hidden` の表示モードを build-time env で切り替えられるようになった。
+- guided wizard は `相談内容 -> ドラフト` を含む全主要 step 遷移で上端へ戻るように揃え、draft CTA も他 step と同じ下部 action row へ寄せた。
+- options/detail には「現在値は AI が仮置きした候補」という説明を追加し、技術ドメイン / 主要言語 / フレームワーク / planning の自動入力範囲を non-engineer 向けに読み替えやすくした。
+- curated skill recommendation は `AI tool` だけでなく project context も見て絞り込み、first-stage skill は初回 draft 適用時に自動選択したうえで、public wizard に skill の発動方法を明示するようになった。
 
 ## What This Phase Still Needs
 - Refine the public UI so non-engineers can understand planning fields without reading internal terminology.

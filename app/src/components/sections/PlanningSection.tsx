@@ -26,10 +26,10 @@ function fromCsv(value: string): string[] {
 export function PlanningSection({ state, dispatch }: PlanningSectionProps) {
   return (
     <section className="form-section">
-      <h2>技術判断と外部依存</h2>
+      <h2>技術判断と外部依存（必要なものだけ）</h2>
       <p className="hint">
-        ここでは API / モデル / 外部サービス / OSS の採用状況を整理します。`Adopted` は採用済み、`Candidate` は候補、`Open`
-        は未確定、`Rejected` は採用しない案です。
+        相談結果から自動で入ることがあります。空なら無理に埋めなくて大丈夫です。`Adopted` は採用済み、`Candidate` は候補、
+        `Open` は未確定、`Rejected` は採用しない案です。
       </p>
 
       <div className="planning-group">
@@ -44,7 +44,7 @@ export function PlanningSection({ state, dispatch }: PlanningSectionProps) {
         </div>
 
         {state.planning.tech_decisions.length === 0 ? (
-          <p className="hint">まだ技術判断はありません。AI API、モデル、DB、認証、通知などが決まっていれば追加してください。</p>
+          <p className="hint">まだ技術判断はありません。AI API、DB、認証などが分かっている時だけ追加してください。未確定なら空のまま進められます。</p>
         ) : (
           <div className="planning-stack">
             {state.planning.tech_decisions.map((item, index) => (
@@ -162,7 +162,7 @@ export function PlanningSection({ state, dispatch }: PlanningSectionProps) {
         </div>
 
         {state.planning.external_dependencies.length === 0 ? (
-          <p className="hint">まだ外部依存はありません。採用済みや候補の API / サービス / package があれば追加してください。</p>
+          <p className="hint">まだ外部依存はありません。採用済みや候補の API / サービス / package がある時だけ追加してください。</p>
         ) : (
           <div className="planning-stack">
             {state.planning.external_dependencies.map((item, index) => (

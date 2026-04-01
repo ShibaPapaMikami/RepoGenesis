@@ -27,6 +27,7 @@ interface ConsultationSectionProps {
   onCopyPrompt: () => void;
   promptCopied: boolean;
   onBuildDraft: () => void;
+  onBackToPaste: () => void;
   onContinueToOptions: () => void;
   onChangeOpenQuestions: (value: string) => void;
   draft: IntakeDraft | null;
@@ -48,6 +49,7 @@ export function ConsultationSection({
   onCopyPrompt,
   promptCopied,
   onBuildDraft,
+  onBackToPaste,
   onContinueToOptions,
   onChangeOpenQuestions,
   draft,
@@ -137,6 +139,9 @@ export function ConsultationSection({
         </div>
 
         <div className="output-actions">
+          <button type="button" onClick={onBackToPaste} className="btn-secondary">
+            相談内容へ戻る
+          </button>
           <button type="button" onClick={onContinueToOptions} className="btn-primary">
             この内容で進む
           </button>
