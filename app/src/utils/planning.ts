@@ -205,9 +205,43 @@ function splitLines(...texts: Array<string | undefined>): string[] {
 function normalizeStatus(line: string, fallback: TechDecisionStatus = 'candidate'): TechDecisionStatus {
   if (/却下|採用しない|不要|対象外/i.test(line)) return 'rejected';
   if (/未確定|未定|要確認|かどうか|または|優先順位|方針/i.test(line)) return 'open';
-  if (/想定|候補|検討|later|future|candidate|reference|参照|pattern|パターン/i.test(line)) return 'candidate';
+  if (/想定|候補|検討|later|future|candidate|reference|参照|pattern|パターン|第一候補|初期候補|first candidate|preferred candidate|primary candidate/i.test(line)) return 'candidate';
   if (/採用|必須|固定|前提|利用する|使う/i.test(line)) return 'adopted';
   return fallback;
+}
+
+const AUTHORITATIVE_STRUCTURED_HINT_KEYS = new Set<StructuredHintKey>([
+  'language',
+  'framework',
+  'ui_stack',
+  'architecture',
+  'core_feature',
+  'audio_processing',
+  'security_level',
+  'ai_runtime_lang',
+  'ai_bridge',
+  'sidecar_packaging',
+  'canonical_format',
+  'segment_duration',
+  'export_format',
+  'autosave',
+]);
+
+function hasStrongUncertaintySignal(line: string): boolean {
+  return /候補|later|future|candidate|reference|参照|pattern|パターン|第一候補|初期候補|first candidate|preferred candidate|primary candidate|未確定|未定|要確認|かどうか|または|優先順位|方針/i.test(line);
+}
+
+function resolveStructuredHintStatus(
+  key: StructuredHintKey,
+  line: string,
+  fallback: TechDecisionStatus,
+): TechDecisionStatus {
+  const status = normalizeStatus(line, fallback);
+  if (status !== 'candidate') return status;
+  if (fallback !== 'adopted') return status;
+  if (!AUTHORITATIVE_STRUCTURED_HINT_KEYS.has(key)) return status;
+  if (hasStrongUncertaintySignal(line)) return status;
+  return 'adopted';
 }
 
 function normalizeDecisionTopic(label: string): { topic: string; category?: DependencyCategory } | null {
@@ -349,7 +383,7 @@ function canonicalizeModelChoice(value: string): string {
 }
 
 function normalizePrimaryLanguageName(value: string): CanonicalPrimaryLanguage | null {
-  const normalized = value.trim().toLowerCase().replace(/[()（）「」『』[\]]/g, ' ');
+  const normalized = stripPreferredCandidateQualifier(value.trim()).toLowerCase().replace(/[()（）「」『』[\]]/g, ' ');
   if (!normalized) return null;
 
   if (/\btypescript\b|type\s*script/.test(normalized)) return 'typescript';
@@ -371,7 +405,7 @@ function normalizePrimaryLanguageChoices(value: string): CanonicalPrimaryLanguag
 }
 
 function normalizeFrameworkName(value: string): string {
-  const normalized = value.trim().replace(/[()（）「」『』[\]]/g, '');
+  const normalized = stripPreferredCandidateQualifier(value.trim()).replace(/[()（）「」『』[\]]/g, '');
   if (!normalized) return '';
 
   const lowered = normalized.toLowerCase();
@@ -420,7 +454,7 @@ function inferDependencyLicense(name: string): string {
 }
 
 function normalizeBridgeChoice(value: string): string {
-  const normalized = value.trim().replace(/[()（）「」『』[\]]/g, '');
+  const normalized = stripPreferredCandidateQualifier(value.trim().replace(/[()（）「」『』[\]]/g, ''));
   if (!normalized) return '';
 
   const lowered = normalized.toLowerCase().replace(/[\s-]+/g, '_');
@@ -429,7 +463,7 @@ function normalizeBridgeChoice(value: string): string {
 }
 
 function normalizePackagingChoice(value: string): string {
-  const normalized = value.trim().replace(/[()（）「」『』[\]]/g, '');
+  const normalized = stripPreferredCandidateQualifier(value.trim().replace(/[()（）「」『』[\]]/g, ''));
   if (!normalized) return '';
 
   const lowered = normalized.toLowerCase().replace(/[\s-]+/g, '');
@@ -456,11 +490,29 @@ function inferAudioProcessingPurpose(name: string): string {
 }
 
 function normalizeSecurityDecisionChoice(value: string): string {
-  const normalized = value.trim().toLowerCase();
+  const normalized = stripPreferredCandidateQualifier(value.trim()).toLowerCase();
+  if (/high[_\s-]*local[_\s-]*processing|local[_\s-]*processing[_\s-]*high/.test(normalized)) return 'high';
+  if (/medium[_\s-]*local[_\s-]*processing|local[_\s-]*processing[_\s-]*medium/.test(normalized)) return 'medium';
+  if (/low[_\s-]*local[_\s-]*processing|local[_\s-]*processing[_\s-]*low/.test(normalized)) return 'low';
   if (/\bhigh\b|高/.test(normalized)) return 'high';
   if (/\bmedium\b|中/.test(normalized)) return 'medium';
   if (/\blow\b|低/.test(normalized)) return 'low';
   return value;
+}
+
+function stripPreferredCandidateQualifier(value: string): string {
+  return value
+    .replace(/\s*(?:を|が|は)?\s*(?:初期)?第一候補(?:です)?$/u, '')
+    .replace(/\s*(?:を|が|は)?\s*優先候補(?:です)?$/u, '')
+    .replace(/\s*(?:as\s+)?(?:the\s+)?(?:first|preferred|primary)\s+candidate$/i, '')
+    .trim();
+}
+
+function extractPreferenceNote(line: string): string {
+  if (/第一候補|初期候補|first candidate|preferred candidate|primary candidate/i.test(line)) {
+    return 'Initial preferred candidate';
+  }
+  return '';
 }
 
 function normalizeGithubRepoUrl(repoUrl: string): string | null {
@@ -498,6 +550,7 @@ function addGithubDependency(
   line: string,
   status: TechDecisionStatus,
 ) {
+  const note = extractPreferenceNote(line);
   mergeDependency(dependencyBucket, {
     name: repo.name,
     category: 'github_repo',
@@ -508,7 +561,7 @@ function addGithubDependency(
     license: '',
     env_vars: [],
     data_outbound: false,
-    notes: '',
+    notes: note,
   });
   mergeDecision(decisionBucket, {
     topic: 'External Code',
@@ -516,7 +569,7 @@ function addGithubDependency(
     status,
     rationale: line,
     decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
-    notes: '',
+    notes: note,
   });
 }
 
@@ -919,6 +972,7 @@ function addStructuredDependency(
   decisionTopic?: string,
 ) {
   const canonicalName = canonicalizeStructuredDependencyName(name, category);
+  const note = extractPreferenceNote(purpose);
   mergeDependency(dependencyBucket, {
     name: canonicalName,
     category,
@@ -929,7 +983,7 @@ function addStructuredDependency(
     license: inferDependencyLicense(canonicalName),
     env_vars: inferEnvVars(canonicalName, category),
     data_outbound: !['oss', 'npm_package', 'github_repo'].includes(category),
-    notes: '',
+    notes: note,
   });
 
   if (decisionTopic) {
@@ -939,7 +993,7 @@ function addStructuredDependency(
       status,
       rationale: purpose,
       decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
-      notes: '',
+      notes: note,
     });
   }
 }
@@ -981,8 +1035,9 @@ function extractStructuredHints(
   const parsed = parseStructuredLine(line);
   if (!parsed) return false;
 
-  const status = normalizeStatus(line, fallbackStatus);
+  const status = resolveStructuredHintStatus(parsed.key, line, fallbackStatus);
   const value = parsed.value;
+  const preferenceNote = extractPreferenceNote(line);
 
   switch (parsed.key) {
     case 'ai_api':
@@ -1078,7 +1133,7 @@ function extractStructuredHints(
             status,
             rationale: line,
             decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
-            notes: '',
+            notes: preferenceNote,
           });
         }
       }
@@ -1090,7 +1145,7 @@ function extractStructuredHints(
         status,
         rationale: line,
         decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
-        notes: '',
+        notes: preferenceNote,
       });
       return true;
     case 'core_feature':
@@ -1101,7 +1156,7 @@ function extractStructuredHints(
           status,
           rationale: line,
           decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
-          notes: '',
+          notes: preferenceNote,
         });
       }
       return true;
@@ -1168,7 +1223,7 @@ function extractStructuredHints(
         status,
         rationale: line,
         decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
-        notes: '',
+        notes: preferenceNote,
       });
       return true;
     case 'scheduled_jobs':
@@ -1181,7 +1236,7 @@ function extractStructuredHints(
         status,
         rationale: line,
         decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
-        notes: '',
+        notes: preferenceNote,
       });
       return true;
     case 'ai_bridge':
@@ -1191,7 +1246,7 @@ function extractStructuredHints(
         status,
         rationale: line,
         decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
-        notes: '',
+        notes: preferenceNote,
       });
       return true;
     case 'sidecar_packaging':
@@ -1201,7 +1256,7 @@ function extractStructuredHints(
         status,
         rationale: line,
         decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
-        notes: '',
+        notes: preferenceNote,
       });
       return true;
     case 'future_asr_candidates':
@@ -1211,7 +1266,7 @@ function extractStructuredHints(
         status: 'candidate',
         rationale: line,
         decision_date: '',
-        notes: '',
+        notes: preferenceNote,
       });
       return true;
     case 'ci_reference':
@@ -1221,7 +1276,7 @@ function extractStructuredHints(
         status: 'candidate',
         rationale: line,
         decision_date: '',
-        notes: '',
+        notes: preferenceNote,
       });
       return true;
     case 'canonical_format':
@@ -1231,7 +1286,7 @@ function extractStructuredHints(
         status,
         rationale: line,
         decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
-        notes: '',
+        notes: preferenceNote,
       });
       return true;
     case 'segment_duration':
@@ -1241,7 +1296,7 @@ function extractStructuredHints(
         status,
         rationale: line,
         decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
-        notes: '',
+        notes: preferenceNote,
       });
       return true;
     case 'export_format':
@@ -1251,7 +1306,7 @@ function extractStructuredHints(
         status,
         rationale: line,
         decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
-        notes: '',
+        notes: preferenceNote,
       });
       return true;
     case 'autosave':
@@ -1261,7 +1316,7 @@ function extractStructuredHints(
         status,
         rationale: line,
         decision_date: status === 'adopted' ? new Date().toISOString().split('T')[0] : '',
-        notes: '',
+        notes: preferenceNote,
       });
       return true;
     case 'repo_style':

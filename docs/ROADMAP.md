@@ -189,6 +189,7 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Map meeting-transcription open questions into transcription-specific planning topics and suppress stale `cli/web` carry-over when the brief only leaves operator surface selection open
 - [x] Treat future/reference-only ASR or CI hints as candidate/reference planning instead of adopted runtime dependencies, and avoid false GitHub alias matches such as `mlx` inside `mlx_or_parakeet`
 - [x] Parse desktop transcription-specific implementation hints (`ui_stack`, `ai_runtime_lang`, `ai_bridge`, `sidecar_packaging`, `internal_canonical_format`, `segment_duration`, `export_format`, `autosave`) into structured planning and generated docs
+- [x] Treat explicit implementation hints written as `想定` as adopted planning when they define the initial stack, normalize `high_local_processing` to `high`, and keep `第一候補` metadata without duplicating canonical choices such as `PyInstaller`
 
 ### CI / Docs Hardening
 - [x] Add CI coverage for vendored generator bundle drift

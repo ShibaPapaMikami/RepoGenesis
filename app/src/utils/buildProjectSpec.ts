@@ -8,7 +8,12 @@ const SECURITY_ORDER = ['low', 'medium', 'high'] as const;
 type CanonicalPrimaryLanguage = ProjectSpec['tech']['primary_language'];
 
 function normalizePrimaryLanguageName(value: string): CanonicalPrimaryLanguage | null {
-  const normalized = value.trim().toLowerCase().replace(/[()（）「」『』[\]]/g, ' ');
+  const normalized = value
+    .trim()
+    .replace(/\s*(?:を|が|は)?\s*(?:初期)?第一候補(?:です)?$/u, '')
+    .replace(/\s*(?:as\s+)?(?:the\s+)?(?:first|preferred|primary)\s+candidate$/i, '')
+    .toLowerCase()
+    .replace(/[()（）「」『』[\]]/g, ' ');
   if (!normalized) return null;
 
   if (/\btypescript\b|type\s*script/.test(normalized)) return 'typescript';
@@ -31,7 +36,11 @@ function parsePrimaryLanguageChoices(value: string): CanonicalPrimaryLanguage[] 
 }
 
 function normalizeFrameworkName(value: string): string {
-  const normalized = value.trim().replace(/[()（）「」『』[\]]/g, '');
+  const normalized = value
+    .trim()
+    .replace(/\s*(?:を|が|は)?\s*(?:初期)?第一候補(?:です)?$/u, '')
+    .replace(/\s*(?:as\s+)?(?:the\s+)?(?:first|preferred|primary)\s+candidate$/i, '')
+    .replace(/[()（）「」『』[\]]/g, '');
   if (!normalized) return '';
 
   const lowered = normalized.toLowerCase();
@@ -118,7 +127,12 @@ function resolveDomains(state: FormState, frameworks: string[]): ProjectSpec['te
 
 function resolveSecurityLevel(state: FormState): ProjectSpec['security']['level'] {
   const minimum = calculateMinSecurityLevel(state.security);
-  const candidate = state.securityLevelOverride ?? state.security.level;
+  const planningSecurity = state.planning.tech_decisions
+    .filter((item) => item.topic === 'Security level')
+    .map((item) => item.choice)
+    .reverse()
+    .find((choice) => choice === 'low' || choice === 'medium' || choice === 'high');
+  const candidate = planningSecurity ?? state.securityLevelOverride ?? state.security.level;
   const minimumIndex = SECURITY_ORDER.indexOf(minimum);
   const candidateIndex = SECURITY_ORDER.indexOf(candidate);
   return SECURITY_ORDER[Math.max(minimumIndex, candidateIndex)];

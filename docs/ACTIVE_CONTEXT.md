@@ -94,6 +94,9 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - GitHub reference alias match は token 境界ベースへ tightening し、`mlx_or_parakeet` から `mlx` repo を誤推定しないようにした
   - intake / buildProjectSpec は `ui_stack` / `ai_runtime_lang` / `ai_bridge` / `sidecar_packaging` / `internal_canonical_format` / `segment_duration` / `export_format` / `autosave` を structured planning として保持できるようになった
   - generated `PROJECT.md` / `REQUIREMENTS.md` / `ARCHITECTURE.md` / tool guidance は supporting language、desktop shell / sidecar bridge、transcript contract（segmentation / canonical JSON / export / autosave）を出し、single-repo tree も runbooks / skills / `.github` / `.repogenesis` を含む実態に揃えた
+  - explicit な implementation hint が `〜を想定` で書かれていても、初期スタックを定義する structured input は adopted planning として保持するようにした
+  - `high_local_processing` は security level `high` として正規化し、spec / requirements / tech decisions の表記揺れを減らした
+  - `〜を第一候補` は candidate のまま canonical choice に正規化し、`PyInstaller` のような packaging choice の重複を避けつつ preferred-candidate 情報を notes に残すようにした
   - `責任者` と `技術ドメイン` は AI-first flow では blocking validation から外した
   - `技術ドメイン` 未確定は warning 扱いで ZIP を止めないようにした
   - skill layer contract を provider-aware に更新し、Codex / Claude Code / Gemini CLI を並列で扱う設計に整理した

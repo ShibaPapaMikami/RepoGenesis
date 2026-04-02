@@ -590,6 +590,83 @@ test('parseConsultationIntake should keep desktop transcription stack explicit w
   );
 });
 
+test('parseConsultationIntake should treat explicit implementation hints with 想定 as adopted while preserving 第一候補 as candidate', () => {
+  const input = `## プロジェクト概要
+ローカルファーストの会議文字起こしデスクトップアプリ
+
+## 想定ユーザー
+- PM
+
+## 解決したい課題
+- 会議ログを安全に残したい
+
+## 最初に作るべきもの
+デスクトップUIから録音して文字起こし結果を保存する最小構成
+
+## 扱うデータ
+- 会議音声
+- 文字起こし結果
+
+## 未確定事項
+- 話者分離を初期から入れるか未確定
+
+## RepoGenesis入力候補
+- ui_stack は tauri_v2 を想定
+- ai_runtime_lang は python を想定
+- ai_bridge は tauri_sidecar を想定
+- sidecar_packaging は pyinstaller を第一候補
+- security は high_local_processing を想定
+- segment_duration は 2〜5秒 を想定
+- autosave は 会議中の一時ログを自動保存 を想定`;
+
+  const draft = parseConsultationIntake(input, makeState());
+  const techDecisions = draft.suggestedState.planning.tech_decisions;
+
+  assert.equal(draft.suggestedState.security.level, 'high');
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Framework' && item.choice === 'Tauri v2' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Supporting language' && item.choice === 'python' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Inference bridge' && item.choice === 'Tauri sidecar' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Security level' && item.choice === 'high' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Transcript segmentation' && item.choice === '2〜5秒' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Autosave' && item.choice === '会議中の一時ログを自動保存' && item.status === 'adopted'),
+    true,
+  );
+  assert.equal(
+    techDecisions.filter((item) => item.topic === 'Sidecar packaging' && item.choice === 'PyInstaller').length,
+    1,
+  );
+  assert.equal(
+    techDecisions.some((item) =>
+      item.topic === 'Sidecar packaging'
+      && item.choice === 'PyInstaller'
+      && item.status === 'candidate'
+      && item.notes === 'Initial preferred candidate'),
+    true,
+  );
+});
+
 test('validate should allow missing owner and domains for consultation-driven drafts', () => {
   const draft = parseConsultationIntake(getConsultationTestTemplate('meeting_transcription_internal_tool'), makeState());
   const errors = validate(draft.suggestedState);

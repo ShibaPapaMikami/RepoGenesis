@@ -358,6 +358,61 @@ test('buildProjectSpec should preserve desktop sidecar hints and transcription a
   assert.equal(externalDependencies.includes('### ml-explore/mlx'), false);
 });
 
+test('buildProjectSpec should carry adopted explicit security and transcript-contract hints into generated docs while keeping preferred candidates annotated', () => {
+  const intake = `## プロジェクト概要
+機密会議向けのローカル議事録デスクトップアプリ。録音しながら文字起こしし、会議中の一時ログを自動保存する。
+
+## 想定ユーザー
+- PM
+
+## 解決したい課題
+- 機密会議を外部送信せずに記録したい
+
+## 最初に作るべきもの
+ローカルデスクトップUIで録音・文字起こし・保存を行う最小構成
+
+## 扱うデータ
+- 会議音声
+- 文字起こし結果
+
+## 未確定事項
+- 話者分離を初期から入れるか未確定
+
+## RepoGenesis入力候補
+- ui_stack は tauri_v2 を想定
+- ai_runtime_lang は python を想定
+- ai_bridge は tauri_sidecar を想定
+- sidecar_packaging は pyinstaller を第一候補
+- internal_canonical_format は json を想定
+- segment_duration は 2〜5秒 を想定
+- export_format は markdown と txt を想定
+- autosave は 会議中の一時ログを自動保存 を想定
+- security は high_local_processing を想定`;
+
+  const draft = parseConsultationIntake(intake, makeState());
+  const spec = buildProjectSpec(draft.suggestedState);
+  const files = generateFromSpec(spec);
+  const requirements = files.get('docs/REQUIREMENTS.md') ?? '';
+  const architecture = files.get('docs/ARCHITECTURE.md') ?? '';
+  const techDecisions = files.get('docs/TECH_DECISIONS.md') ?? '';
+
+  assert.equal(spec.security.level, 'high');
+  assert.equal(requirements.includes('Security expectations for level `high`'), true);
+  assert.equal(requirements.includes('Transcript segmentation is defined for the first workflow: 2〜5秒.'), true);
+  assert.equal(requirements.includes('Autosave behavior is defined for operator sessions: 会議中の一時ログを自動保存.'), true);
+  assert.equal(architecture.includes('- Canonical format: json'), true);
+  assert.equal(architecture.includes('- Review / export targets: markdown と txt'), true);
+  assert.equal(architecture.includes('- Autosave: 会議中の一時ログを自動保存'), true);
+  assert.equal(techDecisions.includes('### Supporting language'), true);
+  assert.equal(techDecisions.includes('- **Choice**: python'), true);
+  assert.equal(techDecisions.includes('- **Status**: Adopted'), true);
+  assert.equal(techDecisions.includes('### Security level'), true);
+  assert.equal(techDecisions.includes('- **Choice**: high'), true);
+  assert.equal(techDecisions.includes('### Sidecar packaging'), true);
+  assert.equal(techDecisions.includes('- **Choice**: PyInstaller'), true);
+  assert.equal(techDecisions.includes('- **Notes**: Initial preferred candidate'), true);
+});
+
 test('buildProjectSpec should raise security level to the minimum required by flags', () => {
   const state = makeState();
   state.security.level = 'low';

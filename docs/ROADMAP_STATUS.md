@@ -141,6 +141,9 @@ Phase 6 / Hardening
 - GitHub reference alias match は token 境界ベースへ tightening し、`mlx_or_parakeet` のような複合 token から `mlx` repo を誤推定しないようにした。
 - intake / buildProjectSpec は `ui_stack` / `ai_runtime_lang` / `ai_bridge` / `sidecar_packaging` / `internal_canonical_format` / `segment_duration` / `export_format` / `autosave` を structured planning として保持できるようになった。
 - generated `PROJECT.md` / `REQUIREMENTS.md` / `ARCHITECTURE.md` / wrapper guidance は supporting language、desktop shell / sidecar bridge、transcript contract（segmentation / canonical JSON / export / autosave）を出し、single-repo tree も runbooks / skills / `.github` / `.repogenesis` を含む実態に揃えた。
+- explicit な implementation hint が `〜を想定` で書かれていても、初期スタックを定義する structured input は adopted planning として保持するようになった。
+- `high_local_processing` は spec / planning / generated docs 上で `high` へ正規化され、requirements 側の security baseline と tech decision 表記が揃いやすくなった。
+- `〜を第一候補` は candidate のまま canonical choice に正規化し、`PyInstaller` のような packaging choice が重複せず、notes には preferred-candidate 情報を残すようになった。
 
 ## What This Phase Still Needs
 - Refine the public UI so non-engineers can understand planning fields without reading internal terminology.

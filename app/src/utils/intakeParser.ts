@@ -85,7 +85,12 @@ function stripListMarker(line: string): string {
 }
 
 function normalizePrimaryLanguageName(value: string): PrimaryLanguage | null {
-  const normalized = value.trim().toLowerCase().replace(/[()（）「」『』[\]]/g, ' ');
+  const normalized = value
+    .trim()
+    .replace(/\s*(?:を|が|は)?\s*(?:初期)?第一候補(?:です)?$/u, '')
+    .replace(/\s*(?:as\s+)?(?:the\s+)?(?:first|preferred|primary)\s+candidate$/i, '')
+    .toLowerCase()
+    .replace(/[()（）「」『』[\]]/g, ' ');
   if (!normalized) return null;
 
   if (/\btypescript\b|type\s*script/.test(normalized)) return 'typescript';
@@ -427,7 +432,11 @@ function inferPrimaryLanguageFromCandidateInputs(items: string[]): PrimaryLangua
 }
 
 function normalizeFrameworkName(value: string): string {
-  const normalized = value.trim().replace(/[()（）「」『』[\]]/g, '');
+  const normalized = value
+    .trim()
+    .replace(/\s*(?:を|が|は)?\s*(?:初期)?第一候補(?:です)?$/u, '')
+    .replace(/\s*(?:as\s+)?(?:the\s+)?(?:first|preferred|primary)\s+candidate$/i, '')
+    .replace(/[()（）「」『』[\]]/g, '');
   if (!normalized) return '';
 
   const lowered = normalized.toLowerCase();
@@ -463,6 +472,9 @@ function inferFrameworksFromCandidateInputs(items: string[]): string[] | null {
 
 function inferSecurityLevelFromCandidateInputs(items: string[]): SecurityLevel | null {
   const text = items.join('\n').toLowerCase();
+  if (/high[_\s-]*local[_\s-]*processing|local[_\s-]*processing[_\s-]*high/.test(text)) return 'high';
+  if (/medium[_\s-]*local[_\s-]*processing|local[_\s-]*processing[_\s-]*medium/.test(text)) return 'medium';
+  if (/low[_\s-]*local[_\s-]*processing|local[_\s-]*processing[_\s-]*low/.test(text)) return 'low';
   if (/\bhigh\b|高/.test(text)) return 'high';
   if (/\bmedium\b|中/.test(text)) return 'medium';
   if (/\blow\b|低/.test(text)) return 'low';
@@ -502,6 +514,8 @@ function extractCandidateInputValue(items: string[], keys: string[]): string | n
       if (normalizedKeys.includes(label)) {
         return waMatch[2]
           .trim()
+          .replace(/\s*(?:を|が|は)?\s*(?:初期)?第一候補(?:です)?$/u, '')
+          .replace(/\s*(?:as\s+)?(?:the\s+)?(?:first|preferred|primary)\s+candidate$/i, '')
           .replace(/\s*(を|が)?\s*(採用|利用|使用)(する|したい|予定)?$/u, '')
           .replace(/\s*(を|が)?\s*想定(する|したい|です)?$/u, '')
           .replace(/\s*(が|は)\s*候補(です)?$/u, '')
