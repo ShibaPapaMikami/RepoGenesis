@@ -174,6 +174,7 @@ RepoGenesis を「一部の開発者が使えるツール」ではなく、
 - [x] Distinguish transcription / desktop operator-UI briefs from TTS/CLI briefs so generated pipeline, roadmap, wrapper guidance, and runtime-label policy match the actual product shape
 - [x] Preserve desktop shell / sidecar architecture hints, supporting languages, and transcript artifact contracts in generated docs for local transcription apps
 - [x] Keep generated `PROJECT.md` repository trees aligned with the actual starter files, runbooks, and optional bundled-skill directories
+- [x] Keep candidate-only stack and transcript hints out of adopted summaries in `PROJECT.md` / `REQUIREMENTS.md` / `ARCHITECTURE.md` / wrapper guidance so generated docs stay internally consistent
 
 ### Track 5: Intake Parsing Hardening
 - [x] Treat explicit `RepoGenesis入力候補` as authoritative overrides for domains, primary language, and execution style

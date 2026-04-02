@@ -912,6 +912,49 @@ describe('generator — single-repo', () => {
     expect(externalDependencies).not.toContain('### ml-explore/mlx');
     expect(claude).toContain('shell-to-sidecar bridge');
   });
+
+  it('should keep candidate sidecar and transcript-contract hints out of adopted stack summaries', () => {
+    const brief = {
+      ...DESKTOP_TAURI_SIDECAR_BRIEF,
+      planning: {
+        ...DESKTOP_TAURI_SIDECAR_BRIEF.planning,
+        tech_decisions: DESKTOP_TAURI_SIDECAR_BRIEF.planning.tech_decisions.map((item) => (
+          [
+            'Supporting language',
+            'Inference bridge',
+            'Sidecar packaging',
+            'Canonical transcript format',
+            'Transcript segmentation',
+            'Transcript export',
+            'Autosave',
+          ].includes(item.topic)
+            ? { ...item, status: 'candidate' as const, decision_date: '' }
+            : item
+        )),
+      },
+    };
+    const inputPath = writeInputFile(brief);
+    const result = generate({ inputPath, outputPath: tmpDir, force: true });
+
+    const projectMd = fs.readFileSync(path.join(result.outputDir, 'PROJECT.md'), 'utf-8');
+    const requirements = fs.readFileSync(path.join(result.outputDir, 'docs/REQUIREMENTS.md'), 'utf-8');
+    const architecture = fs.readFileSync(path.join(result.outputDir, 'docs/ARCHITECTURE.md'), 'utf-8');
+    const techDecisions = fs.readFileSync(path.join(result.outputDir, 'docs/TECH_DECISIONS.md'), 'utf-8');
+    const claude = fs.readFileSync(path.join(result.outputDir, 'CLAUDE.md'), 'utf-8');
+
+    expect(projectMd).not.toContain('- Supporting Languages: python');
+    expect(requirements).not.toContain('Transcript segmentation is defined for the first workflow: 2〜5秒.');
+    expect(requirements).not.toContain('A canonical transcript artifact format is defined before exports fan out: json.');
+    expect(requirements).not.toContain('Review and export targets are named explicitly for the first release: json / markdown / txt.');
+    expect(requirements).not.toContain('Autosave behavior is defined for operator sessions: 会議中の一時ログを自動保存.');
+    expect(architecture).not.toContain('- Supporting Languages: python');
+    expect(architecture).not.toContain('## Transcript Contract');
+    expect(architecture).not.toContain('Tauri sidecar');
+    expect(architecture).not.toContain('PyInstaller');
+    expect(techDecisions).toContain('### Supporting language');
+    expect(techDecisions).toContain('- **Status**: Candidate');
+    expect(claude).not.toContain('shell-to-sidecar bridge');
+  });
 });
 
 describe('generator — multi-repo', () => {

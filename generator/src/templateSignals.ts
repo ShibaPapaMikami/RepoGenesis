@@ -203,8 +203,12 @@ export function summarizeCoreFeatures(brief: ProjectBrief, max = 4): string[] {
   return Array.from(new Set(features)).slice(0, max);
 }
 
-export function summarizeSupportingLanguages(brief: ProjectBrief, max = 3): string[] {
-  const languages = extractPlanningChoiceValues(brief, SUPPORTING_LANGUAGE_TOPIC_PATTERN)
+export function summarizeSupportingLanguages(
+  brief: ProjectBrief,
+  max = 3,
+  statuses: Array<ProjectBrief['planning']['tech_decisions'][number]['status']> = ['adopted'],
+): string[] {
+  const languages = extractPlanningChoiceValues(brief, SUPPORTING_LANGUAGE_TOPIC_PATTERN, statuses)
     .flatMap((choice) => splitListChoice(choice))
     .map((choice) => choice.toLowerCase());
   return Array.from(new Set(languages)).slice(0, max);
@@ -276,16 +280,20 @@ export interface TranscriptionContractSummary {
 function lastPlanningChoice(
   brief: ProjectBrief,
   pattern: RegExp,
+  statuses: Array<ProjectBrief['planning']['tech_decisions'][number]['status']> = ['adopted'],
 ): string | undefined {
-  const values = extractPlanningChoiceValues(brief, pattern);
+  const values = extractPlanningChoiceValues(brief, pattern, statuses);
   return values.length > 0 ? values[values.length - 1] : undefined;
 }
 
-export function summarizeTranscriptionContract(brief: ProjectBrief): TranscriptionContractSummary {
+export function summarizeTranscriptionContract(
+  brief: ProjectBrief,
+  statuses: Array<ProjectBrief['planning']['tech_decisions'][number]['status']> = ['adopted'],
+): TranscriptionContractSummary {
   return {
-    segmentation: lastPlanningChoice(brief, TRANSCRIPT_SEGMENTATION_TOPIC_PATTERN),
-    canonicalFormat: lastPlanningChoice(brief, CANONICAL_TRANSCRIPT_FORMAT_TOPIC_PATTERN),
-    exportFormat: lastPlanningChoice(brief, TRANSCRIPT_EXPORT_TOPIC_PATTERN),
-    autosave: lastPlanningChoice(brief, AUTOSAVE_TOPIC_PATTERN),
+    segmentation: lastPlanningChoice(brief, TRANSCRIPT_SEGMENTATION_TOPIC_PATTERN, statuses),
+    canonicalFormat: lastPlanningChoice(brief, CANONICAL_TRANSCRIPT_FORMAT_TOPIC_PATTERN, statuses),
+    exportFormat: lastPlanningChoice(brief, TRANSCRIPT_EXPORT_TOPIC_PATTERN, statuses),
+    autosave: lastPlanningChoice(brief, AUTOSAVE_TOPIC_PATTERN, statuses),
   };
 }

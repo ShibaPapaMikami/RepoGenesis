@@ -38,10 +38,13 @@ export function generateToolGuidance(
   const hasCliSurface = hasStableCliSurface(brief);
   const supportingLanguages = summarizeSupportingLanguages(brief);
   const hasPythonSidecar = supportingLanguages.includes('python');
+  const adoptedPlanningDecisions = brief.planning?.tech_decisions ?? [];
   const hasTauriShell = brief.tech.frameworks.some((framework) => /tauri/i.test(framework))
-    || (brief.planning?.tech_decisions ?? []).some((item) => /framework/i.test(item.topic) && /tauri/i.test(item.choice));
+    || adoptedPlanningDecisions.some((item) => item.status === 'adopted' && /framework/i.test(item.topic) && /tauri/i.test(item.choice));
   const hasTyperFramework = brief.tech.frameworks.some((framework) => /typer/i.test(framework))
-    || (brief.planning?.tech_decisions ?? []).some((item) => /framework/i.test(item.topic) && /typer/i.test(item.choice));
+    || adoptedPlanningDecisions.some((item) => item.status === 'adopted' && /framework/i.test(item.topic) && /typer/i.test(item.choice));
+  const hasAdoptedBridge = adoptedPlanningDecisions.some((item) => item.status === 'adopted' && /inference bridge/i.test(item.topic) && item.choice.trim());
+  const hasAdoptedPackaging = adoptedPlanningDecisions.some((item) => item.status === 'adopted' && /sidecar packaging/i.test(item.topic) && item.choice.trim());
   const domainSpecificLines = [
     hasCliSurface
       ? '- Treat the CLI contract as first-class: keep command examples, flags, exit behavior, and output locations explicit.'
@@ -61,7 +64,10 @@ export function generateToolGuidance(
     signals.hasTranscription
       ? '- For transcription products, keep capture source, timestamp or speaker-label behavior, transcript storage format, and export contract explicit from the first release.'
       : null,
-    hasOperatorUi && (hasTauriShell || hasPythonSidecar)
+    hasOperatorUi && hasTauriShell && !hasPythonSidecar
+      ? '- If the operator UI uses a desktop shell, keep app packaging, local file boundaries, and runtime prerequisites explicit from the start.'
+      : null,
+    hasOperatorUi && (hasPythonSidecar || hasAdoptedBridge || hasAdoptedPackaging)
       ? '- If the operator UI uses a desktop shell or local sidecar runtime, keep the shell-to-sidecar bridge, packaging method, and local artifact handoff explicit from the start.'
       : null,
     signals.hasUnity

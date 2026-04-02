@@ -14,12 +14,12 @@ export function generateArchitecture(brief: ProjectBrief): string {
   const supportingLanguages = summarizeSupportingLanguages(brief);
   const transcriptionContract = summarizeTranscriptionContract(brief);
   const hasTauriShell = tech.frameworks.some((framework) => /tauri/i.test(framework))
-    || planning.tech_decisions.some((item) => /framework/i.test(item.topic) && /tauri/i.test(item.choice));
+    || planning.tech_decisions.some((item) => item.status === 'adopted' && /framework/i.test(item.topic) && /tauri/i.test(item.choice));
   const hasPythonSidecar = supportingLanguages.includes('python');
   const bridgeChoice = planning.tech_decisions
-    .find((item) => /inference bridge/i.test(item.topic) && item.choice.trim())?.choice;
+    .find((item) => item.status === 'adopted' && /inference bridge/i.test(item.topic) && item.choice.trim())?.choice;
   const packagingChoice = planning.tech_decisions
-    .find((item) => /sidecar packaging/i.test(item.topic) && item.choice.trim())?.choice;
+    .find((item) => item.status === 'adopted' && /sidecar packaging/i.test(item.topic) && item.choice.trim())?.choice;
 
   const frameworkLine = tech.frameworks.length > 0
     ? `- Frameworks: ${tech.frameworks.join(', ')}\n`

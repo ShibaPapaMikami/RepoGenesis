@@ -1,7 +1,7 @@
 # ROADMAP_STATUS.md — Current Position
 
 ## Last Updated
-2026-04-01
+2026-04-02
 
 ## Roadmap Position
 Phase 6 / Hardening
@@ -144,6 +144,7 @@ Phase 6 / Hardening
 - explicit な implementation hint が `〜を想定` で書かれていても、初期スタックを定義する structured input は adopted planning として保持するようになった。
 - `high_local_processing` は spec / planning / generated docs 上で `high` へ正規化され、requirements 側の security baseline と tech decision 表記が揃いやすくなった。
 - `〜を第一候補` は candidate のまま canonical choice に正規化し、`PyInstaller` のような packaging choice が重複せず、notes には preferred-candidate 情報を残すようになった。
+- generated `PROJECT.md` / `REQUIREMENTS.md` / `ARCHITECTURE.md` / wrapper guidance は supporting language・transcript contract・sidecar packaging/bridge を adopted planning だけから要約するようになり、candidate-only hint を確定事項のように見せないようにした。
 
 ## What This Phase Still Needs
 - Refine the public UI so non-engineers can understand planning fields without reading internal terminology.

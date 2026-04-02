@@ -1,7 +1,7 @@
 # ACTIVE_CONTEXT.md — Current Project State
 
 ## Last Updated
-2026-04-01
+2026-04-02
 
 ## Current Phase
 Phase 6 — AI-Assisted Spec Authoring (Hardening)
@@ -97,6 +97,7 @@ Phase 6 — AI-Assisted Spec Authoring (Hardening)
   - explicit な implementation hint が `〜を想定` で書かれていても、初期スタックを定義する structured input は adopted planning として保持するようにした
   - `high_local_processing` は security level `high` として正規化し、spec / requirements / tech decisions の表記揺れを減らした
   - `〜を第一候補` は candidate のまま canonical choice に正規化し、`PyInstaller` のような packaging choice の重複を避けつつ preferred-candidate 情報を notes に残すようにした
+  - generated `PROJECT.md` / `REQUIREMENTS.md` / `ARCHITECTURE.md` / tool guidance は supporting language・transcript contract・sidecar bridge/packaging を adopted planning だけから要約するようにし、candidate-only hint を確定事項のように見せないようにした
   - `責任者` と `技術ドメイン` は AI-first flow では blocking validation から外した
   - `技術ドメイン` 未確定は warning 扱いで ZIP を止めないようにした
   - skill layer contract を provider-aware に更新し、Codex / Claude Code / Gemini CLI を並列で扱う設計に整理した
